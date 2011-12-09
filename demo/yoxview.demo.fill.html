@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Yoxview 3 demo - fill</title>
+    <link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="../yoxview/yoxview.js"></script>
+    <script type="text/javascript" src="../yoxview/datasources/yoxview.data.element.js"></script>
+    <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
+    <style>
+        #gallery{ position: absolute; top: 50%; left: 50%; width: 700px; height: 500px; margin-left: -350px; margin-top: -250px; border: solid 1px Black; }
+        #thumbnails{ height: 84px; width: 100%; position: absolute; bottom: 0; border-top: solid 1px #333; background: #eee; overflow-x: auto; overflow-y: hidden; white-space: nowrap }
+        #thumbnails img{ height: 67px; opacity: 0.8; border: none }
+        #thumbnails a{ display: inline-block }
+        #thumbnails a.selected img, #thumbnails a:hover img{ opacity: 1 }
+        
+        #container{ height: 415px; background: #aaa; overflow: hidden; position: relative }
+    </style>
+</head>
+<body>
+    <div id="gallery">
+        <div id="container"></div>
+        <div id="thumbnails"></div>
+    </div>
+
+    <script>
+        var container = document.getElementById("container");
+        $("#thumbnails").yoxview({
+            enlarge: true,
+            resizeMode: "fill",
+            source: "https://picasaweb.google.com/105098710956916751721/TheGathering2006Purmerend",
+            zoom: true,
+            popupContainer: container,
+            selectedThumbnailClass: "selected"
+        });
+    </script>
+</body>
+</html>
