@@ -48,16 +48,17 @@
 			$(window).resize(setContainerSize);
 			$(thumbnailsContainer).yoxview({
 				delayOpen: true,
-
 				popupMargin: { top: 20, right: 20, left: 20, bottom: 50 },
                 //popupPadding: 20,
-				onClose: function(){ info.innerHTML = "" },
-				onInit: function(view){ 
-					//$.yoxview.open({ viewId: view.id }); 
-				},
-				onSelect: function(item){
-					info.innerHTML = item.title || "";
-				},
+                events: {
+                    close: function(){ info.innerHTML = "" },
+                    init: function(){
+                        //$.yoxview.open({ viewId: this.id });
+                    },
+                    select: function(e, item){
+                        info.innerHTML = item.title || "";
+                    }
+                },
 				selectedThumbnailClass: "selectedThumbnail",
                 source: "https://picasaweb.google.com/105098710956916751721/Trips",
                 zoom: true

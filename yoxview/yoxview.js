@@ -76,6 +76,7 @@
             };
         }
     })();
+
 	YoxView.prototype = {
         addSources: function(sources, onDone){
             var deferredPromises = [],
@@ -117,6 +118,13 @@
                     onDone(arguments);
             });
         },
+        addEventListener: function(eventName, eventHandler){
+            var self = this;
+            if (!eventHandler || typeof(eventHandler) !== "function")
+                throw new Error("Invalid event handler, must be a function.");
+            
+            $(this.container).on(eventName + ".yoxview", $.proxy(eventHandler, self));
+        },
         cacheCount: 0,
 		dataSources: {},
         items: [],
@@ -132,12 +140,20 @@
                     sources.push(optionsSource);
             }
 
-            this.addSources(sources, function(){
-                if (self.options.onInit){
-                    for(var i=0; i<self.options.onInit.length; i++){
-                        self.options.onInit[i].call(null, self);
+            // Init events:
+            for(var eventName in this.options.events){
+                var eventHandlers = this.options.events[eventName];
+                if (eventHandlers instanceof Array){
+                    for(var i=0; i < eventHandlers.length; i++){
+                        self.addEventListener(eventName, eventHandlers[i]);
                     }
                 }
+                else
+                    self.addEventListener(eventName, eventHandlers);
+            }
+
+            this.addSources(sources, function(){
+                self.triggerEvent("init", self);
             });
             
 			// Apply event handlers:
@@ -184,6 +200,12 @@
 				}
 			}
         },
+        removeEventListener: function(eventName, eventHandler){
+            if (!eventHandler || typeof(eventHandler) !== "function")
+                throw new Error("Invalid event handler, must be a function.");
+            
+            $(this.container).off(eventName + ".yoxview", eventHandler);
+        },
         store: function(key, data){
             if (!this.options.storeDataSources || !window.localStorage || typeof(key) !== "string")
                 return;
@@ -199,6 +221,9 @@
             }
             window.localStorage.setItem(keyName, JSON.stringify(data));
             return;
+        },
+        triggerEvent: function(eventName, data){
+            $(this.container).trigger(eventName + ".yoxview", data);
         }
 	};
 
@@ -225,6 +250,7 @@
 			isOpen = false,
 			elements = {}, // $yoxviewPopup
 			docElement = document.documentElement,
+            $body = $("body"),
 			currentView,
             currentViewSelectedThumbnailClass,
 			currentPopupContainer,
@@ -256,7 +282,16 @@
                     enableKeyPresses: true, // If set to false, YoxView won't catch any keyboard press events. To change individual keys, use keyPress.
                     enlarge: false, // Whether to enlarge images to fit the container
                     keyPress: { left: "prev", right: "next", up: "prev", down: "next", escape: "close", home: "first", end: "last" }, // Functions to apply on key presses
-                    onBackgroundClick: function(){ $.yoxview.close() }, // A function to call when the popup's background is clicked. (Applies only in popup mode)
+                    events: { // Predefined event handlers
+                        backgroundClick: function(){ $.yoxview.close() },
+                        init: [
+                            function(){
+                                views.push(this);
+                                if (this.options.cacheImagesInBackground)
+					                cache.cacheItem(this);
+                            }
+                        ]
+                    }, // A function to call when the popup's background is clicked. (Applies only in popup mode)
                     popupContainer: docElement, // The element in which the viewer is rendered. Defaults to the whole window.
                     resizeMode: "fit", // The mode in which to resize the item in the container - 'fit' (shows the whole item, resized to fit inside the container) or 'fill' (fills the entire container).
                     storeDataSources: true // Whether to save to localStorage (if available) external data sources data, so as not to fetch it each time YoxView loads.
@@ -291,9 +326,7 @@
 				if (currentView.options.enableKeyPresses)
 					$.yoxview.keyPresses.disable();
 				
-		
-				if (currentView.options.onClose)
-					currentView.options.onClose.call(currentView);
+		        currentView.triggerEvent("close");
 
                 elements.$background.hide();
 				currentView = currentPopupContainer = currentPopupContainerDimensions = currentViewSelectedThumbnailClass = currentPopupContainerIsDocElement = currentItem = null;
@@ -347,8 +380,7 @@
 					if (currentView.options.enableKeyPresses)
 						$.yoxview.keyPresses.enable();
 
-                    if (currentView.options.onBeforeOpen)
-                        currentView.options.onBeforeOpen.call(currentView, { item: e.item });
+                    currentView.triggerEvent("beforeOpen", { item: e.item });
 
                     if (currentView.options.popupContainer === docElement)
                         elements.$background.show();
@@ -440,9 +472,7 @@
                 elements.panels[1].css("opacity", currentPanelIndex);
                 
                 viewActions.resize(true, elements.panels[currentPanelIndex].callback);
-
-                if (currentView.options.onSelect)
-                    currentView.options.onSelect.call(currentItem, currentItem);
+                currentView.triggerEvent("select", currentItem);
             },
 			// Does the actual displaying of the selected item. Switches between the current and next items, if there was one selected:
 			selectItem: function(item, callback){
@@ -719,7 +749,9 @@
 
             elements.$background = $('<div class="yoxviewPopupBackground"></div>').appendTo(document.body);
             elements.$background.on("click",
-                function(e){ if (currentView.options.onBackgroundClick) currentView.options.onBackgroundClick.call(currentView, e); }
+                function(e){
+                    currentView.triggerEvent("backgroundClick", e)
+                }
             );
 
 			elements.$yoxviewPopup = $yoxviewPopup.appendTo(document.body);
@@ -739,14 +771,26 @@
 				if (!isInit)
 					init();
 
-				var viewOptions = $.extend({}, config.defaults, config[platform], options);
-				
-				viewOptions.onInit = viewOptions.onInit ? [viewOptions.onInit] : [];
-				viewOptions.onInit.splice(0, 0, function(view){ views.push(view); } );
-				
-				if (viewOptions.cacheImagesInBackground){
-					viewOptions.onInit.splice(1, 0, cache.cacheItem);
-				}
+				var optionsEvents = $.extend({}, options.events);
+                delete options.events;
+                var viewOptions = $.extend(true, {}, config.defaults, config[platform], options);
+
+                // Merge the options events with the default ones:
+                for(var eventName in optionsEvents){
+                    var eventHandlers = viewOptions.events[eventName],
+                        events = optionsEvents[eventName];
+
+                    if (!eventHandlers)
+                        eventHandlers = viewOptions.events[eventName] = [];
+                    else if (!(eventHandlers instanceof Array))
+                        eventHandlers = viewOptions.events[eventName] = [eventHandlers];
+                    
+                    if (events instanceof Array)
+                        eventHandlers = eventHandlers.concat(events);
+                    else if (typeof events === "function")
+                        eventHandlers.push(events);
+                }
+
 				new YoxView(container, views.length, viewOptions);
 			},
 			addDataSource: function(dataSource){
