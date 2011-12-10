@@ -284,17 +284,15 @@
                     keyPress: { left: "prev", right: "next", up: "prev", down: "next", escape: "close", home: "first", end: "last" }, // Functions to apply on key presses
                     events: { // Predefined event handlers
                         backgroundClick: function(){ $.yoxview.close() },
-                        init: [
-                            function(){
-                                views.push(this);
-                                if (this.options.cacheImagesInBackground)
-					                cache.cacheItem(this);
-                            }
-                        ]
+                        init: function(){
+                            views.push(this);
+                            if (this.options.cacheImagesInBackground)
+                                cache.cacheItem(this);
+                        }
                     }, // A function to call when the popup's background is clicked. (Applies only in popup mode)
                     popupContainer: docElement, // The element in which the viewer is rendered. Defaults to the whole window.
                     resizeMode: "fit", // The mode in which to resize the item in the container - 'fit' (shows the whole item, resized to fit inside the container) or 'fill' (fills the entire container).
-                    storeDataSources: true // Whether to save to localStorage (if available) external data sources data, so as not to fetch it each time YoxView loads.
+                    storeDataSources: false // Whether to save to localStorage (if available) external data sources data, so as not to fetch it each time YoxView loads.
                 },
                 mobile: {
                     backgroundStyle: "background: Black",
@@ -411,8 +409,7 @@
 			},
             resizeModes: {
                 fill: function(item){
-                    var maxOrMin = currentView.options.enlarge ? Math.max : Math.min,
-                        newWidth = maxOrMin.call(null, item.width, currentPopupContainerDimensions.width),
+                    var newWidth = currentView.options.enlarge ? currentPopupContainerDimensions.width : Math.min(item.width, currentPopupContainerDimensions.width),
 					    newHeight = Math.round(newWidth * item.ratio),
 					    maxHeight = currentPopupContainerDimensions.height;
 
@@ -432,8 +429,8 @@
                     var options = currentView.options,
                         popupMargin = options.popupMargin,
                         popupPadding = options.popupPadding,
-                        maxOrMin = options.enlarge ? Math.max : Math.min,
-                        newWidth = maxOrMin.call(null, item.width, currentPopupContainerDimensions.width - popupMargin.horizontal - popupPadding.horizontal),
+                        requiredWidth = currentPopupContainerDimensions.width - popupMargin.horizontal - popupPadding.horizontal,
+                        newWidth =  currentView.options.enlarge ? requiredWidth : Math.min(item.width, requiredWidth),
                         newHeight = Math.round(newWidth * currentItem.ratio),
                         maxHeight = currentPopupContainerDimensions.height - popupMargin.vertical - popupPadding.vertical;
 
@@ -479,6 +476,8 @@
 				if (currentItem && item.id === currentItem.id)
 					return false;
 
+                currentView.triggerEvent("beforeSelect", item);
+                
 				if (currentItem && currentViewSelectedThumbnailClass && currentItem.thumbnail)
 					$(currentItem.thumbnail.element).removeClass(currentViewSelectedThumbnailClass);
 					
@@ -491,7 +490,6 @@
                 currentPanelIndex = currentPanelIndex === 1 ? 0 : 1;
 
                 cache.withItem(item, function(){
-
                     var currentPanel = elements.panels[currentPanelIndex];
                     if (currentPanel.attr("src") !== item.url){
                         currentPanel.callback = callback;
@@ -561,8 +559,11 @@
                 cacheImages = [],
                 currentCachedImageIndex = 0,
                 innerKey = (new Date()).valueOf(),
-                cachingCount = 0; // The number of currently loading images
-
+                cachingCount = 0, // The number of currently loading images
+                loadGracetime = 200,
+                loadGracetimeTimeoutId,
+                loadingItemId;
+            
             for(var i=0; i<concurrentCachedImagesCount; i++){
                 var cacheImage = new Image();
                 $(cacheImage).on("load", { cacheImageIndex: i }, onLoadImage);
@@ -585,21 +586,27 @@
                     advanceCache();
             }
 
+            function endCache(item){
+                cacheView.triggerEvent("cacheEnd", item);
+                loadingItemId = null;
+            }
+
             function onLoadImage(e){
                 var cacheImage = cacheImages[currentCachedImageIndex = e.data.cacheImageIndex],
-                    item = cacheImage.item,
-                    loadedThumbnailClass;
-
+                    item = cacheImage.item;
+                
                 item.width = this.width;
                 item.height = this.height;
                 item.ratio = this.height / this.width;
                 item.isLoaded = true;
 
+                if (item.id === loadingItemId)
+                    endCache(item);
+
+                cacheView.triggerEvent("loadItem", item);
+                
                 if (cacheImage.onCache)
                     cacheImage.onCache.call(item);
-
-                if (loadedThumbnailClass = cacheView.options.loadedThumbnailClass)
-                    $(item.thumbnail.element).addClass(loadedThumbnailClass);
 
                 cachingCount--;
                 delete cacheImage.item;
@@ -642,6 +649,8 @@
                 for(var i = 0; i < concurrentCachedImagesCount; i++){
                     var cacheImage = cacheImages[i];
                     if (cacheImage.item && cacheImage.item.id === item.id){
+                        // If it is loading, add the onCache function to it:
+                        cacheImage.onCache = onCache;
                         return true;
                     }
                 }
@@ -651,6 +660,7 @@
                 if (!item.isLoaded && item.type === "image"){
                     var cacheImage = cacheImages[currentCachedImageIndex];
                     cacheImage.item = item;
+                    cacheImage.img.src = "";
                     cacheImage.img.src = item.url;
                     cacheImage.onCache = onCache;
                     cachingCount++;
@@ -674,15 +684,30 @@
                 // Reset current cache count for outside calls:
                 if (arguments.length < 3 || arguments[2] !== innerKey)
                     currentCacheCount = 0;
-                
+
                 if (item.isLoaded){
                     onCache.call(item);
+
+                    if (loadingItemId)
+                        endCache(item);
+                    
                     currentCacheIndex = item.id - 1;
                     if (!cacheView.isLoaded){
                         updateViewCacheAndAdvance(false);
                     }
                 }
                 else{
+                    if (loadGracetimeTimeoutId)
+                        clearTimeout(loadGracetimeTimeoutId);
+                    
+                    loadGracetimeTimeoutId = setTimeout(function(){
+                        if (!item.isLoaded){
+                            loadGracetimeTimeoutId = null;
+                            cacheView.triggerEvent("cacheStart", item);
+                            loadingItemId = item.id;
+                        }
+                    }, loadGracetime);
+
                     cacheItem(item, onCache, innerKey);
                 }
             }
