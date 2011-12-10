@@ -12,7 +12,7 @@ $.yoxview.addDataSource(function(){
 	return {
 		name: dataSourceName,
 		match: function(source){ return isElement(source) || source instanceof jQuery; },
-		load: function(source, callback){
+		load: function(source, options, callback){
 			var imagesData = [];
 
 			$("a:has('img')", source).each(function(){

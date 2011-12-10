@@ -14,9 +14,9 @@ $.yoxview.addDataSource(function(){
         },
         picasaImgMaxSizes = [94, 110, 128, 200, 220, 288, 320, 400, 512, 576, 640, 720, 800, 912, 1024, 1152, 1280, 1440, 1600];
 
-    function getDataFromUrl(url){
+    function getDataFromUrl(url, options){
         var urlMatch = url.match(picasaMatchRegex),
-            data = $.extend({}, defaults);
+            data = $.extend({}, defaults, options);
         
         if (urlMatch && urlMatch.length > 1)
         {
@@ -81,8 +81,9 @@ $.yoxview.addDataSource(function(){
 	return {
 		name: dataSourceName,
 		match: function(source){ return picasaRegex.test(source); },
-		load: function(source, callback){
-            var picasaData = getDataFromUrl(source);
+		load: function(source, options, callback){
+            var picasaData = getDataFromUrl(source, options);
+
             $.ajax({
                 url: getFeedUrl(picasaData),
                 dataType: 'jsonp',

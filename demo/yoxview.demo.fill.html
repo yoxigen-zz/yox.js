@@ -56,7 +56,8 @@
                 select: function(e, item){
                     itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
                     infoTitle.innerHTML = item.title;
-                }
+                },
+                init: function(){ $.yoxview.open(); }
             }
         });
     </script>

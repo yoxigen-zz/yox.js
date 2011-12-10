@@ -172,19 +172,22 @@
 		},
         loadSource: function(source){
             var self = this,
-                onLoadSource = function(sourceData){ self.store(source, sourceData); dfd.resolve(sourceData); };
+                sourceIsObject = typeof(source) === "object",
+                sourceUrl = sourceIsObject ? source.url : source,
+                sourceOptions = sourceIsObject ? source : {},
+                onLoadSource = function(sourceData){ self.store(sourceUrl, sourceData); dfd.resolve(sourceData); };
 
             for(var dataSourceName in this.dataSources){
 				var dataSource = this.dataSources[dataSourceName];
 
-				if (dataSource.match(source)){
+				if (dataSource.match(sourceUrl)){
                     var dfd = $.Deferred(),
-                        savedSourceData = self.store(source);
+                        savedSourceData = self.store(sourceUrl);
 
                     if (savedSourceData)
                         onLoadSource(savedSourceData);
                     else{
-                        dataSource.load(source, onLoadSource,
+                        dataSource.load(sourceUrl, sourceOptions, onLoadSource,
                             function(error){
                                 dfd.reject();
                             }
