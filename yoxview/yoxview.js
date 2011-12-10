@@ -90,7 +90,6 @@
 
             $.when.apply(this, deferredPromises).done(function () {
                 var documentFragment;
-                
                 for(var i=0; i < arguments.length; i++){
                     var sourceData = arguments[i];
                     if (sourceData.createThumbnails){
@@ -109,11 +108,13 @@
                             documentFragment.appendChild(thumbnailEl);
                         }
                     }
+
+                    self.items = self.items.concat(sourceData.items);
                 }
 
                 if (documentFragment)
                     self.container[0].appendChild(documentFragment);
-                
+
                 if (onDone)
                     onDone(arguments);
             });
@@ -175,7 +176,6 @@
                             $(item.thumbnail.element).data("yoxviewIndex", item.id);
                     }
 
-                    self.items = self.items.concat(sourceData.items);
                     dfd.resolve(sourceData);
                 };
 
