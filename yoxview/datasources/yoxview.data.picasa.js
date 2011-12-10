@@ -8,7 +8,8 @@ $.yoxview.addDataSource(function(){
             setSingleAlbumThumbnails: true,
             setTitle: true, // Whether to add a header with user and/or album name before thumbnails
 			alt: 'json',
-			thumbsize: 100,
+			thumbsize: "104u",
+            imgmax: 1600,
             fields: "entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link(@href))"
         },
         picasaImgMaxSizes = [94, 110, 128, 200, 220, 288, 320, 400, 512, 576, 640, 720, 800, 912, 1024, 1152, 1280, 1440, 1600];
