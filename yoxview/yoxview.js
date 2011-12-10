@@ -112,6 +112,13 @@
                     self.items = self.items.concat(sourceData.items);
                 }
 
+                for(var i=0, count=self.items.length; i < count; i++){
+                    var item = self.items[i];
+                    item.id = i + 1;
+                    if (item.thumbnail && item.thumbnail.element)
+                        $(item.thumbnail.element).data("yoxviewIndex", item.id);
+                }
+
                 if (documentFragment)
                     self.container[0].appendChild(documentFragment);
 
@@ -165,20 +172,7 @@
 		},
         loadSource: function(source){
             var self = this,
-                onLoadSource = function(sourceData){
-                    var startIndex = self.items.length;
-
-                    self.store(source, sourceData);
-                    for(var i=0, count=sourceData.items.length; i < count; i++){
-                        var item = sourceData.items[i];
-                        item.id = ++startIndex;
-                        if (item.thumbnail && item.thumbnail.element)
-                            $(item.thumbnail.element).data("yoxviewIndex", item.id);
-                    }
-
-                    dfd.resolve(sourceData);
-                };
-
+                onLoadSource = function(sourceData){ self.store(source, sourceData); dfd.resolve(sourceData); };
 
             for(var dataSourceName in this.dataSources){
 				var dataSource = this.dataSources[dataSourceName];
