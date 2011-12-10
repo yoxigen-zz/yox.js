@@ -8,30 +8,56 @@
     <script type="text/javascript" src="../yoxview/datasources/yoxview.data.element.js"></script>
     <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
     <style>
-        #gallery{ position: absolute; top: 50%; left: 50%; width: 700px; height: 500px; margin-left: -350px; margin-top: -250px; border: solid 1px Black; }
+        #gallery{ position: absolute; top: 50%; left: 50%; width: 705px; height: 555px; margin-left: -350px; margin-top: -250px; border: solid 1px Black; }
         #thumbnails{ height: 84px; width: 100%; position: absolute; bottom: 0; border-top: solid 1px #333; background: #eee; overflow-x: auto; overflow-y: hidden; white-space: nowrap }
-        #thumbnails img{ height: 67px; opacity: 0.8; border: none }
+        #thumbnails img{ height: 67px; opacity: 0.4; border: none }
         #thumbnails a{ display: inline-block }
+        #thumbnails a.loaded img{ opacity: 0.8 }
         #thumbnails a.selected img, #thumbnails a:hover img{ opacity: 1 }
         
-        #container{ height: 415px; background: #aaa; overflow: hidden; position: relative }
+        #container{ height: 470px; background: #000; overflow: hidden; position: relative }
+        .yoxviewPopup{ background: Black !important }
+
+        #info{ position: absolute; width: 100%; height: 30px; bottom: 0; left: 0; background: rgba(0,0,0,0.5); color: White; z-index: 5; padding: 0 10px; line-height: 31px; }
+        #loader{ position: absolute; right: 25px; top: 7px; width: 16px; height: 16px; display: none }
+        #infoTitle{ display: inline; font-size: 12pt; margin: 0; padding: 0; font-weight: normal; }
+        #itemCounter{ color: #666; font-size: 0.8em; }
     </style>
 </head>
 <body>
     <div id="gallery">
-        <div id="container"></div>
+        <div id="container">
+            <div id="info">
+                <span id="itemCounter"></span>
+                <h2 id="infoTitle"></h2>
+                <img id="loader" src="img/loader.gif" alt="Loading" />
+            </div>
+        </div>
         <div id="thumbnails"></div>
     </div>
 
     <script>
-        var container = document.getElementById("container");
+        var container = document.getElementById("container"),
+            infoTitle = document.getElementById("infoTitle"),
+            loader = document.getElementById("loader"),
+            itemCounter = document.getElementById("itemCounter");
+        
         $("#thumbnails").yoxview({
-            enlarge: true,
+            enlarge: false,
             resizeMode: "fill",
             source: "https://picasaweb.google.com/105098710956916751721/TheGathering2006Purmerend",
             zoom: true,
             popupContainer: container,
-            selectedThumbnailClass: "selected"
+            selectedThumbnailClass: "selected",
+            events: {
+                cacheStart: function(e, item){ loader.style.display = "inline" },
+                cacheEnd: function(e, item){ loader.style.display = "none" },
+                loadItem: function(e, item){ $(item.thumbnail.element).addClass("loaded"); },
+                select: function(e, item){
+                    itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
+                    infoTitle.innerHTML = item.title;
+                }
+            }
         });
     </script>
 </body>
