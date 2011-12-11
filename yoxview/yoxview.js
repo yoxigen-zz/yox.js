@@ -529,7 +529,7 @@
                     style.push("padding-", side, ": ", padding[side], "px;");
                 }
 
-                elements.$yoxviewPopup.attr("class", "yoxviewPopup yoxviewPopup_" + platform);
+                elements.$yoxviewPopup.attr("class", "yoxviewPopup yoxviewPopup_" + platform + " yoxviewPopup_" + options.resizeMode);
 
                 for(var i=elements.panels.length; i--;){
                     elements.panels[i].css({ transitionDuration: options.transitionTime + "ms" });

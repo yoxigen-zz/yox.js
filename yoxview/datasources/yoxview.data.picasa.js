@@ -3,17 +3,19 @@ $.yoxview.addDataSource(function(){
         picasaRegex = /^https?:\/\/picasaweb\.google\./,
         picasaMatchRegex = /https?:\/\/picasaweb\.google\.\w+\/([^\/#\?]+)\/?([^\/#\?]+)?(\?([^#]*))?/,
         apiUrl = "http://picasaweb.google.com/data/feed/api/",
+        picasaCropSizes = [32, 48, 64, 72, 104, 144, 150, 160],
+        picasaUncropSizes = [94, 110, 128, 200, 220, 288, 320, 400, 512, 576, 640, 720, 800, 912, 1024, 1152, 1280, 1440, 1600].concat(picasaCropSizes).sort(function(a,b){ return a-b; }),
         defaults = {
             setThumbnail: true,
             setSingleAlbumThumbnails: true,
             setTitle: true, // Whether to add a header with user and/or album name before thumbnails
 			alt: 'json',
-			thumbsize: "104u",
-            imgmax: 1600,
+            cropThumbnails: false,
+			thumbsize: 64,
+            imgmax: picasaUncropSizes[picasaUncropSizes.length - 1],
             fields: "entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link(@href))"
-        },
-        picasaImgMaxSizes = [94, 110, 128, 200, 220, 288, 320, 400, 512, 576, 640, 720, 800, 912, 1024, 1152, 1280, 1440, 1600];
-
+        };
+    
     function getDataFromUrl(url, options){
         var urlMatch = url.match(picasaMatchRegex),
             data = $.extend({}, defaults, options);
@@ -29,7 +31,16 @@ $.yoxview.addDataSource(function(){
                 data.fields += ",entry(title),entry(gphoto:numphotos)";
         }
 
-        return data
+        data.imgmax = getImgmax(picasaUncropSizes, data.imgmax);
+        data.thumbsize = getImgmax(data.cropThumbnails ? picasaCropSizes : picasaUncropSizes, data.thumbsize) + (data.cropThumbnails ? "c" : "u");
+        return data;
+    }
+
+    function getImgmax(picasaSizes, optionsImgmax){
+        var imgmax = Math.min(optionsImgmax, Math.max(screen.width, screen.height));
+
+        for(var i=picasaSizes.length, picasaSize; (i-- -1) && (picasaSize = picasaSizes[i]) && picasaSizes[i - 1] >= imgmax;){}
+        return picasaSize;
     }
 
     function getFeedUrl(picasaData)
@@ -83,7 +94,7 @@ $.yoxview.addDataSource(function(){
 		match: function(source){ return picasaRegex.test(source); },
 		load: function(source, options, callback){
             var picasaData = getDataFromUrl(source, options);
-
+console.log("picasaData: ", picasaData);
             $.ajax({
                 url: getFeedUrl(picasaData),
                 dataType: 'jsonp',

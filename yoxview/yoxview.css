@@ -6,6 +6,7 @@
 	display: none;
 }
 .yoxviewPopup_mobile{ border: none }
+.yoxviewPopup_fill{ border: none }
 
 .yoxviewPopup img{
 	position: absolute;
