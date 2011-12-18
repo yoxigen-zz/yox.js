@@ -2,21 +2,21 @@
 <html>
 <head>
     <title>Yoxview 3 demo - fill</title>
+    <link rel="Stylesheet" type="text/css" href="css/demo.css" />
     <link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="../yoxview/yoxview.js"></script>
     <script type="text/javascript" src="../yoxview/datasources/yoxview.data.element.js"></script>
     <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
     <style>
-        #gallery{ position: absolute; top: 50%; left: 50%; width: 705px; height: 555px; margin-left: -350px; margin-top: -250px; border: solid 1px Black; }
-        #thumbnails{ height: 84px; width: 100%; position: absolute; bottom: 0; border-top: solid 1px #333; background: #eee; overflow-x: auto; overflow-y: hidden; white-space: nowrap }
+        #gallery{ position: absolute; top: 50%; left: 50%; width: 705px; height: 555px; margin-left: -350px; margin-top: -250px; border: solid 1px Black; background: Black }
+        #thumbnails{ height: 84px; width: 100%; position: absolute; bottom: 0; border-top: solid 1px #333; background: #000; overflow-x: auto; overflow-y: hidden; white-space: nowrap }
         #thumbnails img{ height: 67px; opacity: 0.4; border: none }
         #thumbnails a{ display: inline-block }
-        #thumbnails a.loaded img{ opacity: 0.8 }
+        #thumbnails a.loaded img{ opacity: 0.6 }
         #thumbnails a.selected img, #thumbnails a:hover img{ opacity: 1 }
         
         #container{ height: 470px; background: #000; overflow: hidden; position: relative }
-        .yoxviewPopup{ background: Black !important }
 
         #info{ position: absolute; width: 100%; height: 30px; bottom: 0; left: 0; background: rgba(0,0,0,0.5); color: White; z-index: 5; padding: 0 10px; line-height: 31px; }
         #loader{ position: absolute; right: 25px; top: 7px; width: 16px; height: 16px; display: none }
@@ -25,6 +25,7 @@
     </style>
 </head>
 <body>
+    <header><h1>YoxView 3.0 Demo - Fill example</h1><a style="float:right" href="yoxview.demo.fit.html">Fit demo</a></header>
     <div id="gallery">
         <div id="container">
             <div id="info">
@@ -43,11 +44,12 @@
             itemCounter = document.getElementById("itemCounter");
         
         $("#thumbnails").yoxview({
+            enableKeyboard: true,
             enlarge: false,
             resizeMode: "fill",
             source: { url: "https://picasaweb.google.com/105098710956916751721/TheGathering2006Purmerend", thumbsize: 104 },
             zoom: true,
-            popupContainer: container,
+            container: container,
             selectedThumbnailClass: "selected",
             events: {
                 cacheStart: function(e, item){ loader.style.display = "inline" },
@@ -57,7 +59,7 @@
                     itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
                     infoTitle.innerHTML = item.title;
                 },
-                init: function(){ $.yoxview.open(); }
+                init: function(){ this.selectItem(0); }
             }
         });
     </script>

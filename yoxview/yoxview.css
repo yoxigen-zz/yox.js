@@ -1,20 +1,39 @@
-﻿.yoxviewPopup{ 
-	position: fixed; 
+﻿.yoxviewFrame{
+	position: absolute;
 	overflow: hidden; 
 	border: solid 1px #666;
-	background: White;
-	display: none;
-}
-.yoxviewPopup_mobile{ border: none }
-.yoxviewPopup_fill{ border: none }
 
-.yoxviewPopup img{
+
+}
+.yoxviewFrame_mobile{ border: none }
+.yoxviewFrame_fill{ border: none }
+
+.yoxviewImg{
 	position: absolute;
 	border: none;
-	width: 100%;
+
 	display: block;
 	z-index: 1;
+    /*
+    -moz-transition: opacity 300ms ease-out;
+    -webkit-transition: opacity 300ms ease-out;
+    -webkit-transform: translateZ(0);
+    */
+}
+.yoxviewFrame_fit{
+    /*
+    -moz-transition: all 300ms ease-out;
+    -webkit-transition: all 300ms ease-out;
+    -webkit-transform: translateZ(0);
+*/
+}
+.yoxviewFrame_fit .yoxviewImg{
+    width: 100%;
+    /*
+    -moz-transition: all 300ms ease-out;
+    -webkit-transition: all 300ms ease-out;
+    */
 }
 
-.yoxviewPopup div#info{ background: rgba(0,0,0,0.5); color: White; height: 30px; bottom: 0; left: 0; width: 100%; line-height: 30px; padding-left: 10px;}
-.yoxviewPopupBackground{ position: absolute; top: 0; left: 0; background: rgba(0,0,0,0.8); display: none; height: 110%; width: 100%; }
+.yoxviewFrame div#info{ background: rgba(0,0,0,0.5); color: White; height: 30px; bottom: 0; left: 0; width: 100%; line-height: 30px; padding-left: 10px;}
+.yoxviewBackground{ position: absolute; top: 0; left: 0; background: rgba(0,0,0,0.8); display: none; height: 110%; width: 100%; }

@@ -94,7 +94,7 @@ $.yoxview.addDataSource(function(){
 		match: function(source){ return picasaRegex.test(source); },
 		load: function(source, options, callback){
             var picasaData = getDataFromUrl(source, options);
-console.log("picasaData: ", picasaData);
+
             $.ajax({
                 url: getFeedUrl(picasaData),
                 dataType: 'jsonp',
