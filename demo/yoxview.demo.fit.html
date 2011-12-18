@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>YoxView 3.0 Demo - Basic Usage</title>
+		<link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script type="text/javascript" src="../yoxview/yoxview.js"></script>
+		<script type="text/javascript" src="../yoxview/datasources/yoxview.data.element.js"></script>
+        <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
+		<style>
+			body{ padding: 0; margin: 0; font-family: Calibri, Arial, Sans-Serif; overflow: hidden;  }
+			h1{ font-size: 14pt; color: #fff; margin: 0; padding: 0; display: inline; font-weight: normal }
+			header{ height: 35px; line-height: 34px; padding: 0 11px; background: Black; z-index: 2 }
+            header a{ color: #aaa; text-decoration: none }
+            header a:hover{ color: White }
+			#thumbnails{ height: 60px; background: #000; white-space: nowrap  }
+			#thumbnails a{ opacity: 0.3; }
+			#thumbnails img{ height: 100%; border: none}
+            #thumbnails a.loadedThumbnail{ opacity: 0.5 }
+            #thumbnails a.selectedThumbnail, #thumbnails a:hover { opacity: 1; }
+			#thumbnails a.selectedThumbnail img{ opacity: 1 }
+			#popupContainer{
+                background: #0d0d0d;
+                overflow: hidden;
+            }
+			#info{
+                background: none repeat scroll 0 0 #0A0A0A;
+                border-bottom: 1px solid #282828;
+                border-top: 1px solid #151515;
+                color: White;
+                height: 29px;
+                line-height: 28px;
+                text-align: left;
+            }
+            #itemCounter{ color: #666; font-size: 0.8em; float: left; height: 100%; display: block; width: 50px; text-align: center; }
+            #infoTitle{ display: inline; font-size: 12pt; margin: 0; padding: 0; font-weight: normal;  float: left; height: 100%; display: block;}
+            #loader{ float: right; width: 16px; height: 16px; margin-top: 6px; margin-right: 6px; display: none }
+		</style>
+	</head>
+	<body>
+		<header><h1>YoxView 3.0 Demo - Basic usage</h1><a style="float:right" href="yoxview.demo.fill.html">Fill demo</a></header>
+		<div id="popupContainer"></div>
+        <div id="info">
+            <span id="itemCounter"></span>
+            <h2 id="infoTitle"></h2>
+            <img id="loader" src="img/loader.gif" alt="Loading" />
+        </div>
+        <div id="thumbnails" class="thumbnails yoxview"></div>
+		<script type="text/javascript">
+			var popupContainer =  document.getElementById("popupContainer"),
+                $thumbnailsContainer = $("#thumbnails"),
+				docElement = document.documentElement,
+				info = document.getElementById("info"),
+                infoTitle = document.getElementById("infoTitle"),
+                loader = document.getElementById("loader"),
+                itemCounter = document.getElementById("itemCounter"),
+                isInit,
+                heightToSubtract = document.getElementsByTagName("header")[0].clientHeight + info.clientHeight + $thumbnailsContainer.height() +2,
+                title = document.title;
+				
+			function setContainerSize(){
+                var height = docElement.clientHeight - heightToSubtract;
+				popupContainer.style.height = height + "px";
+                if (isInit)
+                    $thumbnailsContainer.yoxview("update");
+
+			}
+			
+			setContainerSize();
+			
+			$(window).resize(setContainerSize);
+			$thumbnailsContainer.yoxview({
+				delayOpen: true,
+                enableKeyboard: true,
+				popupMargin: 10,
+                container: popupContainer,
+                //popupPadding: 20,
+                events: {
+                    close: function(){ info.innerHTML = "" },
+                    select: function(e, item){
+                        infoTitle.innerHTML = item.title || "";
+                        itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
+                        document.title = title + (item ? " - " + item.title : "");
+                    },
+                    cacheStart: function(e, item){ loader.style.display = "inline" },
+                    cacheEnd: function(e, item){ loader.style.display = "none" },
+                    init: function(){ this.selectItem(0); },
+                    loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); }
+                },
+				selectedThumbnailClass: "selectedThumbnail",
+                source: [{
+                    url: "https://picasaweb.google.com/105098710956916751721/Trips",
+                    thumbsize: 104,
+                    cropThumbnails: false
+                }],
+                zoom: true,
+                transform: true,
+                transitionTime: 300
+			});
+            isInit = true;
+		</script>
+	</body>
+</html>

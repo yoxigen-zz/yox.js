@@ -1,0 +1,5 @@
+body{ padding: 0; margin: 0; font-family: Calibri, Arial, Sans-Serif;  }
+h1{ font-size: 14pt; color: #fff; margin: 0; padding: 0; display: inline; font-weight: normal }
+header{ height: 35px; line-height: 34px; padding: 0 11px; background: Black; z-index: 2 }
+header a{ color: #aaa; text-decoration: none }
+header a:hover{ color: White }
