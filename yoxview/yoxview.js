@@ -105,7 +105,6 @@
                 position = view.getPosition(item);
 
             view.transition.call(view, $(this), position);
-            
             view.triggerEvent("select", item);
         }
 
@@ -197,7 +196,7 @@
                 elements.$container.css("position", "relative");
 
             if (useFrame){
-                elements.$frame = $("<div>", { class: "yoxviewFrame yoxviewFrame_" + view.options.resizeMode}).appendTo(elements.$container);
+                elements.$frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + view.options.resizeMode}).appendTo(elements.$container);
                 if (transition){
                     elements.$frame.css("transition", "all " + view.options.transitionTime + "ms ease-out");
                     if ($.browser.webkit)
@@ -209,7 +208,7 @@
 
             elements.panels = [];
 			for(var i=0; i<imgCount; i++){
-				var $img = $("<img>", { src: "", class: "yoxviewImg" });
+				var $img = $("<img>", { src: "", "class": "yoxviewImg" });
 				if (i > 0)
 					$img.css({opacity: "0"});
 
@@ -348,15 +347,20 @@
 
                 this.addSources(sources, function(){
                     self.triggerEvent("init", self);
+                    utils.loadImages(self.container[0], function(){
+                        self.triggerEvent("loadThumbnails");
+                    });
                 });
 
                 createViewer(this);
                 
                 // Apply event handlers:
-                this.container.on("click.yoxview", "a:has('img')", function(e){
-                    e.preventDefault();
-                    self.selectItem(self.items[$(e.currentTarget).data("yoxviewIndex") - 1]);
-                });
+                if (this.options.handleThumbnailClick){
+                    this.container.on("click.yoxview", "a:has('img')", function(e){
+                        e.preventDefault();
+                        self.triggerEvent("thumbnailClick", self.items[$(e.currentTarget).data("yoxviewIndex") - 1]);
+                    });
+                }
 
                 if (this.options.selectedThumbnailClass)
                     this.addEventListener("beforeSelect", function(e, data){
@@ -368,7 +372,19 @@
 
                 if (this.options.enableKeyboard)
                     this.enableKeyboard();
-                
+
+                if (this.options.controls){
+                    for(var methodName in this.options.controls){
+                        var method = this[methodName];
+                        if (method){
+                            $(this.options.controls[methodName])
+                                .data("yoxviewControl", methodName)
+                                .on("click", function(e){
+                                    e.preventDefault(); self[$(this).data("yoxviewControl")].call(self);
+                                });
+                        }
+                    }
+                }
                 this.update();
             },
             last: function(){
@@ -434,6 +450,15 @@
                     
                     item = this.items[item];
                 }
+                else{
+                    if (item instanceof HTMLElement)
+                        item = $(item);
+
+                    if (item instanceof jQuery){
+                        item = this.items[item.data("yoxviewIndex") - 1];
+                    }
+                }
+
                 var currentItem = this.currentItem,
                     view = this;
 
@@ -511,6 +536,33 @@
                         $.browser.opera ? "-o-" : "";
 
                 return cssStylePrefix;
+            },
+            loadImages: function(parentEl, onLoad){
+                var images = parentEl.getElementsByTagName("img"),
+                    imgCount = images.length,
+                    loadedCount = 0,
+                    onLoadImg = function(e){
+                        if (e.target.nodeName === "IMG" && ++loadedCount === imgCount){
+                            onLoad(imgCount);
+                            parentEl.removeEventListener("load", onLoadImg, true);
+                        }
+                    },
+                    onLoadImgIE = function(e){
+                        if (++loadedCount === imgCount){
+                            onLoad(imgCount);
+                        }
+                        e.srcElement.detachEvent("onload", onLoadImgIE);
+                    };
+
+                if (parentEl.addEventListener){
+                    images = null;
+                    parentEl.addEventListener("load", onLoadImg, true);
+                }
+                else if (parentEl.attachEvent){
+                    for(var i=imgCount; i--;){
+                        images[i].attachEvent("onload", onLoadImgIE);
+                    }
+                }
             }
         };
     })();
@@ -549,6 +601,7 @@
                     createThumbnail: thumbnailsActions.createThumbnail, // A function that creates a thumbnail element when YoxView generates thumbnails. (Flickr, Picasa, etc.)
                     enableKeyPresses: true, // If set to false, YoxView won't catch any keyboard press events. To change individual keys, use keyPress.
                     enlarge: false, // Whether to enlarge images to fit the container
+                    handleThumbnailClick: true, // Whether clicks on thumbnails should be handled. Set to false to implement clicks using the API.
                     keyPress: { left: "prev", right: "next", up: "prev", down: "next", escape: "close", home: "first", end: "last" }, // Functions to apply on key presses
                     events: { // Predefined event handlers
                         backgroundClick: function(){ $.yoxview.close() },
@@ -556,6 +609,10 @@
                             views.push(this);
                             if (this.options.cacheImagesInBackground)
                                 cache.cacheItem(this);
+                        },
+                        thumbnailClick: function(e, item){
+                            e.preventDefault();
+                            this.selectItem(item);
                         }
                     }, // A function to call when the popup's background is clicked. (Applies only in popup mode)
                     container: docElement, // The element in which the viewer is rendered. Defaults to the whole window.
