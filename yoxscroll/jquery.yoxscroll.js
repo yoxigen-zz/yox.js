@@ -25,78 +25,153 @@
 
     YoxScroll.prototype = (function(){
         var defaults = {
+                events: {
+                    buttonholdstart: function(e, btn){
+                        var $btn = $(btn);
+                        if (this.options.enabledButtonClass)
+                            $btn.addClass(this.options.enabledButtonClass);
+
+                        var methodParams = $btn.data("yoxscroll-method");
+
+                        if (methodParams){
+                            methodParams = methodParams.split("-");
+                            var method = this[methodParams.shift()];
+                            if (method)
+                                method.apply(this, methodParams);
+                        }
+                    },
+                    buttonholdend: function(e, btn){
+                        if (this.options.enabledButtonClass)
+                            $(btn).removeClass(this.options.enabledButtonClass);
+
+                        this.stopScroll();
+                    },
+                    buttonclick: function(e, btn){ console.log("CLICK", arguments); }
+                },
+                float: "left",
                 isHorizontal: true,
-                float: "left"
+                scrollVelocity: 400 // pixels / second
             },
-            mouseDownTimeoutId,
-            mouseDownTimeout = 50,
+            $window = $(window),
             mousedownStartPoint,
             startPosition,
             moved = false,
-            lastMousePosition,
             direction = 0,
             lastSliderPosition,
-            decceleration = 1.5,
-            dragIntervalId,
-            dragInterval = 50,
             currentView,
             mousePos,
-            moveTimeoutId,
-            currentDelta =0,
-            defaultCubicBezier = [0, .42, .36, 1],
-            bezierPoints = [
-                {x: 0, y: 0},
-                {x: defaultCubicBezier[0], y: defaultCubicBezier[1]},
-                {x: defaultCubicBezier[2], y: defaultCubicBezier[3]},
-                {x: 1, y: 1}
-            ],
-            defaultCubicBezierStr = defaultCubicBezier.join(", "),
+            currentDelta = 0,
+            eventTimestamp,
+            currentTimespan,
+            scrollEasing = "cubic-bezier(.15, .03, .15, .16)",
+            //scrollEasing = "linear",
+            decceleration = 2.5,
             isMobile = isMobile(),
-            moveEvent = isMobile ? "touchmove" : "mousemove",
-            downEvent = isMobile ? "touchstart" : "mousedown",
-            upEvent = isMobile ? "touchend" : "mouseup";
-        
+            eventNames = {
+                move: isMobile ? "touchmove" : "mousemove",
+                down: isMobile ? "touchstart" : "mousedown",
+                up: isMobile ? "touchend" : "mouseup"
+            },
+            holdTimeout = 200,
+            holdTimeoutId,
+            heldElement,
+            eventHandlers = {
+                buttonDown: function(e){
+                    e.preventDefault();
+                    var btn = this;
+                    holdTimeoutId = setTimeout(function(){
+                        $window.on(eventNames.up, e.data, eventHandlers.holdEnd);
+                        if (!isMobile)
+                            $window.on("mouseout", e.data, eventHandlers.mouseOut);
+                        e.data.view.triggerEvent("buttonholdstart", btn);
+                        holdTimeoutId = null;
+                        heldElement = btn;
+                    }, holdTimeout);
+                },
+                buttonUp: function(e){
+                    if (holdTimeoutId){
+                        clearTimeout(holdTimeoutId);
+                        e.data.view.triggerEvent("buttonclick", this)
+                        holdTimeoutId = null;
+                    }
+                },
+                holdEnd: function(e){
+                    $window.off(eventNames.up, eventHandlers.holdEnd);
+                    if (!isMobile)
+                        $window.off("mouseout", eventHandlers.mouseOut);
+
+                    e.data.view.triggerEvent("buttonholdend", heldElement);
+                    heldElement = null;
+                    return false;
+                },
+                mouseOut: function(e){
+                    if (!e.relatedTarget) // Fire only if the mouse is out of the window
+                        eventHandlers.holdEnd(e);
+                }
+            };
+
+        var cubicBeziers = (function(){
+            var defaultCubicBezier = [0, .42, .36, 1],
+                defaultCubicBezierPoints = [
+                    new Point(0,0),
+                    new Point(defaultCubicBezier[0], defaultCubicBezier[1]),
+                    new Point(defaultCubicBezier[2], defaultCubicBezier[3]),
+                    new Point(1,1)
+                ],
+                defaultCubicBezierStr = defaultCubicBezier.join(", ");
+
+            function Point(x,y){
+                this.x = x;
+                this.y = y;
+            }
+
+            function splitBezier(V, t){
+                // V: Array of four points of the bezier to split.
+                var Vtemp = [V,[],[],[]],
+                    result = [V[0]];
+
+                /* Triangle computation */
+                for (var i = 1; i <= 3; i++) {
+                    for (j =0 ; j <= 3 - i; j++) {
+                        var point = new Point(
+                            Math.abs(t -1) * Vtemp[i-1][j].x + t * Vtemp[i-1][j+1].x,
+                            Math.abs(t - 1) * Vtemp[i-1][j].y + t * Vtemp[i-1][j+1].y
+                        );
+
+                        Vtemp[i][j] = point;
+                        if (!j)
+                            result.push(point);
+                    }
+                }
+
+                // Expand the bezier fraction into a full bezier by dividing each point by the last:
+                var lastPoint = result[3];
+                for(i=1; i<4;i++){
+                    var point = result[i];
+                    point.x /= lastPoint.x;
+                    point.y /= lastPoint.y;
+                }
+
+                return result;
+            }
+
+            return {
+                getCubicBezier: function(fractionOfDefaultDistance){
+                    if (fractionOfDefaultDistance)
+                        return defaultCubicBezierStr;
+                    else{
+                        var cubicBezierPoints = splitBezier(defaultCubicBezierPoints, fractionOfDefaultDistance);
+                        return [cubicBezierPoints[1].x, cubicBezierPoints[1].y, cubicBezierPoints[2].x, cubicBezierPoints[2].y].join(", ");
+                    }
+                }
+            }
+        })();
+
         function isMobile(){
             var mobilePlatforms = /(Android)|(iPhone)|(iPod)/;
 
             // Consider the platform to be mobile if a predefined string in the userAgent is found or if the screen resolution is very small:
             return mobilePlatforms.test(navigator.userAgent) || (screen.width * screen.height < 400000);
-        }
-
-        function Point(x,y){
-            this.x = x;
-            this.y = y;
-        }
-        function splitBezier(V, t){
-            var Vtemp = [[],[],[],[]],
-                result = [];
-
-            /* Copy control points  */
-
-            for (var j =0; j <= 3; j++)
-              Vtemp[0][j] = V[j];
-
-            /* Triangle computation */
-            for (var i = 1; i <= 3; i++) {
-                for (j =0 ; j <= 3 - i; j++) {
-                    Vtemp[i][j] = new Point(
-                        Math.abs(t -1) * Vtemp[i-1][j].x + (t) * Vtemp[i-1][j+1].x,
-                        Math.abs(t - 1) * Vtemp[i-1][j].y + (t) * Vtemp[i-1][j+1].y
-                    );
-                }                                                   /* end for i */
-            }                                                   /* end for j */
-
-            for (j = 0; j <= 3; j++)
-                result[j]  = Vtemp[j][0];
-
-            var lastPoint = result[3];
-            for(var i=1; i<4;i++){
-                var point = result[i];
-                point.x /= lastPoint.x;
-                point.y /= lastPoint.y;
-            }
-
-            return result;
         }
 
 
@@ -105,21 +180,29 @@
             startPosition = parseInt(this.elements.$slider.css("left"), 10);
         }
 
-        function dragSlider(e){
+        function dragSlider(event, $slider, minPosition){
+            var timespan = (event.timeStamp || new Date()) - eventTimestamp;
+            if (!timespan)
+                return false;
+            currentTimespan = timespan;
+
+            eventTimestamp = event.timeStamp || new Date();
+            currentDelta = event.pageX - mousePos;
+            mousePos = event.pageX;
+
             var pos = startPosition + mousePos - mousedownStartPoint,
-                //currentDelta = mousePos - (lastMousePosition || mousedownStartPoint),
                 currentDirection = Math.abs(currentDelta) / currentDelta;
 
-            if (pos >= currentView.minPosition && pos <= 0)
-                currentView.elements.$slider.css("left", pos);
+            if (pos >= minPosition && pos <= 0)
+                $slider.css("left", pos);
             else{
                 if (!currentDelta || currentDirection !== direction){
                     resetDrag.call(currentView);
                 }
-                if (pos < currentView.minPosition && lastSliderPosition !== currentView.minPosition)
-                    currentView.elements.$slider.css("left", pos = currentView.minPosition);
+                if (pos < minPosition && lastSliderPosition !== minPosition)
+                    $slider.css("left", pos = minPosition);
                 else if (pos > 0 && lastSliderPosition !== 0)
-                    currentView.elements.$slider.css("left", pos = 0);
+                    $slider.css("left", pos = 0);
 
             }
 
@@ -128,49 +211,44 @@
             lastSliderPosition = pos;
         }
 
-        function trackMousePos(e){
-            var event = isMobile ? window.event.touches[0] : e;
-            currentDelta = event.pageX - mousePos;
-            mousePos = event.pageX;
-        }
-        function move(time, distance){
-            var $slider = this.elements.$slider,
-                newLeft = lastSliderPosition + (distance * direction),
+        // Called on move event:
+        var trackMousePos = isMobile
+            ? function(e){
+                dragSlider(window.event.touches[0], e.data.$slider, e.data.minPosition);
+            }
+            : function(e){
+                dragSlider(e, e.data.$slider, e.data.minPosition)
+            };
+        function move(time, distance, startFromCurrentPosition){
+            var $slider = this.elements.$slider;
+            lastSliderPosition = startFromCurrentPosition ? parseInt($slider.css("left"), 10) : lastSliderPosition;
+            var newLeft = lastSliderPosition + (distance * direction),
                 xFraction = newLeft > 0
-                        ? (distance - newLeft) / distance
-                        : newLeft < currentView.minPosition
-                            ? (distance - currentView.minPosition + newLeft) / distance
-                            : 1;
-            
+                    ? (distance - newLeft) / distance
+                    : newLeft < this.minPosition
+                        ? (distance - this.minPosition + newLeft) / distance
+                        : 1;
+
             if (xFraction !== 0){
                 newLeft = lastSliderPosition + xFraction * distance * direction;
 				time = xFraction * time;
-				var cubicBezier;
-				if (xFraction !== 1){
-					var cubicBezierPoints = splitBezier(bezierPoints, xFraction);
-					cubicBezier = [cubicBezierPoints[1].x, cubicBezierPoints[1].y, cubicBezierPoints[2].x, cubicBezierPoints[2].y].join(", ");
-				}
-				else
-					cubicBezier = defaultCubicBezierStr;
+				var cubicBezier = cubicBeziers.getCubicBezier(xFraction);
 
                 $slider.css({ transition: "left " + time + "s cubic-bezier(" + cubicBezier + ")", left: newLeft });
             }
         }
 
         function onMouseUp(e){
-            clearInterval(dragIntervalId);
-            currentView.elements.$window.off(moveEvent, trackMousePos);
+            currentView.elements.$window.off(eventNames.move, trackMousePos);
 
-            //mousePos = undefined;
             currentDirection = 0;
-            
-            //e.data.view.elements.$window.off("mousemove", dragSlider)
-            e.data.view.elements.$window.off(upEvent, onMouseUp);
 
-            if (currentDelta !== 0){console.log(currentDelta);
-                var v = Math.abs(currentDelta) / 50,
-                    distance = Math.round((v*v) * decceleration * 1000),
-                    time = v * decceleration;
+            e.data.view.elements.$window.off(eventNames.up, onMouseUp);
+
+            if (currentDelta !== 0){
+                var v = Math.abs(currentDelta) / (currentTimespan * 7),
+                    time = v * decceleration,
+                    distance = Math.round((v*v) * decceleration * 1000);
 
                 move.call(e.data.view, time, distance);
                 moved = false;
@@ -178,7 +256,7 @@
             }
             return false;
         }
-        
+
         return {
             addEventListener: function(eventName, eventHandler){
                 var self = this;
@@ -205,15 +283,17 @@
 
                 // Merge the options events with the default ones:
                 var optionsEvents = $.extend({}, options.events);
+                delete options.events;
 
+                var viewOptions = $.extend(true, {}, defaults, options);
                 for(var eventName in optionsEvents){
-                    var eventHandlers = options.events[eventName],
+                    var eventHandlers = viewOptions.events[eventName],
                         events = optionsEvents[eventName];
 
                     if (!eventHandlers)
-                        eventHandlers = options.events[eventName] = [];
+                        eventHandlers = viewOptions.events[eventName] = [];
                     else if (!(eventHandlers instanceof Array))
-                        eventHandlers = options.events[eventName] = [eventHandlers];
+                        eventHandlers = viewOptions.events[eventName] = [eventHandlers];
 
                     if (events instanceof Array)
                         eventHandlers = eventHandlers.concat(events);
@@ -221,7 +301,7 @@
                         eventHandlers.push(events);
                 }
 
-                this.options = options = $.extend({}, defaults, options);
+                this.options = options = viewOptions;
 
                 this.$eventsElement = $("<div>");
 
@@ -232,7 +312,7 @@
                 };
                 this.elements = elements;
 
-                if ($.browser.webkit)
+                if ($.browser.webkit) // Enable hardware acceleration in webkit:
                     elements.$slider[0].style.setProperty("-webkit-transform", "translateZ(0)", null);
                 
                 var $container = elements.$container;
@@ -244,50 +324,76 @@
                 elements.$slider.appendTo(elements.$container);
 
                 this.update();
+                this.initEvents();
+                this.initButtons();
 
-                // Init events:
-                for(var eventName in this.options.events){
-                    var eventHandlers = this.options.events[eventName];
-                    if (eventHandlers instanceof Array){
-                        for(var i=0; i < eventHandlers.length; i++){
-                            self.addEventListener(eventName, eventHandlers[i]);
-                        }
-                    }
-                    else
-                        self.addEventListener(eventName, eventHandlers);
-                }
-                
-                elements.$slider.on(downEvent, function(e){
+                elements.$slider.on(eventNames.down, function(e){
+                    var event = isMobile ? window.event.touches[0] : e;
                     e.preventDefault();
-                    mousePos = isMobile ? window.event.touches[0].pageX : e.pageX;
+                    mousePos = event.pageX;
+                    eventTimestamp = event.timeStamp || new Date();
                     resetDrag.call(self, e);
 
                     elements.$slider.css({ transition: "none", left: elements.$slider.css("left") });
                     currentDelta = 0;
                     moved = false;
                     
-                    //mouseDownTimeoutId = setTimeout(function(){
-                        currentView = self;
-                        dragIntervalId = setInterval(dragSlider, dragInterval);
+                    currentView = self;
+                    //dragIntervalId = setInterval(function(){ dragSlider.call(self, self.elements.$slider, self.minPosition); }, dragInterval);
 
-                        elements.$window.on(moveEvent, trackMousePos)
-                            .on(upEvent, { view: self }, onMouseUp);
-                        mouseDownTimeoutId = null;
-                    //}, mouseDownTimeout);
-
+                    elements.$window.on(eventNames.move, { $slider: elements.$slider, minPosition: self.minPosition }, trackMousePos)
+                        .on(eventNames.up, { view: self }, onMouseUp);
                 })
-                .on(upEvent, function(e){
+                .on(eventNames.up, function(e){
                     e.preventDefault();
-                    //clearTimeout(mouseDownTimeoutId);
-                            try{
                     var currentMousePos = mousePos;
-                            } catch(e){ alert(e); }
                     if (!moved || (currentMousePos > mousedownStartPoint - 4 && currentMousePos < mousedownStartPoint + 4) )
                         self.triggerEvent("click", e);
                 })
                 .on("click", function(e){ e.preventDefault(); });
 
                 //console.log("READY");
+            },
+            initButtons: function(){
+                if (!this.options.elements)
+                    return false;
+
+                if (this.options.elements instanceof jQuery){
+                    this.options.elements.on(eventNames.down, { view: this }, eventHandlers.buttonDown)
+                        .on(eventNames.up, { view: this }, eventHandlers.buttonUp);
+                }
+            },
+            initEvents: function(){
+                for(var eventName in this.options.events){
+                    var eventHandlers = this.options.events[eventName];
+                    if (eventHandlers instanceof Array){
+                        for(var i=0; i < eventHandlers.length; i++){
+                            this.addEventListener(eventName, eventHandlers[i]);
+                        }
+                    }
+                    else
+                        this.addEventListener(eventName, eventHandlers);
+                }
+            },
+            scroll: function(dir){
+                direction = dir === "left" ? 1 : -1;
+                var $slider = this.elements.$slider,
+                    currentPosition = parseInt($slider.css("left"), 10),
+                    scrollTarget = direction === 1 ? 0 : this.minPosition,
+                    scrollDistance = Math.abs(scrollTarget - currentPosition),
+                    time = scrollDistance / this.options.scrollVelocity;
+
+                $slider.css("transition", "left " + time + "s " + scrollEasing)
+                    .css("left", scrollTarget);
+            },
+            stopScroll: function(){
+                var v = this.options.scrollVelocity / 20,
+                    time = v / decceleration,
+                    //distance = v * time;
+                    distance = 0;
+
+                time = time / 10;
+                move.call(this, time, distance, true);
             },
             triggerEvent: function(eventName, data){
                 $(this.$eventsElement).trigger(eventName + ".yoxscroll", data);

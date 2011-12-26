@@ -196,7 +196,7 @@
                 elements.$container.css("position", "relative");
 
             if (useFrame){
-                elements.$frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + view.options.resizeMode}).appendTo(elements.$container);
+                elements.$frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + view.options.resizeMode + " yoxviewFrame_" + $.yoxview.platform}).appendTo(elements.$container);
                 if (transition){
                     elements.$frame.css("transition", "all " + view.options.transitionTime + "ms ease-out");
                     if ($.browser.webkit)
@@ -635,6 +635,8 @@
                         cacheBuffer: 2, // The number of images to cache after the current image (directional, depends on the current viewing direction)
                         onBackgroundClick: null,
                         onBeforeOpen: function(){ window.scrollTo(0, 1); },
+                        popupMargin: 0,
+                        popupPadding: 0,
                         showInfo: true,
                         transitionTime: 0 // The time it takes to animate transitions between items or opening and closing.
                     },
@@ -900,7 +902,8 @@
 			},
 			addDataSource: function(dataSource){
                 YoxView.prototype.addDataSource(dataSource);
-			}
+			},
+            platform: platform
 		}
 	})();
 	

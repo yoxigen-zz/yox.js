@@ -15,12 +15,36 @@
 			header{ height: 35px; line-height: 34px; padding: 0 11px; background: Black; z-index: 2 }
             header a{ color: #aaa; text-decoration: none }
             header a:hover{ color: White }
-			#thumbnails{ height: 60px; background: #000; white-space: nowrap  }
+            #thumbnailsPanel{ height: 60px; background: #000; white-space: nowrap  }
+            #thumbnails{ margin: 0 20px; height: 100%; overflow: hidden; }
 			#thumbnails a{ opacity: 0.3; }
 			#thumbnails img{ height: 100%; border: none}
             #thumbnails a.loadedThumbnail{ opacity: 0.5 }
             #thumbnails a.selectedThumbnail, #thumbnails a:hover { opacity: 1; }
 			#thumbnails a.selectedThumbnail img{ opacity: 1 }
+
+            .thumbnailsBtn{
+                width: 27px;
+                height: 100%;
+                background-image: url(img/controls.png);
+                background-repeat: no-repeat;
+                text-decoration: none;
+                line-height: 60px;
+                font-weight: bold;
+                text-align: center;
+                color: #aaa;
+                position: absolute;
+                z-index: 1;
+            }
+
+
+            #thumbnailsLeft{ left: 0; background-position: 0 -100px; }
+            #thumbnailsLeft:hover{ background-position: -27px -100px; }
+            #thumbnailsLeft:active, #thumbnailsLeft.enabledThumbnailsButton{ background-position: -54px -100px }
+            #thumbnailsRight{ right: 0; background-position: 0 -160px; }
+            #thumbnailsRight:hover{ background-position: -27px -160px; }
+            #thumbnailsRight:active, #thumbnailsRight.enabledThumbnailsButton{ background-position: -54px -160px }
+
 			#popupContainer{
                 background: #0d0d0d;
                 overflow: hidden;
@@ -44,7 +68,7 @@
                 height: 129px;
                 top: 50%;
                 margin-top: -64px;
-                background-image: url(img/controls2.png);
+                background-image: url(img/controls.png);
                 background-repeat: no-repeat;
                 position: absolute;
                 z-index: 2;
@@ -53,8 +77,8 @@
                 -webkit-transition: opacity 200ms ease-out;
             }
             .yoxviewControlBtn:hover{ opacity: .6 }
-            .yoxviewControlBtn_prev{ background-position: -65px 0; left: 0; }
-            .yoxviewControlBtn_next{ background-position: 3px 0; right: 0; }
+            .yoxviewControlBtn_prev{ background-position: 0px 38px; left: 0; }
+            .yoxviewControlBtn_next{ background-position: -68px 38px; right: 0; }
 		</style>
 	</head>
 	<body>
@@ -68,9 +92,14 @@
             <h2 id="infoTitle"></h2>
             <img id="loader" src="img/loader.gif" alt="Loading" />
         </div>
-        <div id="thumbnails" class="thumbnails yoxview"></div>
+        <div id="thumbnailsPanel">
+            <a href="#" id="thumbnailsLeft" class="thumbnailsBtn" data-yoxscroll-method="scroll-left"></a>
+            <a href="#" id="thumbnailsRight" class="thumbnailsBtn" data-yoxscroll-method="scroll-right"></a>
+            <div id="thumbnails" class="thumbnails yoxview"></div>
+        </div>
 		<script type="text/javascript">
 			var popupContainer =  document.getElementById("popupContainer"),
+                $thumbnailsPanel = $("#thumbnailsPanel"),
                 $thumbnailsContainer = $("#thumbnails"),
 				docElement = document.documentElement,
 				info = document.getElementById("info"),
@@ -78,7 +107,7 @@
                 loader = document.getElementById("loader"),
                 itemCounter = document.getElementById("itemCounter"),
                 isInit,
-                heightToSubtract = document.getElementsByTagName("header")[0].clientHeight + info.clientHeight + $thumbnailsContainer.height() +2,
+                heightToSubtract = document.getElementsByTagName("header")[0].clientHeight + info.clientHeight + $thumbnailsPanel.height() +2,
                 title = document.title;
 				
 			function setContainerSize(){
@@ -120,7 +149,9 @@
                         $thumbnailsContainer.yoxscroll({
                             events: {
                                 click: function(e, originalEvent){ $thumbnailsContainer.yoxview("selectItem", originalEvent.target.parentNode); }
-                            }
+                            },
+                            elements: $(".thumbnailsBtn"),
+                            enabledButtonClass: "enabledThumbnailsButton"
                         });
                     }
                 },
