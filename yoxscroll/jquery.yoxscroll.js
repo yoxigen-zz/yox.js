@@ -27,30 +27,20 @@
         var defaults = {
                 events: {
                     buttonholdstart: function(e, btn){
-                        var $btn = $(btn);
-                        if (this.options.enabledButtonClass)
-                            $btn.addClass(this.options.enabledButtonClass);
-
-                        var methodParams = $btn.data("yoxscroll-method");
-
-                        if (methodParams){
-                            methodParams = methodParams.split("-");
-                            var method = this[methodParams.shift()];
-                            if (method)
-                                method.apply(this, methodParams);
-                        }
+                        applyButtonMethod.call(this, btn, "holdstart");
                     },
                     buttonholdend: function(e, btn){
-                        if (this.options.enabledButtonClass)
-                            $(btn).removeClass(this.options.enabledButtonClass);
-
                         this.stopScroll();
                     },
-                    buttonclick: function(e, btn){ console.log("CLICK", arguments); }
+                    buttonclick: function(e, btn){
+                        applyButtonMethod.call(this, btn, "click");
+                    }
                 },
                 float: "left",
                 isHorizontal: true,
-                scrollVelocity: 400 // pixels / second
+                scrollByTime: .5, // The time, in seconds, it takes the scroll to complete, when a page / scrollBy command is given
+                scrollToEasing: "ease-in-out",
+                scrollVelocity: 500 // pixels / second
             },
             $window = $(window),
             mousedownStartPoint,
@@ -78,7 +68,12 @@
             eventHandlers = {
                 buttonDown: function(e){
                     e.preventDefault();
-                    var btn = this;
+                    var btn = this,
+                        pressedButtonClass = e.data.view.options.pressedButtonClass;
+
+                    if (pressedButtonClass)
+                        $(btn).addClass(pressedButtonClass);
+
                     holdTimeoutId = setTimeout(function(){
                         $window.on(eventNames.up, e.data, eventHandlers.holdEnd);
                         if (!isMobile)
@@ -89,6 +84,10 @@
                     }, holdTimeout);
                 },
                 buttonUp: function(e){
+                    var pressedButtonClass = e.data.view.options.pressedButtonClass;
+                    if (pressedButtonClass)
+                        $(this).removeClass(pressedButtonClass);
+
                     if (holdTimeoutId){
                         clearTimeout(holdTimeoutId);
                         e.data.view.triggerEvent("buttonclick", this)
@@ -174,6 +173,16 @@
             return mobilePlatforms.test(navigator.userAgent) || (screen.width * screen.height < 400000);
         }
 
+        function applyButtonMethod(btn, event){
+            var methodParams = $(btn).data("yoxscroll-" + event);
+
+            if (methodParams){
+                methodParams = methodParams.split("-");
+                var method = this[methodParams.shift()];
+                if (method)
+                    method.apply(this, methodParams);
+            }
+        }
 
         function resetDrag(e){
             mousedownStartPoint = mousePos;
@@ -246,7 +255,7 @@
             e.data.view.elements.$window.off(eventNames.up, onMouseUp);
 
             if (currentDelta !== 0){
-                var v = Math.abs(currentDelta) / (currentTimespan * 7),
+                var v = Math.min(Math.abs(currentDelta) / (currentTimespan * 7), 0.86),
                     time = v * decceleration,
                     distance = Math.round((v*v) * decceleration * 1000);
 
@@ -375,16 +384,32 @@
                         this.addEventListener(eventName, eventHandlers);
                 }
             },
+            page: function(dir){
+                dir = dir === "left" ? 1 : -1;
+                this.scrollBy(dir * this.containerSize);
+            },
+            // Scrolls the view until it reaches the limit. Scrolling can be stopped with stopScroll().
             scroll: function(dir){
                 direction = dir === "left" ? 1 : -1;
+                this.scrollTo(direction === 1 ? 0 : this.minPosition, scrollEasing);
+            },
+            scrollBy: function(distance){
+                this.scrollTo(distance, null, true, this.options.scrollByTime);
+            },
+            scrollTo: function(scrollPosition, easing, isRelative, time){
                 var $slider = this.elements.$slider,
-                    currentPosition = parseInt($slider.css("left"), 10),
-                    scrollTarget = direction === 1 ? 0 : this.minPosition,
-                    scrollDistance = Math.abs(scrollTarget - currentPosition),
-                    time = scrollDistance / this.options.scrollVelocity;
+                    currentPosition = parseInt($slider.css("left"), 10);
 
-                $slider.css("transition", "left " + time + "s " + scrollEasing)
-                    .css("left", scrollTarget);
+                if (isRelative)
+                    scrollPosition += currentPosition;
+
+                scrollPosition = Math.min(Math.max(scrollPosition, this.minPosition), 0);
+                if (time === undefined){
+                    var scrollDistance = Math.abs(scrollPosition - currentPosition);
+                    time = scrollDistance / this.options.scrollVelocity;
+                }
+                $slider.css("transition", "left " + time + "s " + (easing || this.options.scrollToEasing))
+                    .css("left", scrollPosition);
             },
             stopScroll: function(){
                 var v = this.options.scrollVelocity / 20,
@@ -401,7 +426,8 @@
             update: function(){
                 var sliderWidth = this.calculateSliderSize();
                 this.elements.$slider.width(sliderWidth);
-                this.minPosition = this.elements.$container.width() - sliderWidth;
+                this.containerSize = this.elements.$container.width();
+                this.minPosition = this.containerSize - sliderWidth;
             }
         };
     })();

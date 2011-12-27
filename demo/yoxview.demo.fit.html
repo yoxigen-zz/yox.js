@@ -93,8 +93,8 @@
             <img id="loader" src="img/loader.gif" alt="Loading" />
         </div>
         <div id="thumbnailsPanel">
-            <a href="#" id="thumbnailsLeft" class="thumbnailsBtn" data-yoxscroll-method="scroll-left"></a>
-            <a href="#" id="thumbnailsRight" class="thumbnailsBtn" data-yoxscroll-method="scroll-right"></a>
+            <a href="#" id="thumbnailsLeft" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-left" data-yoxscroll-click="page-left"></a>
+            <a href="#" id="thumbnailsRight" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-right" data-yoxscroll-click="page-right"></a>
             <div id="thumbnails" class="thumbnails yoxview"></div>
         </div>
 		<script type="text/javascript">
@@ -151,7 +151,7 @@
                                 click: function(e, originalEvent){ $thumbnailsContainer.yoxview("selectItem", originalEvent.target.parentNode); }
                             },
                             elements: $(".thumbnailsBtn"),
-                            enabledButtonClass: "enabledThumbnailsButton"
+                            pressedButtonClass: "enabledThumbnailsButton"
                         });
                     }
                 },
@@ -162,10 +162,9 @@
                     thumbsize: 104,
                     cropThumbnails: false
                 }, {
-                    url: "https://picasaweb.google.com/105098710956916751721/xrCvoB",
+                    url: "https://picasaweb.google.com/105098710956916751721/Plants",
                     thumbsize: 104,
-                    cropThumbnails: false,
-                    authkey: "Gv1sRgCJ7LkvmYpdjwAg"
+                    cropThumbnails: false
                 }],
                 zoom: true,
                 transform: true,
