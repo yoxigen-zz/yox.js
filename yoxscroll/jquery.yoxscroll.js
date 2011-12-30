@@ -40,6 +40,7 @@
                 isHorizontal: true,
                 scrollByTime: .5, // The time, in seconds, it takes the scroll to complete, when a page / scrollBy command is given
                 scrollToEasing: "ease-in-out",
+                scrollToElementTime: .2, // The time, in seconds, it takes the scroll to complete when scrollTo is called with an HTML element or jQuery object
                 scrollVelocity: 500 // pixels / second
             },
             $window = $(window),
@@ -391,16 +392,44 @@
             // Scrolls the view until it reaches the limit. Scrolling can be stopped with stopScroll().
             scroll: function(dir){
                 direction = dir === "left" ? 1 : -1;
-                this.scrollTo(direction === 1 ? 0 : this.minPosition, scrollEasing);
+                this.scrollTo(direction === 1 ? 0 : this.minPosition, { easing: scrollEasing});
             },
             scrollBy: function(distance){
-                this.scrollTo(distance, null, true, this.options.scrollByTime);
+                this.scrollTo(distance, { isRelative: true, time: this.options.scrollByTime});
             },
-            scrollTo: function(scrollPosition, easing, isRelative, time){
+            scrollTo: function(scrollPosition, scrollOptions){
+                scrollOptions = scrollOptions || {};
                 var $slider = this.elements.$slider,
-                    currentPosition = parseInt($slider.css("left"), 10);
+                    currentPosition = parseInt($slider.css("left"), 10),
+                    isJquery = scrollPosition instanceof jQuery,
+                    $item = isJquery ? scrollPosition : undefined,
+                    time = scrollOptions.time;
 
-                if (isRelative)
+                if (scrollPosition instanceof HTMLElement){
+                    $item = $(scrollPosition);
+                    isJquery = true;
+                }
+
+                if (isJquery){
+                    var itemPosition = $item.position().left,
+                        itemWidth = $item.width();
+
+                    if (scrollOptions.centerElement){
+                        scrollPosition =  (this.containerSize - itemWidth) / 2 - itemPosition;
+                    }
+                    else{
+                        var itemPositionRelativeToContainer = itemPosition + currentPosition;
+                        if (itemPositionRelativeToContainer + itemWidth > this.containerSize)
+                            scrollPosition = this.containerSize - itemPosition - itemWidth;
+                        else if (itemPositionRelativeToContainer < 0)
+                            scrollPosition = itemPosition * -1;
+                        else
+                            return false;
+                    }
+                    time = time || this.options.scrollToElementTime;
+
+                }
+                if (scrollOptions.isRelative)
                     scrollPosition += currentPosition;
 
                 scrollPosition = Math.min(Math.max(scrollPosition, this.minPosition), 0);
@@ -408,7 +437,7 @@
                     var scrollDistance = Math.abs(scrollPosition - currentPosition);
                     time = scrollDistance / this.options.scrollVelocity;
                 }
-                $slider.css("transition", "left " + time + "s " + (easing || this.options.scrollToEasing))
+                $slider.css("transition", "left " + time + "s " + (scrollOptions.easing || this.options.scrollToEasing))
                     .css("left", scrollPosition);
             },
             stopScroll: function(){

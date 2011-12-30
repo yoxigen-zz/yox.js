@@ -421,13 +421,27 @@
                     }
                 }
             },
-            next: function(){
-             if (!this.currentItem)
+            next: function(slideshow){
+                if (!this.currentItem)
 					return false;
 
                 this.direction = 1;
 				var nextItemId = this.currentItem.id === this.items.length ? 0 : this.currentItem.id;
-				this.selectItem(nextItemId);
+				this.selectItem(nextItemId, undefined, slideshow);
+            },
+            toggleSlideshow: function(){
+                var view = this;
+
+                if (this.isPlaying){
+                    clearTimeout(this.playTimeoutId);
+                    this.isPlaying = false;
+                    this.triggerEvent("slideshowStop");
+                }
+                else{
+                    this.isPlaying = true;
+                    this.playTimeoutId = setTimeout(function(){ view.next.call(view, true) }, this.options.slideshowDelay);
+                    this.triggerEvent("slideshowStart");
+                }
             },
             prev: function(){
                 if (!this.currentItem)
@@ -443,7 +457,14 @@
 
                 $(this.container).off(eventName + ".yoxview", eventHandler);
             },
-            selectItem: function(item){
+            selectItem: function(item, data, slideshow){
+                if (!slideshow && this.isPlaying)
+                    this.toggleSlideshow();
+                else if (slideshow && !this.isPlaying){
+                    this.isPlaying = true;
+                    this.triggerEvent("slideshowStart");
+                }
+
                 if (!isNaN(item)){
                     if (item >= this.items.length)
                         throw new Error("Invalid item index.");
@@ -465,7 +486,7 @@
                 if (currentItem && item.id === currentItem.id)
 					return false;
 
-                this.triggerEvent("beforeSelect", { newItem: item, oldItem: currentItem });
+                this.triggerEvent("beforeSelect", [{ newItem: item, oldItem: currentItem }, data]);
 				this.currentItem = item;
                 this.cache.withItem(item, this, function(){
                     var $panel = this.getPanel(true);
@@ -602,13 +623,18 @@
                     enableKeyPresses: true, // If set to false, YoxView won't catch any keyboard press events. To change individual keys, use keyPress.
                     enlarge: false, // Whether to enlarge images to fit the container
                     handleThumbnailClick: true, // Whether clicks on thumbnails should be handled. Set to false to implement clicks using the API.
-                    keyPress: { left: "prev", right: "next", up: "prev", down: "next", escape: "close", home: "first", end: "last" }, // Functions to apply on key presses
+                    keyPress: { left: "prev", right: "next", up: "prev", down: "next", escape: "close", home: "first", end: "last", enter: "toggleSlideshow" }, // Functions to apply on key presses
                     events: { // Predefined event handlers
                         backgroundClick: function(){ $.yoxview.close() },
                         init: function(){
                             views.push(this);
                             if (this.options.cacheImagesInBackground)
                                 cache.cacheItem(this);
+                        },
+                        select: function(e, item){
+                            var view = this;
+                            if (this.isPlaying)
+                                this.playTimeoutId = setTimeout(function(){ view.next.call(view, true); }, this.options.slideshowDelay);
                         },
                         thumbnailClick: function(e, item){
                             e.preventDefault();
@@ -617,6 +643,7 @@
                     }, // A function to call when the popup's background is clicked. (Applies only in popup mode)
                     container: docElement, // The element in which the viewer is rendered. Defaults to the whole window.
                     resizeMode: "fit", // The mode in which to resize the item in the container - 'fit' (shows the whole item, resized to fit inside the container) or 'fill' (fills the entire container).
+                    slideshowDelay: 3000, // Time in milliseconds to display each image when in slideshow
                     storeDataSources: false // Whether to save to localStorage (if available) external data sources data, so as not to fetch it each time YoxView loads.
                 },
                 mode: {

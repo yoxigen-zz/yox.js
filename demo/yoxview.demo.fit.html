@@ -1,7 +1,7 @@
 ﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
-		<title>YoxView 3.0 Demo - Basic Usage</title>
+		<title>YoxView 3.0 Demo</title>
 		<link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
         <link rel="Stylesheet" type="text/css" href="../yoxscroll/yoxscroll.css" />
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
@@ -58,9 +58,37 @@
                 line-height: 28px;
                 text-align: left;
             }
-            #itemCounter{ color: #666; font-size: 0.8em; float: left; height: 100%; display: block; width: 50px; text-align: center; }
-            #infoTitle{ display: inline; font-size: 12pt; margin: 0; padding: 0; font-weight: normal;  float: left; height: 100%; display: block;}
-            #loader{ float: right; width: 16px; height: 16px; margin-top: 6px; margin-right: 6px; display: none }
+            #itemCounter{ color: #666; font-size: 0.8em; float: right; height: 100%; display: block; width: 50px; text-align: center; border-right: solid 1px #000 }
+            #infoTitle{ font-size: 12pt; margin: 0; padding: 0 0 0 10px; font-weight: normal;  float: left; height: 100%; display: block;}
+            #loader{
+                background: url("img/ajax-loader.gif") no-repeat scroll center center White;
+                border-radius: 50% 50% 50% 50%;
+                box-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
+                height: 60px;
+                left: 50%;
+                margin-left: -30px;
+                margin-top: -30px;
+                opacity: .6;
+                position: absolute;
+                top: 50%;
+                width: 60px;
+                z-index: 20;
+                display: none;
+            }
+
+            #slideshowBtn{
+                border-left: 1px solid #282828;
+                color: #666666;
+                display: block;
+                float: right;
+                font-size: 0.8em;
+                height: 100%;
+                text-align: center;
+                text-decoration: none;
+                width: 70px;
+            }
+            #slideshowBtn:hover, #slideshowBtn.slideshowBtn_on{ box-shadow: 0 2px 10px rgba(0,0,0,0.4) inset; color: #ddd; background: #222 }
+            #slideshowBtn.slideshowBtn_on{ color: White; }
 
             .yoxviewControlBtn{
                 display: block;
@@ -82,15 +110,16 @@
 		</style>
 	</head>
 	<body>
-		<header><h1>YoxView 3.0 Demo - Basic usage</h1><a style="float:right" href="yoxview.demo.fill.html">Fill demo</a></header>
+		<header><h1>YoxView 3.0 Demo - Basic usage</h1></header>
 		<div id="popupContainer">
             <a href="#" title="Previous" class="yoxviewControlBtn yoxviewControlBtn_prev" id="yoxviewPrev"></a>
             <a href="#" title="Next" class="yoxviewControlBtn yoxviewControlBtn_next" id="yoxviewNext"></a>
+            <div id="loader"></div>
 		</div>
         <div id="info">
-            <span id="itemCounter"></span>
             <h2 id="infoTitle"></h2>
-            <img id="loader" src="img/loader.gif" alt="Loading" />
+            <a href="#" id="slideshowBtn">Slideshow</a>
+            <span id="itemCounter"></span>
         </div>
         <div id="thumbnailsPanel">
             <a href="#" id="thumbnailsLeft" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-left" data-yoxscroll-click="page-left"></a>
@@ -101,6 +130,7 @@
 			var popupContainer =  document.getElementById("popupContainer"),
                 $thumbnailsPanel = $("#thumbnailsPanel"),
                 $thumbnailsContainer = $("#thumbnails"),
+                $slideshowBtn = $("#slideshowBtn"),
 				docElement = document.documentElement,
 				info = document.getElementById("info"),
                 infoTitle = document.getElementById("infoTitle"),
@@ -124,6 +154,11 @@
                 setContainerSize();
                 $thumbnailsContainer.yoxscroll("update");
             });
+
+            $slideshowBtn.on("click", function(e){
+                $thumbnailsContainer.yoxview("toggleSlideshow");
+            });
+
 			$thumbnailsContainer.yoxview({
 				delayOpen: true,
                 enableKeyboard: true,
@@ -135,11 +170,18 @@
                 },
                 //popupPadding: 20,
                 events: {
+                    beforeSelect: function(e, items, data){
+                        try{
+                            $thumbnailsContainer.yoxscroll("scrollTo", items.newItem.thumbnail.element, { centerElement: !data });
+                        }
+                        catch(e){ }
+                    },
                     close: function(){ info.innerHTML = "" },
                     select: function(e, item){
                         infoTitle.innerHTML = item.title || "";
                         itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
                         document.title = title + (item ? " - " + item.title : "");
+
                     },
                     cacheStart: function(e, item){ loader.style.display = "inline" },
                     cacheEnd: function(e, item){ loader.style.display = "none" },
@@ -148,12 +190,14 @@
                     loadThumbnails: function(e){
                         $thumbnailsContainer.yoxscroll({
                             events: {
-                                click: function(e, originalEvent){ $thumbnailsContainer.yoxview("selectItem", originalEvent.target.parentNode); }
+                                click: function(e, originalEvent){ $thumbnailsContainer.yoxview("selectItem", originalEvent.target.parentNode, "yoxscroll"); }
                             },
                             elements: $(".thumbnailsBtn"),
                             pressedButtonClass: "enabledThumbnailsButton"
                         });
-                    }
+                    },
+                    slideshowStop: function(){ $slideshowBtn.removeClass("slideshowBtn_on"); },
+                    slideshowStart: function(){ $slideshowBtn.addClass("slideshowBtn_on"); }
                 },
                 handleThumbnailClick: false,
 				selectedThumbnailClass: "selectedThumbnail",
@@ -161,7 +205,8 @@
                     url: "https://picasaweb.google.com/105098710956916751721/Trips",
                     thumbsize: 104,
                     cropThumbnails: false
-                }, {
+                },
+                {
                     url: "https://picasaweb.google.com/105098710956916751721/Plants",
                     thumbsize: 104,
                     cropThumbnails: false
