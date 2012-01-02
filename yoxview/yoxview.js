@@ -104,7 +104,7 @@
                 item = view.currentItem,
                 position = view.getPosition(item);
 
-            view.transition.call(view, $(this), position);
+            view.transition.call(view, position);
             view.triggerEvent("select", item);
         }
 
@@ -147,6 +147,69 @@
                 };
             }
         };
+
+        var transitions = {
+            morph: (function(){
+                var $frame,
+                    panels,
+                    currentPanelIndex = 1,
+                    defaultTransitionTime,
+                    currentTransitionTime;
+
+                return {
+                    create: function($container){
+                        var view = this;
+                        $frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + this.options.resizeMode + " yoxviewFrame_" + $.yoxview.platform}).appendTo($container);
+                        if (this.options.transitionTime){
+                            currentTransitionTime = this.options.transitionTime;
+                            defaultTransitionTime = this.options.transitionTime;
+                            $frame.css("transition", "all " + defaultTransitionTime + "ms ease-out");
+                            if ($.browser.webkit)
+                                $frame[0].style.setProperty("-webkit-transform", "translateZ(0)");
+                        }
+
+                        panels = [];
+                        for(var i=0; i<2; i++){
+                            var $img = $("<img>", { src: "", "class": "yoxviewImg" });
+                            if (i > 0)
+                                $img.css({opacity: "0"});
+
+                            $img.css({ transition: ["all ", this.options.transitionTime, "ms ease-out"].join("") });
+                            if ($.browser.webkit)
+                                $img[0].style.setProperty("-webkit-transform", "translateZ(0)");
+
+                            $img.on("load", { view: view }, onImageLoad);
+                            panels.push($img.appendTo($frame));
+                        }
+                    },
+                    getPanel: function(item){
+                        currentPanelIndex = currentPanelIndex ? 0 : 1;
+                        return panels[currentPanelIndex];
+                    },
+                    transition: function(position, time){
+                        var panelCss = { opacity: currentPanelIndex },
+                            frameCss = $.extend({}, position);
+
+                        if (time !== undefined){
+                            if (isNaN(time))
+                                throw new TypeError("Invalid value for transition time, must be a number (in milliseconds).");
+                        }
+                        else
+                            time = defaultTransitionTime;
+
+                        if (time !== currentTransitionTime){
+                            panelCss.transition = "opacity " + time + "ms ease-out";
+                            frameCss.transition = "all " + time + "ms ease-out";
+                            currentTransitionTime = time;
+                        }
+
+                        panels[1].css("opacity", currentPanelIndex);
+                        $frame.css(frameCss);
+                    }
+                };
+            })()
+        };
+
         var keyboard = {
 			map: {
 	            40: 'down',
@@ -178,9 +241,7 @@
 
         function createViewer(view){
             var elements = {},
-                isFill = view.options.resizeMode === "fill",
-                transition = !!view.options.transitionTime,
-                useFrame = !isFill;
+                isFill = view.options.resizeMode === "fill";
 
             elements.$container = $(view.options.container);
 
@@ -195,58 +256,17 @@
             else if (elements.$container.css("position") === "static")
                 elements.$container.css("position", "relative");
 
-            if (useFrame){
-                elements.$frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + view.options.resizeMode + " yoxviewFrame_" + $.yoxview.platform}).appendTo(elements.$container);
-                if (transition){
-                    elements.$frame.css("transition", "all " + view.options.transitionTime + "ms ease-out");
-                    if ($.browser.webkit)
-                        elements.$frame[0].style.setProperty("-webkit-transform", "translateZ(0)");
-                }
-            }
-            var imgCount = 2,
-                panelsParent = elements.$frame || elements.$container;
+            var transitionMode = typeof view.options.transition === "string" ? transitions[view.options.transition] : view.options.transition;
+            if (!transitionMode)
+                throw new Error("Invalid transition - \"" + view.options.transition + "\" doesn't exist.");
 
-            elements.panels = [];
-			for(var i=0; i<imgCount; i++){
-				var $img = $("<img>", { src: "", "class": "yoxviewImg" });
-				if (i > 0)
-					$img.css({opacity: "0"});
-
-                if (transition){
-                    $img.css({ transition: [(isFill ? "opacity" : "all"), " ", view.options.transitionTime, "ms ease-out"].join("") });
-                    if ($.browser.webkit)
-                        $img[0].style.setProperty("-webkit-transform", "translateZ(0)");
-                }
-
-                $img.on("load", { view: view }, onImageLoad);
-				elements.panels.push($img.appendTo(panelsParent));
-			}
-
-            view.elements = elements;
-            view.getPanel = function(switchPanels){
-                if (switchPanels)
-                    this.currentPanelIndex = this.currentPanelIndex ? 0 : 1;
-                
-                return this.elements.panels[this.currentPanelIndex];
-            };
-            view.getPosition = resizeCalculateFunctions[view.options.resizeMode];
-            view.transition = useFrame
-                ? function($panel, position){
-                    this.elements.panels[1].css("opacity", this.currentPanelIndex);
-                    this.elements.$frame.css(position);
-                }
-                : function($panel, position){
-                    this.elements.panels[1].css("opacity", this.currentPanelIndex);
-                    $panel.css(position);
-                };
-            view.setTransitionTime = function(time){
-                if (useFrame)
-                    this.elements.$frame.css("transition", time ? "all " + time + "ms ease-out" : "none");
-
-                for(var i=this.elements.panels.length; i--;){
-                    this.elements.panels[i].css("transition", time ? [(isFill ? "opacity" : "all"), " ",time, "ms ease-out"].join("") : "none");
-                }
-            }
+            transitionMode.create.call(view, elements.$container);
+            $.extend(view, {
+                getPanel: transitionMode.getPanel,
+                transition: transitionMode.transition,
+                getPosition: resizeCalculateFunctions[view.options.resizeMode],
+                elements: elements
+            });
         }
 
         return {
@@ -531,15 +551,14 @@
                         clearTimeout(this.updateTransitionTimeoutId);
                         this.updateTransitionTimeoutId = null;
                     }
-                    this.setTransitionTime();
-                    this.updateTransitionTimeoutId = setTimeout(function(){ self.setTransitionTime(self.options.transitionTime); delete self.updateTransitionTimeoutId; }, self.options.transitionTime);
+                    //this.setTransitionTime();
+                    //this.updateTransitionTimeoutId = setTimeout(function(){ self.setTransitionTime(self.options.transitionTime); delete self.updateTransitionTimeoutId; }, self.options.transitionTime);
                 }
                 var containerDimensions = { width: this.elements.$container.width(), height: this.elements.$container.height() };
                 if (!this.containerDimensions || containerDimensions.width !== this.containerDimensions.width || containerDimensions.height !== this.containerDimensions.height){
                     this.containerDimensions = containerDimensions;
                     if (this.currentItem){
-
-                        this.transition(this.getPanel(), this.getPosition(this.currentItem));
+                        this.transition(this.getPosition(this.currentItem), 0);
                     }
                 }
             }
@@ -645,6 +664,7 @@
                     resizeMode: "fit", // The mode in which to resize the item in the container - 'fit' (shows the whole item, resized to fit inside the container) or 'fill' (fills the entire container).
                     slideshowDelay: 3000, // Time in milliseconds to display each image when in slideshow
                     storeDataSources: false // Whether to save to localStorage (if available) external data sources data, so as not to fetch it each time YoxView loads.
+
                 },
                 mode: {
                     fill: {
@@ -653,7 +673,7 @@
                         popupPadding: 0
                     },
                     fit: {
-
+                        transition: "morph"
                     }
                 },
                 platform: {

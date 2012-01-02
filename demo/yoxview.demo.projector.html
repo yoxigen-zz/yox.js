@@ -3,40 +3,68 @@
 	<head>
 		<title>YoxView 3.0 Demo</title>
 		<link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
-        <link rel="Stylesheet" type="text/css" href="../yoxscroll/yoxscroll.css" />
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 		<script type="text/javascript" src="../yoxview/yoxview.js"></script>
-        <script type="text/javascript" src="../yoxscroll/jquery.yoxscroll.js"></script>
-		<script type="text/javascript" src="../yoxview/datasources/yoxview.data.element.js"></script>
         <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
 		<style>
 			body{ padding: 0; margin: 0; font-family: Calibri, Arial, Sans-Serif; overflow: hidden;  }
-			h1{ font-size: 14pt; color: #fff; margin: 0; padding: 0; display: inline; font-weight: normal }
-			header{ height: 35px; line-height: 34px; padding: 0 11px; background: Black; z-index: 2 }
+			h1{ font-size: 14pt; color: #666; margin: 0; padding: 0; display: inline; font-weight: normal }
+			header{ height: 35px; line-height: 34px; padding: 0 11px; z-index: 2; box-shadow: 1px 1px 10px rgba(0,0,0,0.2) }
             header a{ color: #aaa; text-decoration: none }
             header a:hover{ color: White }
-            #thumbnailsPanel{ height: 60px; background: #000; white-space: nowrap  }
-            #thumbnails{ margin: 0 20px; height: 100%; overflow: hidden; }
-			#thumbnails a{ opacity: 0.3; }
-			#thumbnails img{ height: 100%; border: none}
-            #thumbnails a.loadedThumbnail{ opacity: 0.5 }
-            #thumbnails a.selectedThumbnail, #thumbnails a:hover { opacity: 1; }
-			#thumbnails a.selectedThumbnail img{ opacity: 1 }
+
+            #thumbnailsPanel{
+                background: White;
+                height: 100%;
+                left: 0;
+                opacity: 0;
+                position: absolute;
+                top: 0;
+                width: 100%;
+                z-index: 21;
+                -moz-transition: opacity 300ms ease-out;
+                -webkit-transition: opacity 300ms ease-out;
+            }
+            #thumbnails{ z-index: 31; bottom: 20px; left: 50%; position: absolute;}
+			#thumbnails a{
+                position: absolute;
+                width: 72px;
+                height: 72px;
+                border-radius: 50%;
+                overflow: hidden;
+                left: 50%;
+                top: 50%;
+                margin-left: -36px;
+                margin-top: -48px;
+                z-index: 31;
+                -moz-transition: all 300ms ease-out;
+                -webkit-transition: all 300ms ease-out;
+                border: solid 1px Black;
+                box-shadow: 0 0 10px rgba(0,0,0,0.7);
+                opacity: 0;
+                -webkit-transform: translateZ(0);
+                background: url("img/ajax-loader.gif") no-repeat scroll center center White;
+            }
+			#thumbnails img{ height: 100%; border-radius: 50%; }
+            #thumbnails a.selectedThumbnail, #thumbnails a:hover { width: 82px; height: 82px; margin-left: -41px; margin-top: -53px; }
 
             .thumbnailsBtn{
-                width: 27px;
-                height: 100%;
-                background-image: url(img/controls.png);
-                background-repeat: no-repeat;
-                text-decoration: none;
-                line-height: 60px;
-                font-weight: bold;
+                display: block;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                box-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
+                color: #666;
                 text-align: center;
-                color: #aaa;
+                line-height: 40px;
                 position: absolute;
-                z-index: 1;
+                bottom: 20px;
+                left: 50%;
+                margin-left: -20px;
+                z-index: 32;
+                text-decoration: none;
             }
-
+            .thumbnailsBtn:hover{ background: #ddd }
 
             #thumbnailsLeft{ left: 0; background-position: 0 -100px; }
             #thumbnailsLeft:hover{ background-position: -27px -100px; }
@@ -46,17 +74,16 @@
             #thumbnailsRight:active, #thumbnailsRight.enabledThumbnailsButton{ background-position: -54px -160px }
 
 			#popupContainer{
-                background: #0d0d0d;
                 overflow: hidden;
             }
 			#info{
-                background: none repeat scroll 0 0 #0A0A0A;
-                border-bottom: 1px solid #282828;
-                border-top: 1px solid #151515;
+                border-bottom: 1px solid #ddd;
+                border-top: 1px solid #ddd;
                 color: White;
                 height: 29px;
                 line-height: 28px;
                 text-align: left;
+                display: none;
             }
             #itemCounter{ color: #666; font-size: 0.8em; float: right; height: 100%; display: block; width: 50px; text-align: center; border-right: solid 1px #000 }
             #infoTitle{ font-size: 12pt; margin: 0; padding: 0 0 0 10px; font-weight: normal;  float: left; height: 100%; display: block;}
@@ -99,8 +126,8 @@
                 background-image: url(img/controls.png);
                 background-repeat: no-repeat;
                 position: absolute;
-                z-index: 2;
-                opacity: .25;
+                z-index: 22;
+                opacity: .9;
                 -moz-transition: opacity 200ms ease-out;
                 -webkit-transition: opacity 200ms ease-out;
             }
@@ -128,16 +155,16 @@
             <a href="#" title="Previous" class="yoxviewControlBtn yoxviewControlBtn_prev" id="yoxviewPrev"></a>
             <a href="#" title="Next" class="yoxviewControlBtn yoxviewControlBtn_next" id="yoxviewNext"></a>
             <div id="loader"></div>
+            <div id="thumbnailsPanel">
+
+            </div>
+            <div id="thumbnails" class="thumbnails yoxview"></div>
+            <a href="#" class="thumbnailsBtn" id="thumbsBtn">T</a>
 		</div>
         <div id="info">
             <h2 id="infoTitle"></h2>
             <a href="#" id="slideshowBtn">Slideshow</a>
             <span id="itemCounter"></span>
-        </div>
-        <div id="thumbnailsPanel">
-            <a href="#" id="thumbnailsLeft" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-left" data-yoxscroll-click="page-left"></a>
-            <a href="#" id="thumbnailsRight" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-right" data-yoxscroll-click="page-right"></a>
-            <div id="thumbnails" class="thumbnails yoxview"></div>
         </div>
 		<script type="text/javascript">
 			var popupContainer =  document.getElementById("popupContainer"),
@@ -150,8 +177,9 @@
                 loader = document.getElementById("loader"),
                 itemCounter = document.getElementById("itemCounter"),
                 isInit,
-                heightToSubtract = document.getElementsByTagName("header")[0].clientHeight + info.clientHeight + $thumbnailsPanel.height() +2,
-                title = document.title;
+                heightToSubtract = document.getElementsByTagName("header")[0].clientHeight,
+                title = document.title,
+                thumbnailsOpen = false;
 				
 			function setContainerSize(){
                 var height = docElement.clientHeight - heightToSubtract;
@@ -159,13 +187,50 @@
                 if (isInit)
                     $thumbnailsContainer.yoxview("update");
 
+                if (thumbnailsOpen)
+                    toggleThumbnails(true);
 			}
-			
+
+            $("#thumbsBtn").on("click", function(){ toggleThumbnails(); });
+            $thumbnailsPanel.on("click", function(){ toggleThumbnails(false); });
+
+            function toggleThumbnails(open){
+                var time = 0,
+                    delay = 30,
+                    $thumbs = $("a", $thumbnailsContainer),
+                    nThumbs = $thumbs.length,
+                    topOffset = popupContainer.clientHeight / 2,
+                    radius = topOffset - 100;
+
+                if (!thumbnailsOpen || (open === true && !thumbnailsOpen))
+                    $thumbnailsPanel.css("opacity", .5);
+
+                if (open === undefined)
+                    open = !thumbnailsOpen;
+
+                $thumbs.each(function(i, thumbnail){
+                    setTimeout(function(){
+                        var pos = open
+                            ? { left: Math.cos(Math.PI * 2 * i / nThumbs) * radius, top: (Math.sin(Math.PI * 2 * i / nThumbs + Math.PI) * radius) - topOffset, opacity: 1 }
+                            : { left: 0, top: 0, opacity: 0 };
+
+
+                        $(thumbnail).css(pos);
+
+                        if (i === nThumbs - 1){
+                            thumbnailsOpen = open;
+                        }
+                    }, delay * i);
+                });
+
+                $thumbnailsPanel.css("opacity", open ? .5 : 0);
+
+            }
+
 			setContainerSize();
 			
 			$(window).resize(function(){
                 setContainerSize();
-                $thumbnailsContainer.yoxscroll("update");
             });
 
             $slideshowBtn.on("click", function(e){
@@ -175,7 +240,7 @@
 			$thumbnailsContainer.yoxview({
 				delayOpen: true,
                 enableKeyboard: true,
-				popupMargin: { top: 10, right: 45, bottom: 10, left: 45 },
+				popupMargin: { top: 20, right: 45, bottom: 80, left: 45 },
                 container: popupContainer,
                 controls: {
                     prev: $("#yoxviewPrev"),
@@ -183,12 +248,6 @@
                 },
                 //popupPadding: 20,
                 events: {
-                    beforeSelect: function(e, items, data){
-                        try{
-                            $thumbnailsContainer.yoxscroll("scrollTo", items.newItem.thumbnail.element, { centerElement: !data });
-                        }
-                        catch(e){ }
-                    },
                     close: function(){ info.innerHTML = "" },
                     select: function(e, item){
                         infoTitle.innerHTML = item.title || "";
@@ -200,29 +259,15 @@
                     cacheEnd: function(e, item){ loader.style.display = "none" },
                     init: function(){ this.selectItem(0); },
                     loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
-                    loadThumbnails: function(e){
-                        $thumbnailsContainer.yoxscroll({
-                            events: {
-                                click: function(e, originalEvent){ $thumbnailsContainer.yoxview("selectItem", originalEvent.target.parentNode, "yoxscroll"); }
-                            },
-                            elements: $(".thumbnailsBtn"),
-                            pressedButtonClass: "enabledThumbnailsButton"
-                        });
-                    },
                     slideshowStop: function(){ $slideshowBtn.removeClass("slideshowBtn_on"); },
                     slideshowStart: function(){ $slideshowBtn.addClass("slideshowBtn_on"); }
                 },
-                handleThumbnailClick: false,
 				selectedThumbnailClass: "selectedThumbnail",
                 source: [{
-                    url: "https://picasaweb.google.com/105098710956916751721/Trips",
-                    thumbsize: 104,
-                    cropThumbnails: false
-                },
-                {
                     url: "https://picasaweb.google.com/105098710956916751721/Plants",
-                    thumbsize: 104,
-                    cropThumbnails: false
+                    thumbsize: 72,
+                    cropThumbnails: true,
+                    "max-results": 25
                 }],
                 zoom: true,
                 transform: true,
