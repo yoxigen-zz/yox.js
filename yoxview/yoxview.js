@@ -73,26 +73,6 @@
 		this.id = id;
         this.cache = cache;
         this.direction = 1;
-        
-        function distributeMeasures(original){
-            var distributed = { top: 0, bottom: 0, left: 0, right: 0};
-
-            if (original){
-                var isNumber = typeof(original) === "number";
-
-                for(var side in distributed){
-                    distributed[side] = isNumber ? original : (original[side] || 0);
-                }
-            }
-            distributed.horizontal = distributed.left + distributed.right;
-            distributed.vertical = distributed.top + distributed.bottom;
-
-            return distributed;
-        }
-
-        this.options.popupMargin = distributeMeasures(this.options.popupMargin);
-        this.options.popupPadding = distributeMeasures(this.options.popupPadding);
-        		
 		this.init();
 	}
 
@@ -240,8 +220,7 @@
 		};
 
         function createViewer(view){
-            var elements = {},
-                isFill = view.options.resizeMode === "fill";
+            var elements = {};
 
             elements.$container = $(view.options.container);
 
@@ -276,9 +255,21 @@
 
                 dataSources[dataSource.name] = dataSource;
             },
-            addSources: function(sources, onDone){
+            addItems: function(items, createThumbnails){
+                if (!items)
+                    return false;
+
+                if (!(items instanceof Array))
+                    items = [items];
+
+                this.triggerEvent("loadSources", { createThumbnails: createThumbnails, items: items });
+            },
+            addSources: function(sources){
                 var deferredPromises = [],
                     self = this;
+
+                if (sources && !(sources instanceof Array))
+                    sources = [sources];
 
                 for(var i=0; i<sources.length; i++){
                     var promise = this.loadSource(sources[i]);
@@ -287,41 +278,7 @@
                 }
 
                 $.when.apply(this, deferredPromises).done(function () {
-                    var documentFragment;
-                    for(var i=0; i < arguments.length; i++){
-                        var sourceData = arguments[i];
-                        if (sourceData.createThumbnails){
-                            documentFragment = documentFragment || document.createDocumentFragment();
-                            for(var j = 0, count = sourceData.items.length; j < count; j++){
-                                var item = sourceData.items[j],
-                                    thumbnailEl = self.options.createThumbnail(item);
-
-                                $(thumbnailEl).data("yoxviewIndex", item.id);
-                                item.thumbnail.element = thumbnailEl;
-
-                                var thumbnailImages = thumbnailEl.getElementsByTagName("img");
-                                if (thumbnailImages.length)
-                                    item.thumbnail.image = thumbnailImages[0];
-
-                                documentFragment.appendChild(thumbnailEl);
-                            }
-                        }
-
-                        self.items = self.items.concat(sourceData.items);
-                    }
-
-                    for(var i=0, count=self.items.length; i < count; i++){
-                        var item = self.items[i];
-                        item.id = i + 1;
-                        if (item.thumbnail && item.thumbnail.element)
-                            $(item.thumbnail.element).data("yoxviewIndex", item.id);
-                    }
-
-                    if (documentFragment)
-                        self.container[0].appendChild(documentFragment);
-
-                    if (onDone)
-                        onDone(arguments);
+                    self.triggerEvent("loadSources", arguments);
                 });
             },
             addEventListener: function(eventName, eventHandler){
@@ -353,6 +310,9 @@
                         sources.push(optionsSource);
                 }
 
+                this.options.popupMargin = utils.distributeMeasures(this.options.popupMargin);
+                this.options.popupPadding = utils.distributeMeasures(this.options.popupPadding);
+
                 // Init events:
                 for(var eventName in this.options.events){
                     var eventHandlers = this.options.events[eventName];
@@ -365,12 +325,7 @@
                         self.addEventListener(eventName, eventHandlers);
                 }
 
-                this.addSources(sources, function(){
-                    self.triggerEvent("init", self);
-                    utils.loadImages(self.container[0], function(){
-                        self.triggerEvent("loadThumbnails");
-                    });
-                });
+                this.addSources(sources);
 
                 createViewer(this);
                 
@@ -472,8 +427,8 @@
 				this.selectItem(prevItemId);
             },
             removeEventListener: function(eventName, eventHandler){
-                if (!eventHandler || typeof(eventHandler) !== "function")
-                    throw new Error("Invalid event handler, must be a function.");
+                if (eventHandler && typeof(eventHandler) !== "function")
+                    throw new Error("Invalid event handler, must be a function or undefined.");
 
                 $(this.container).off(eventName + ".yoxview", eventHandler);
             },
@@ -539,10 +494,12 @@
                     return;
                 }
                 window.localStorage.setItem(keyName, JSON.stringify(data));
-                return;
             },
             triggerEvent: function(eventName, data){
                 $(this.container).trigger(eventName + ".yoxview", data);
+            },
+            unload: function(){
+                // SOON
             },
             update: function(){
                 var self = this;
@@ -551,56 +508,12 @@
                         clearTimeout(this.updateTransitionTimeoutId);
                         this.updateTransitionTimeoutId = null;
                     }
-                    //this.setTransitionTime();
-                    //this.updateTransitionTimeoutId = setTimeout(function(){ self.setTransitionTime(self.options.transitionTime); delete self.updateTransitionTimeoutId; }, self.options.transitionTime);
                 }
                 var containerDimensions = { width: this.elements.$container.width(), height: this.elements.$container.height() };
                 if (!this.containerDimensions || containerDimensions.width !== this.containerDimensions.width || containerDimensions.height !== this.containerDimensions.height){
                     this.containerDimensions = containerDimensions;
                     if (this.currentItem){
                         this.transition(this.getPosition(this.currentItem), 0);
-                    }
-                }
-            }
-        };
-    })();
-    var utils = (function(){
-        var cssStylePrefix;
-        return {
-            getCssStylePrefix: function(){
-                if (!cssStylePrefix)
-                    cssStylePrefix =
-                        $.browser.msie ? "-ms-" :
-                        $.browser.mozilla ? "-moz-" :
-                        $.browser.webkit ? "-webkit-" :
-                        $.browser.opera ? "-o-" : "";
-
-                return cssStylePrefix;
-            },
-            loadImages: function(parentEl, onLoad){
-                var images = parentEl.getElementsByTagName("img"),
-                    imgCount = images.length,
-                    loadedCount = 0,
-                    onLoadImg = function(e){
-                        if (e.target.nodeName === "IMG" && ++loadedCount === imgCount){
-                            onLoad(imgCount);
-                            parentEl.removeEventListener("load", onLoadImg, true);
-                        }
-                    },
-                    onLoadImgIE = function(e){
-                        if (++loadedCount === imgCount){
-                            onLoad(imgCount);
-                        }
-                        e.srcElement.detachEvent("onload", onLoadImgIE);
-                    };
-
-                if (parentEl.addEventListener){
-                    images = null;
-                    parentEl.addEventListener("load", onLoadImg, true);
-                }
-                else if (parentEl.attachEvent){
-                    for(var i=imgCount; i--;){
-                        images[i].attachEvent("onload", onLoadImgIE);
                     }
                 }
             }
@@ -645,10 +558,56 @@
                     keyPress: { left: "prev", right: "next", up: "prev", down: "next", escape: "close", home: "first", end: "last", enter: "toggleSlideshow" }, // Functions to apply on key presses
                     events: { // Predefined event handlers
                         backgroundClick: function(){ $.yoxview.close() },
+                        createThumbnails: function(){
+                            this.triggerEvent("init");
+                        },
                         init: function(){
                             views.push(this);
                             if (this.options.cacheImagesInBackground)
                                 cache.cacheItem(this);
+
+                            // Need to trigger init only once per view:
+                            this.removeEventListener("init");
+                        },
+                        loadSources: function(e){
+                            var documentFragment,
+                                view = this,
+                                sources = Array.prototype.slice.call(arguments, 1),
+                                originalNumberOfItems = view.items.length;
+                            
+                            for(var i=0; i < sources.length; i++){
+                                var sourceData = sources[i];
+                                if (sourceData.createThumbnails){
+                                    documentFragment = documentFragment || document.createDocumentFragment();
+                                    for(var j = 0, count = sourceData.items.length; j < count; j++){
+                                        var item = sourceData.items[j],
+                                            thumbnailEl = view.options.createThumbnail(item);
+        
+                                        $(thumbnailEl).data("yoxviewIndex", item.id);
+                                        item.thumbnail.element = thumbnailEl;
+        
+                                        var thumbnailImages = thumbnailEl.getElementsByTagName("img");
+                                        if (thumbnailImages.length)
+                                            item.thumbnail.image = thumbnailImages[0];
+        
+                                        documentFragment.appendChild(thumbnailEl);
+                                    }
+                                }
+        
+                                view.items = view.items.concat(sourceData.items);
+                            }
+        
+                            for(var i=originalNumberOfItems, count=view.items.length; i < count; i++){
+                                var item = view.items[i];
+                                item.id = i + 1;
+                                if (item.thumbnail && item.thumbnail.element)
+                                    $(item.thumbnail.element).data("yoxviewIndex", item.id);
+                            }
+        
+                            if (documentFragment)
+                                view.container[0].appendChild(documentFragment);
+
+                            view.triggerEvent("createThumbnails");
                         },
                         select: function(e, item){
                             var view = this;
@@ -913,7 +872,7 @@
                 withItem: withItem
             };
         })();
-        
+
         function getPlatform(){
             var mobilePlatforms = /(Android)|(iPhone)|(iPod)/;
 
@@ -953,5 +912,23 @@
             platform: platform
 		}
 	})();
-	
+
+    var utils = {
+        distributeMeasures: function(original){
+            var distributed = { top: 0, bottom: 0, left: 0, right: 0};
+
+            if (original){
+                var isNumber = typeof(original) === "number";
+
+                for(var side in distributed){
+                    distributed[side] = isNumber ? original : (original[side] || 0);
+                }
+            }
+            distributed.horizontal = distributed.left + distributed.right;
+            distributed.vertical = distributed.top + distributed.bottom;
+
+            return distributed;
+        }
+    }
+
 })(jQuery);

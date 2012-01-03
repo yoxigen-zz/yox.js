@@ -110,6 +110,48 @@
                 }
             };
 
+        function loadImages(parentEl, onLoad){
+            var $parentEl = $(parentEl),
+                images = parentEl.getElementsByTagName("img"),
+                imgCount = images.length,
+                key = new Date();
+
+            if (!imgCount){
+                onLoad(0);
+                return;
+            }
+
+            var loadedCount = 0,
+                onLoadImg = function(e){
+                    if ((e instanceof Date || e.target.nodeName === "IMG") && ++loadedCount === imgCount){
+                        parentEl.removeEventListener("load", onLoadImg, true);
+                        onLoad(imgCount);
+
+                    }
+                },
+                onLoadImgIE = function(e){
+                    if (++loadedCount === imgCount){
+                        onLoad(imgCount);
+                    }
+                    e.srcElement.detachEvent("onload", onLoadImgIE);
+                };
+
+            if (parentEl.addEventListener){
+                parentEl.addEventListener("load", onLoadImg, true);
+            }
+            else if (parentEl.attachEvent){
+                for(var i=imgCount; i--;){
+                    images[i].attachEvent("onload", onLoadImgIE);
+                }
+            }
+
+            for(var imageIndex=imgCount; imageIndex--;){
+                if (images[imageIndex].complete)
+                    onLoadImg(key);
+            }
+
+        }
+
         var cubicBeziers = (function(){
             var defaultCubicBezier = [0, .42, .36, 1],
                 defaultCubicBezierPoints = [
@@ -361,8 +403,6 @@
                         self.triggerEvent("click", e);
                 })
                 .on("click", function(e){ e.preventDefault(); });
-
-                //console.log("READY");
             },
             initButtons: function(){
                 if (!this.options.elements)
@@ -453,10 +493,14 @@
                 $(this.$eventsElement).trigger(eventName + ".yoxscroll", data);
             },
             update: function(){
-                var sliderWidth = this.calculateSliderSize();
-                this.elements.$slider.width(sliderWidth);
-                this.containerSize = this.elements.$container.width();
-                this.minPosition = this.containerSize - sliderWidth;
+                var self = this;
+                this.elements.$container.children(":not(.yoxscrollSlider)").appendTo(this.elements.$slider);
+                loadImages(this.elements.$container[0], function(){
+                    var sliderWidth = self.calculateSliderSize();
+                    self.elements.$slider.width(sliderWidth);
+                    self.containerSize = self.elements.$container.width();
+                    self.minPosition = self.containerSize - sliderWidth;
+                });
             }
         };
     })();
