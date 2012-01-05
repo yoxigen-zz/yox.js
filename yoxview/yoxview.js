@@ -426,6 +426,24 @@
 				var prevItemId = this.currentItem.id === 1 ? this.items.length - 1 : this.currentItem.id - 2;
 				this.selectItem(prevItemId);
             },
+            removeItems: function(){
+                this.removeThumbnails();
+                this.triggerEvent("removeItems", this.items);
+                this.currentItem = undefined;
+                this.items = [];
+            },
+            removeThumbnails: function(){
+                var removedThumbnails = [];
+
+                for(var i=0, count = this.items.length; i < count; i++){
+                    var item = this.items[i];
+                    if (item.thumbnail && item.thumbnail.generated){
+                        removedThumbnails.push($(item.thumbnail.element).remove());
+                        delete item.thumbnail.element;
+                    }
+                }
+                this.triggerEvent("removeThumbnails", removedThumbnails);
+            },
             removeEventListener: function(eventName, eventHandler){
                 if (eventHandler && typeof(eventHandler) !== "function")
                     throw new Error("Invalid event handler, must be a function or undefined.");
@@ -463,6 +481,7 @@
 
                 this.triggerEvent("beforeSelect", [{ newItem: item, oldItem: currentItem }, data]);
 				this.currentItem = item;
+
                 this.cache.withItem(item, this, function(){
                     var $panel = this.getPanel(true);
                     if ($panel.attr("src") !== item.url){
@@ -479,6 +498,10 @@
                     else
                         onImageLoad.call($panel[0], this);
                 });
+            },
+            source: function(sources){
+                this.removeItems();
+                this.addSources(sources);
             },
             store: function(key, data){
                 if (!this.options.storeDataSources || !window.localStorage || typeof(key) !== "string")
@@ -558,9 +581,6 @@
                     keyPress: { left: "prev", right: "next", up: "prev", down: "next", escape: "close", home: "first", end: "last", enter: "toggleSlideshow" }, // Functions to apply on key presses
                     events: { // Predefined event handlers
                         backgroundClick: function(){ $.yoxview.close() },
-                        createThumbnails: function(){
-                            this.triggerEvent("init");
-                        },
                         init: function(){
                             views.push(this);
                             if (this.options.cacheImagesInBackground)
@@ -571,6 +591,7 @@
                         },
                         loadSources: function(e){
                             var documentFragment,
+                                createItems = [],
                                 view = this,
                                 sources = Array.prototype.slice.call(arguments, 1),
                                 originalNumberOfItems = view.items.length;
@@ -578,14 +599,15 @@
                             for(var i=0; i < sources.length; i++){
                                 var sourceData = sources[i];
                                 if (sourceData.createThumbnails){
-                                    documentFragment = documentFragment || document.createDocumentFragment();
+                                    documentFragment = document.createDocumentFragment();
                                     for(var j = 0, count = sourceData.items.length; j < count; j++){
                                         var item = sourceData.items[j],
                                             thumbnailEl = view.options.createThumbnail(item);
         
                                         $(thumbnailEl).data("yoxviewIndex", item.id);
                                         item.thumbnail.element = thumbnailEl;
-        
+                                        item.thumbnail.generated = true;
+
                                         var thumbnailImages = thumbnailEl.getElementsByTagName("img");
                                         if (thumbnailImages.length)
                                             item.thumbnail.image = thumbnailImages[0];
@@ -595,6 +617,7 @@
                                 }
         
                                 view.items = view.items.concat(sourceData.items);
+                                createItems = createItems.concat(sourceData.items);
                             }
         
                             for(var i=originalNumberOfItems, count=view.items.length; i < count; i++){
@@ -604,10 +627,15 @@
                                     $(item.thumbnail.element).data("yoxviewIndex", item.id);
                             }
         
-                            if (documentFragment)
+                            if (documentFragment){
                                 view.container[0].appendChild(documentFragment);
+                                view.triggerEvent("createThumbnails", { items: createItems });
+                            }
 
-                            view.triggerEvent("createThumbnails");
+                            if (!view.initialized){
+                                view.initialized = true;
+                                view.triggerEvent("init");
+                            }
                         },
                         select: function(e, item){
                             var view = this;
@@ -765,7 +793,7 @@
                     endCache(item, view);
 
                 view.triggerEvent("loadItem", item);
-                
+
                 if (cacheImage.onCache)
                     cacheImage.onCache.call(view, item);
 
