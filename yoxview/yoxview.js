@@ -82,37 +82,39 @@
         function onImageLoad(e){
             var view = e instanceof YoxView ? e : e.data.view,
                 item = view.currentItem,
-                position = view.getPosition(item);
+                position = view.getPosition(item, view.containerDimensions, view.options);
 
             view.transition.call(view, position);
             view.triggerEvent("select", item);
         }
 
         var resizeCalculateFunctions = {
-            fill: function(item){
-                var newWidth = this.options.enlarge ? this.containerDimensions.width : Math.min(item.width, this.containerDimensions.width),
+            fill: function(item, containerDimensions, options){
+                options = options || {};
+                var newWidth = options.enlarge ? containerDimensions.width : Math.min(item.width, containerDimensions.width),
                     newHeight = Math.round(newWidth * item.ratio),
-                    maxHeight = this.containerDimensions.height;
+                    maxHeight = containerDimensions.height;
 
-                if (newHeight < maxHeight && (maxHeight <= item.height || this.options.enlarge)){
+                if (newHeight < maxHeight && (maxHeight <= item.height || options.enlarge)){
                     newHeight = maxHeight;
                     newWidth = Math.round(newHeight / item.ratio);
                 }
 
                 return {
-                    left: (this.containerDimensions.width - newWidth) / 2,
-                    top: (this.containerDimensions.height - newHeight) / 2,
+                    left: (containerDimensions.width - newWidth) / 2,
+                    top: (containerDimensions.height - newHeight) / 2,
                     width: newWidth,
                     height: newHeight
                 };
             },
-            fit: function(item){
-                var popupMargin = this.options.popupMargin,
-                    popupPadding = this.options.popupPadding,
-                    requiredWidth = this.containerDimensions.width - popupMargin.horizontal - popupPadding.horizontal,
-                    newWidth =  this.options.enlarge ? requiredWidth : Math.min(item.width, requiredWidth),
+            fit: function(item, containerDimensions, options){
+                options = options || {};
+                var margin = options.margin || {},
+                    padding = options.padding || {},
+                    requiredWidth = containerDimensions.width - (margin.horizontal || 0) - (padding.horizontal || 0),
+                    newWidth =  options.enlarge ? requiredWidth : Math.min(item.width, requiredWidth),
                     newHeight = Math.round(newWidth * item.ratio),
-                    maxHeight = this.containerDimensions.height - popupMargin.vertical - popupPadding.vertical;
+                    maxHeight = containerDimensions.height - (margin.vertical || 0) - (padding.vertical || 0);
 
                 if (newHeight > maxHeight){
                     newHeight = maxHeight;
@@ -120,8 +122,8 @@
                 }
 
                 return {
-                    left: (this.containerDimensions.width - newWidth) / 2 + (popupMargin.left - popupMargin.right) - popupPadding.left,
-                    top: (this.containerDimensions.height - newHeight + (popupMargin.top - popupMargin.bottom)) / 2 - popupPadding.top,
+                    left: (containerDimensions.width - newWidth) / 2 + ((margin.left || 0) - (margin.right || 0)) - (padding.left || 0),
+                    top: (containerDimensions.height - newHeight + ((margin.top || 0) - (margin.bottom || 0))) / 2 - (padding.top || 0),
                     width: newWidth,
                     height: newHeight
                 };
@@ -129,6 +131,64 @@
         };
 
         var transitions = {
+            evaporate: (function(){
+                var panels,
+                    currentPanelIndex = 1,
+                    defaultTransitionTime,
+                    currentTransitionTime;
+
+                return {
+                    create: function($container){
+                        var view = this;
+                        currentTransitionTime = this.options.transitionTime;
+                        defaultTransitionTime = this.options.transitionTime;
+
+                        panels = [];
+                        for(var i=0; i<2; i++){
+                            var $img = $("<img>", { src: "", "class": "yoxviewImg" });
+                            if (i > 0)
+                                $img.css({opacity: "0"});
+
+                            $img.css({ transition: ["all ", this.options.transitionTime, "ms ease-out"].join("") });
+                            if ($.browser.webkit)
+                                $img[0].style.setProperty("-webkit-transform", "translateZ(0)");
+
+                            $img.on("load", { view: view }, onImageLoad);
+                            panels.push($img.appendTo($container));
+                        }
+                    },
+                    getPanel: function(item){
+                        currentPanelIndex = currentPanelIndex ? 0 : 1;
+                        return panels[currentPanelIndex];
+                    },
+                    transition: function(position, time){
+                        if (time !== undefined){
+                            if (isNaN(time))
+                                throw new TypeError("Invalid value for transition time, must be a number (in milliseconds).");
+                        }
+                        else
+                            time = defaultTransitionTime;
+
+                        if (time !== currentTransitionTime){
+                            for(var i=panels.length; i--;){
+                                panels[i].css("transition", "all " + time + "ms ease-out");
+                            }
+                            currentTransitionTime = time;
+                        }
+
+                        var currentPanel = panels[currentPanelIndex ? 0 : 1].css("z-index", "2"),
+                            newPanel = panels[currentPanelIndex],
+                            panelCss = $.extend({ transition: "all  0ms ease-out", "z-index": "1" },
+                                resizeCalculateFunctions.fit(
+                                    $.extend({}, position, { ratio: position.height / position.width }),
+                                    { width: currentPanel.width(), height: currentPanel.height() }));
+
+                        newPanel.css(panelCss);
+                        currentPanel.css({ transition: "all " + time + "ms ease-out", opacity: 0 });
+                        newPanel.css($.extend({ transition: "all " + time + "ms ease-out", opacity: 1 }, position));
+                    }
+                };
+            })(),
             morph: (function(){
                 var $frame,
                     panels,
@@ -310,8 +370,8 @@
                         sources.push(optionsSource);
                 }
 
-                this.options.popupMargin = utils.distributeMeasures(this.options.popupMargin);
-                this.options.popupPadding = utils.distributeMeasures(this.options.popupPadding);
+                this.options.margin = utils.distributeMeasures(this.options.margin);
+                this.options.padding = utils.distributeMeasures(this.options.padding);
 
                 // Init events:
                 for(var eventName in this.options.events){
@@ -536,7 +596,7 @@
                 if (!this.containerDimensions || containerDimensions.width !== this.containerDimensions.width || containerDimensions.height !== this.containerDimensions.height){
                     this.containerDimensions = containerDimensions;
                     if (this.currentItem){
-                        this.transition(this.getPosition(this.currentItem), 0);
+                        this.transition(this.getPosition(this.currentItem, this.containerDimensions, this.options), 0);
                     }
                 }
             }
@@ -656,8 +716,8 @@
                 mode: {
                     fill: {
                         enlarge: true,
-                        popupMargin: 0,
-                        popupPadding: 0
+                        margin: 0,
+                        padding: 0
                     },
                     fit: {
                         transition: "morph"
@@ -669,15 +729,15 @@
                         cacheBuffer: 2, // The number of images to cache after the current image (directional, depends on the current viewing direction)
                         onBackgroundClick: null,
                         onBeforeOpen: function(){ window.scrollTo(0, 1); },
-                        popupMargin: 0,
-                        popupPadding: 0,
+                        margin: 0,
+                        padding: 0,
                         showInfo: true,
                         transitionTime: 0 // The time it takes to animate transitions between items or opening and closing.
                     },
                     regular: {
                         cacheBuffer: 5, // The number of images to cache after the current image (directional, depends on the current viewing direction)
-                        popupMargin: 20, // the minimum margin between the popup and the window
-                        popupPadding: 0,
+                        margin: 20, // the minimum margin between the popup and the window
+                        padding: 0,
                         showInfo: true,
                         transitionTime: 300 // The time it takes to animate transitions between items or opening and closing.
                     }
@@ -914,7 +974,7 @@
 				var optionsEvents = $.extend({}, options.events);
                 delete options.events;
                 var viewOptions = $.extend(true, {}, config.defaults, config.platform[platform], options);
-                viewOptions = $.extend(viewOptions, config.mode[viewOptions.resizeMode]);
+                viewOptions = $.extend(config.mode[viewOptions.resizeMode], viewOptions);
                 
                 // Merge the options events with the default ones:
                 for(var eventName in optionsEvents){

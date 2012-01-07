@@ -105,7 +105,7 @@
 			$thumbnailsContainer.yoxview({
 				delayOpen: true,
                 enableKeyboard: true,
-				popupMargin: { top: 10, right: 45, bottom: 10, left: 45 },
+				margin: { top: 10, right: 45, bottom: 10, left: 45 },
                 container: popupContainer,
                 controls: {
                     prev: $("#yoxviewPrev"),
@@ -148,6 +148,7 @@
                 ],
                 zoom: true,
                 transform: true,
+                //transition: "evaporate",
                 transitionTime: 300
 			})
             .yoxscroll({

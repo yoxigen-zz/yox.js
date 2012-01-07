@@ -13,7 +13,7 @@ $.yoxview.addDataSource(function(){
             cropThumbnails: false,
 			thumbsize: 64,
             imgmax: picasaUncropSizes[picasaUncropSizes.length - 1],
-            fields: "entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link(@href))"
+            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href))"
         };
     
     function getDataFromUrl(url, options){
@@ -28,7 +28,7 @@ $.yoxview.addDataSource(function(){
                 data.fields += ",entry(summary),gphoto:name";
             }
             else
-                data.fields += ",entry(title),entry(gphoto:numphotos)";
+                data.fields += ",entry(title),entry(gphoto:numphotos),entry(gphoto:name),entry(link[@rel='alternate'])";
         }
 
         data.imgmax = getImgmax(picasaUncropSizes, data.imgmax);
@@ -61,18 +61,19 @@ $.yoxview.addDataSource(function(){
     function getImagesData(picasaData, kind)
     {
         var entry = picasaData.feed.entry,
-            isAlbum = kind === "album",
+            //isAlbum = kind === "user",
             itemsData = [];
 
         jQuery.each(picasaData.feed.entry, function(i, image){
-            var imageTitle = isAlbum ? image.title.$t + " (" + image.gphoto$numphotos.$t + " images)" : image.summary.$t,
+            var isAlbum = image.category[0].term.match(/#(.*)$/)[1] === "album",
+                imageTitle = isAlbum ? image.title.$t + " (" + image.gphoto$numphotos.$t + " images)" : image.summary.$t,
                 mediaData = image.media$group.media$content[0],
                 itemData = {
                     thumbnail: {
                         src: image.media$group.media$thumbnail[0].url
                     },
                     url: mediaData.url,
-                    link: image.link[1].href,
+                    link: image.link[0].href,
                     title: imageTitle,
                     type: "image",
                     width: mediaData.width,
@@ -110,9 +111,9 @@ $.yoxview.addDataSource(function(){
                         returnData.items = [];
                     }
                     else{
-                        var kind = data.feed.entry[0].gphoto$numphotos ? "album" : "other";
+                        var kind = data.feed.category[0].term.match(/#(.*)$/)[1];
 
-                        if (kind === "album")
+                        if (kind === "user")
                             $.extend(returnData, {
                                 title: data.feed.title.$t,
                                 createGroups: true
@@ -126,7 +127,7 @@ $.yoxview.addDataSource(function(){
                         callback(returnData);
                 },
                 error : function(xOptions, textStatus){
-
+console.log("error: ", arguments);
                 }
             });
 	    }
