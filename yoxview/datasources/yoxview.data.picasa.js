@@ -61,12 +61,13 @@ $.yoxview.addDataSource(function(){
     function getImagesData(picasaData, kind)
     {
         var entry = picasaData.feed.entry,
-            //isAlbum = kind === "user",
             itemsData = [];
 
         jQuery.each(picasaData.feed.entry, function(i, image){
-            var isAlbum = image.category[0].term.match(/#(.*)$/)[1] === "album",
-                imageTitle = isAlbum ? image.title.$t + " (" + image.gphoto$numphotos.$t + " images)" : image.summary.$t,
+            var isAlbum = image.category[0].term.match(/#(.*)$/)[1] === "album";
+            if (isAlbum && !image.gphoto$numphotos.$t)
+                return true;
+            var imageTitle = isAlbum ? image.title.$t + " (" + image.gphoto$numphotos.$t + " images)" : image.summary.$t,
                 mediaData = image.media$group.media$content[0],
                 itemData = {
                     thumbnail: {
@@ -75,14 +76,20 @@ $.yoxview.addDataSource(function(){
                     url: mediaData.url,
                     link: image.link[0].href,
                     title: imageTitle,
-                    type: "image",
+                    type: "image"
+                };
+
+            if (isAlbum){
+                itemData.data = { album: image.gphoto$name.$t };
+                itemData.isLoaded = true;
+            }
+            else{
+                $.extend(itemData, {
                     width: mediaData.width,
                     height: mediaData.height,
                     ratio: mediaData.height / mediaData.width
-                };
-
-            if (isAlbum)
-                itemData.data = { album: image.gphoto$name.$t };
+                });
+            }
 
             itemsData.push(itemData);
         });
@@ -127,7 +134,7 @@ $.yoxview.addDataSource(function(){
                         callback(returnData);
                 },
                 error : function(xOptions, textStatus){
-console.log("error: ", arguments);
+                    console.log("error: ", arguments);
                 }
             });
 	    }

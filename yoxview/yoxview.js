@@ -122,8 +122,8 @@
                 }
 
                 return {
-                    left: (containerDimensions.width - newWidth) / 2 + ((margin.left || 0) - (margin.right || 0)) - (padding.left || 0),
-                    top: (containerDimensions.height - newHeight + ((margin.top || 0) - (margin.bottom || 0))) / 2 - (padding.top || 0),
+                    left: (containerDimensions.width - (margin.left || 0) - (margin.right || 0) - newWidth) / 2 + (margin.left || 0) - (padding.left || 0),
+                    top: (containerDimensions.height - (margin.top || 0) - (margin.bottom || 0) - newHeight) / 2 + (margin.top || 0) - (padding.top || 0),
                     width: newWidth,
                     height: newHeight
                 };
@@ -971,11 +971,12 @@
 
 		return {
 			add: function(container, options){
-				var optionsEvents = $.extend({}, options.events);
+				var optionsEvents = $.extend({}, options.events),
+                    platformConfig = config.platform[platform];
                 delete options.events;
-                var viewOptions = $.extend(true, {}, config.defaults, config.platform[platform], options);
-                viewOptions = $.extend(config.mode[viewOptions.resizeMode], viewOptions);
-                
+
+                var viewOptions = $.extend(true, {}, config.mode[options.resizeMode || platformConfig.resizeMode || config.defaults.resizeMode], config.defaults, platformConfig, options);
+
                 // Merge the options events with the default ones:
                 for(var eventName in optionsEvents){
                     var eventHandlers = viewOptions.events[eventName],

@@ -66,13 +66,6 @@
             }
             .thumbnailsBtn:hover{ background: #ddd }
 
-            #thumbnailsLeft{ left: 0; background-position: 0 -100px; }
-            #thumbnailsLeft:hover{ background-position: -27px -100px; }
-            #thumbnailsLeft:active, #thumbnailsLeft.enabledThumbnailsButton{ background-position: -54px -100px }
-            #thumbnailsRight{ right: 0; background-position: 0 -160px; }
-            #thumbnailsRight:hover{ background-position: -27px -160px; }
-            #thumbnailsRight:active, #thumbnailsRight.enabledThumbnailsButton{ background-position: -54px -160px }
-
 			#popupContainer{
                 overflow: hidden;
             }
@@ -135,19 +128,7 @@
             .yoxviewControlBtn_prev{ background-position: 0px 38px; left: 0; }
             .yoxviewControlBtn_next{ background-position: -68px 38px; right: 0; }
 		</style>
-        <script type="text/javascript">
-
-          var _gaq = _gaq || [];
-          _gaq.push(['_setAccount', 'UA-1768050-24']);
-          _gaq.push(['_trackPageview']);
-
-          (function() {
-            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-          })();
-
-        </script>
+        <script src="js/ga.js"></script>
 	</head>
 	<body>
 		<header><h1>YoxView 3.0 Demo</h1></header>
@@ -240,7 +221,7 @@
 			$thumbnailsContainer.yoxview({
 				delayOpen: true,
                 enableKeyboard: true,
-				popupMargin: { top: 20, right: 45, bottom: 80, left: 45 },
+				margin: { top: 20, right: 45, bottom: 80, left: 45 },
                 container: popupContainer,
                 controls: {
                     prev: $("#yoxviewPrev"),
