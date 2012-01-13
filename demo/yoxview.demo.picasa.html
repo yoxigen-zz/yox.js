@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>YoxView 3.0 Demo - Picasa User</title>
+		<link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
+        <link rel="Stylesheet" type="text/css" href="../yoxscroll/yoxscroll.css" />
+        <link rel="Stylesheet" type="text/css" href="css/yoxview.demo.fit.css" />
+        <link rel="Stylesheet" type="text/css" href="css/yoxview.demo.picasa.css" />
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script type="text/javascript" src="../yoxview/yoxview.js"></script>
+        <script type="text/javascript" src="../yoxscroll/jquery.yoxscroll.js"></script>
+		<script type="text/javascript" src="../yoxview/datasources/yoxview.data.element.js"></script>
+        <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
+        <script type="text/javascript" src="js/jquery.tmpl.min.js"></script>
+        <script src="js/ga.js"></script>
+	</head>
+	<body>
+		<header>
+            <h1 id="pageTitle"></h1>
+            <div style="float:right">
+                <label for="source_input">Picasa User URL:</label><input id="source_input" value="https://picasaweb.google.com/112402114851229244394" />
+                <input type="button" value="Set source" onclick="setUser()" />
+            </div>
+        </header>
+		<div id="popupContainer">
+            <div id="albums"></div>
+            <a href="#" title="Previous" class="yoxviewControlBtn yoxviewControlBtn_prev" id="yoxviewPrev"></a>
+            <a href="#" title="Next" class="yoxviewControlBtn yoxviewControlBtn_next" id="yoxviewNext"></a>
+            <div id="loader"></div>
+		</div>
+        <div id="info">
+            <h2 id="infoTitle"></h2>
+            <a href="#" id="slideshowBtn">Slideshow</a>
+            <span id="itemCounter"></span>
+        </div>
+        <div id="thumbnailsPanel">
+            <a href="#" id="thumbnailsLeft" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-left" data-yoxscroll-click="page-left"></a>
+            <a href="#" id="thumbnailsRight" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-right" data-yoxscroll-click="page-right"></a>
+            <div id="thumbnails" class="thumbnails yoxview"></div>
+        </div>
+		<script src="js/yoxview.demo.picasa.js"></script>
+        <script id="albumInfoTemplate" type="text/x-jquery-tmpl">
+            <div class="albumInfo">
+                <h3>${name}</h3>
+                <span class="albumInfo_count">${imageCount} images</span>
+                {{if description}}
+                <p class="albumInfo_description">${description}</p>
+                {{/if}}
+            </div>
+        </script>
+	</body>
+</html>

@@ -643,7 +643,7 @@
                         backgroundClick: function(){ $.yoxview.close() },
                         init: function(){
                             views.push(this);
-                            if (this.options.cacheImagesInBackground)
+                            if (this.options.cacheImagesInBackground && this.items.length)
                                 cache.cacheItem(this);
 
                             // Need to trigger init only once per view:
@@ -689,7 +689,7 @@
         
                             if (documentFragment){
                                 view.container[0].appendChild(documentFragment);
-                                view.triggerEvent("createThumbnails", { items: createItems });
+                                view.triggerEvent("createThumbnails", { items: createItems, sources: sources });
                             }
 
                             if (!view.initialized){

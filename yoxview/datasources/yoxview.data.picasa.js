@@ -28,7 +28,7 @@ $.yoxview.addDataSource(function(){
                 data.fields += ",entry(summary),gphoto:name";
             }
             else
-                data.fields += ",entry(title),entry(gphoto:numphotos),entry(gphoto:name),entry(link[@rel='alternate'])";
+                data.fields += ",entry(title),entry(gphoto:numphotos),entry(gphoto:name),entry(link[@rel='alternate']),author,entry(summary)";
         }
 
         data.imgmax = getImgmax(picasaUncropSizes, data.imgmax);
@@ -67,7 +67,7 @@ $.yoxview.addDataSource(function(){
             var isAlbum = image.category[0].term.match(/#(.*)$/)[1] === "album";
             if (isAlbum && !image.gphoto$numphotos.$t)
                 return true;
-            var imageTitle = isAlbum ? image.title.$t + " (" + image.gphoto$numphotos.$t + " images)" : image.summary.$t,
+            var imageTitle = isAlbum ? image.title.$t : image.summary.$t,
                 mediaData = image.media$group.media$content[0],
                 itemData = {
                     thumbnail: {
@@ -80,7 +80,7 @@ $.yoxview.addDataSource(function(){
                 };
 
             if (isAlbum){
-                itemData.data = { album: image.gphoto$name.$t };
+                itemData.data = { album: { name: image.gphoto$name.$t, imageCount: image.gphoto$numphotos.$t, description: image.summary.$t }};
                 itemData.isLoaded = true;
             }
             else{
@@ -123,7 +123,13 @@ $.yoxview.addDataSource(function(){
                         if (kind === "user")
                             $.extend(returnData, {
                                 title: data.feed.title.$t,
-                                createGroups: true
+                                data: {
+                                    kind: "user",
+                                    author: {
+                                        name: data.feed.author[0].name.$t,
+                                        link: data.feed.author[0].uri.$t
+                                    }
+                                }
                             });
 
                         returnData.createThumbnails = true;

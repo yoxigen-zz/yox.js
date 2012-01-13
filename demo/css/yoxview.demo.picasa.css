@@ -1,0 +1,59 @@
+#albums{
+    position: relative;
+    z-index: 5;
+    width: 104px;
+    float: left;
+    height: 100%;
+    border-right: solid 1px #151515;
+}
+#albums a{
+    display: block;
+    height: 104px;
+    width: 104px;
+    opacity: .6;
+    position: relative;
+    text-decoration: none;
+}
+#albums a:hover{ opacity: 1 }
+#albums a img{ position: absolute; right: 0; top: 0; border: none }
+#loader{ margin-left: 30px }
+.yoxviewControlBtn_prev{ left: 104px }
+
+.albumInfo{
+    -moz-transition: left 300ms ease-out 0s;
+    -webkit-transition: left 300ms ease-out;
+    background: rgba(0,0,0,0.95);
+    height: 100%;
+    position: absolute;
+    top: 0;
+    width: 285px;
+    left: -300px;
+    padding: 0 104px 0 15px;
+    z-index: 1;
+    color: White;
+    overflow: hidden;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.6);
+    -webkit-transform: translateZ(0);
+}
+.albumInfo h3{
+    font-size: 12pt;
+    margin: 0;
+    padding: 0.5em 0 0;
+
+}
+#albums a:hover .albumInfo{
+    left: 0;
+}
+#albums a:active .albumInfo{ top: 2px; }
+
+.albumInfo_count{
+    color: #AAAAAA;
+    font-size: 0.8em;
+}
+.ablbumInfo_description{
+    margin: 0;
+    padding: 0;
+    font-size: .8em;
+}
+#source_input{ width: 350px; margin-left: 10px; border: solid 1px #aaa; border-radius: 8px; box-shadow: 1px 1px 6px rgba(0,0,0,0.5) inset; padding: 1px 5px; }
+header{ color: White }
