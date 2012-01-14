@@ -14,7 +14,7 @@
     position: relative;
     text-decoration: none;
 }
-#albums a:hover{ opacity: 1 }
+#albums a:hover, #albums a.selected{ opacity: 1 }
 #albums a img{ position: absolute; right: 0; top: 0; border: none }
 #loader{ margin-left: 30px }
 .yoxviewControlBtn_prev{ left: 104px }
@@ -57,3 +57,13 @@
 }
 #source_input{ width: 350px; margin-left: 10px; border: solid 1px #aaa; border-radius: 8px; box-shadow: 1px 1px 6px rgba(0,0,0,0.5) inset; padding: 1px 5px; }
 header{ color: White }
+#thumbnailsPanel{ position: relative }
+#thumbnailsLoader{
+    position: absolute;
+    left: 50%; top: 50%;
+    margin-left: -16px;
+    margin-top: -16px;
+    width: 32px;
+    height: 32px;
+    display: none;
+}

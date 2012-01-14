@@ -5,6 +5,7 @@ var popupContainer =  document.getElementById("popupContainer"),
     sourceInput = document.getElementById("source_input"),
     $slideshowBtn = $("#slideshowBtn"),
     $addPanel = $("#addPanel"),
+    thumbnailsLoader = document.getElementById("thumbnailsLoader"),
     docElement = document.documentElement,
     info = document.getElementById("info"),
     infoTitle = document.getElementById("infoTitle"),
@@ -66,11 +67,13 @@ $albums.yoxview({
 })
     .on("click", "a", function(e){
         e.preventDefault();
+        $(".selected", $albums).removeClass("selected");
         $thumbnailsContainer.yoxview("source", {
             url: this.getAttribute("href"),
             cropThumbnails: false,
             thumbsize: 104
         });
+        this.className = "selected";
     });
 
 $thumbnailsContainer.yoxview({
@@ -101,6 +104,10 @@ $thumbnailsContainer.yoxview({
         cacheEnd: function(e, item){ loader.style.display = "none" },
         init: function(){ this.items.length && this.selectItem(0); },
         loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
+        loadSourcesStart: function(){
+            thumbnailsLoader.style.display = "block";
+        },
+        loadSources: function(){ thumbnailsLoader.style.display = "none" },
         createThumbnails: function(e, data){
             $thumbnailsContainer.yoxscroll("update");
             if (this.initialized)

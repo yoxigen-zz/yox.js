@@ -325,6 +325,8 @@
                 this.triggerEvent("loadSources", { createThumbnails: createThumbnails, items: items });
             },
             addSources: function(sources){
+                this.triggerEvent("loadSourcesStart", sources);
+
                 var deferredPromises = [],
                     self = this;
 
