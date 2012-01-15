@@ -80,6 +80,8 @@
         var dataSources = {};
         
         function onImageLoad(e){
+            this.loading = false;
+
             var view = e instanceof YoxView ? e : e.data.view,
                 item = view.currentItem,
                 position = view.getPosition(item, view.containerDimensions, view.options);
@@ -222,6 +224,9 @@
                             panels.push($img.appendTo($frame));
                         }
                     },
+                    getCurrentPanel: function(){
+                        return panels[currentPanelIndex];
+                    },
                     getPanel: function(item){
                         currentPanelIndex = currentPanelIndex ? 0 : 1;
                         return panels[currentPanelIndex];
@@ -302,6 +307,7 @@
             transitionMode.create.call(view, elements.$container);
             $.extend(view, {
                 getPanel: transitionMode.getPanel,
+                getCurrentPanel: transitionMode.getCurrentPanel,
                 transition: transitionMode.transition,
                 getPosition: resizeCalculateFunctions[view.options.resizeMode],
                 elements: elements
@@ -521,7 +527,7 @@
                 }
 
                 if (!isNaN(item)){
-                    if (item >= this.items.length)
+                    if (item >= this.items.length || item < 0)
                         throw new Error("Invalid item index.");
                     
                     item = this.items[item];
@@ -543,11 +549,15 @@
 
                 this.triggerEvent("beforeSelect", [{ newItem: item, oldItem: currentItem }, data]);
 				this.currentItem = item;
-
+                //this.getCurrentPanel()[0].abortLoad = true;
                 this.cache.withItem(item, this, function(){
-                    var $panel = this.getPanel(true);
+                    var $panel = this.getCurrentPanel();
+                    if (!$panel[0].loading)
+                        $panel = this.getPanel(true);
+
+                    $panel[0].loading = true;
+
                     if ($panel.attr("src") !== item.url){
-                        //$panel.callback = callback;
                         $panel.attr("src", item.url);
                         /*
                         if (window.chrome){ // This fixes a bug in Chrome 16, without it the second image doesn't show on the first run.

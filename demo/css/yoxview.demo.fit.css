@@ -85,7 +85,7 @@ header a:hover{ color: White }
     background-repeat: no-repeat;
     position: absolute;
     z-index: 2;
-    opacity: .25;
+    opacity: .1;
     -moz-transition: opacity 200ms ease-out;
     -webkit-transition: opacity 200ms ease-out;
 }

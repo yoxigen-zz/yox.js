@@ -13,10 +13,14 @@ var popupContainer =  document.getElementById("popupContainer"),
     itemCounter = document.getElementById("itemCounter"),
     isInit,
     heightToSubtract = document.getElementsByTagName("header")[0].clientHeight + info.clientHeight + $thumbnailsPanel.height() +2,
-    title = document.title;
+    title = document.title,
+    imagesInit;
 
 function setContainerSize(){
     var height = docElement.clientHeight - heightToSubtract;
+    if (!imagesInit)
+        height += $thumbnailsPanel.height() + info.clientHeight + 2;
+
     popupContainer.style.height = height + "px";
     if (isInit)
         $thumbnailsContainer.yoxview("update");
@@ -42,7 +46,12 @@ $slideshowBtn.on("click", function(e){
 });
 
 $("#addBtn").on("click", function(e){ e.preventDefault(); $addPanel.slideToggle("fast"); });
-sourceInput.addEventListener("focus", function(){ this.select(); }, false);
+$(sourceInput).on("focus", function(){ this.select(); }).on("keydown", function(e){
+    if (e.keyCode === 13){
+        setUser();
+        return false;
+    }
+});
 function createAlbumInfo(data, thumbnailEl){
     $(thumbnailEl).wrapInner($("#albumInfoTemplate").tmpl(data));
 }
@@ -62,6 +71,7 @@ $albums.yoxview({
             });
 
             document.title = document.getElementById("pageTitle").innerHTML = data.sources[0].data.author.name + "'s gallery";
+            $("a:first", $albums).trigger("click");
         }
     }
 })
@@ -104,10 +114,17 @@ $thumbnailsContainer.yoxview({
         cacheEnd: function(e, item){ loader.style.display = "none" },
         init: function(){ this.items.length && this.selectItem(0); },
         loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
-        loadSourcesStart: function(){
+        loadSourcesStart: function(e, data){
             thumbnailsLoader.style.display = "block";
+            if (!(data instanceof jQuery) && !imagesInit){
+                imagesInit = true;
+                setContainerSize();
+                $(".yoxviewControlBtn").show();
+            }
         },
-        loadSources: function(){ thumbnailsLoader.style.display = "none" },
+        loadSources: function(e, data){
+            thumbnailsLoader.style.display = "none";
+        },
         createThumbnails: function(e, data){
             $thumbnailsContainer.yoxscroll("update");
             if (this.initialized)

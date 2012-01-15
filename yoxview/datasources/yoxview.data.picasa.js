@@ -80,7 +80,7 @@ $.yoxview.addDataSource(function(){
                 };
 
             if (isAlbum){
-                itemData.data = { album: { name: image.gphoto$name.$t, imageCount: image.gphoto$numphotos.$t, description: image.summary.$t }};
+                itemData.data = { album: { name: image.title.$t, imageCount: image.gphoto$numphotos.$t, description: image.summary.$t }};
                 itemData.isLoaded = true;
             }
             else{

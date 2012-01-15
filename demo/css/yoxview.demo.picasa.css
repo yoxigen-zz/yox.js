@@ -5,6 +5,7 @@
     float: left;
     height: 100%;
     border-right: solid 1px #151515;
+    background: #0A0A0A;
 }
 #albums a{
     display: block;
@@ -67,3 +68,4 @@ header{ color: White }
     height: 32px;
     display: none;
 }
+.yoxviewControlBtn{ display: none }
