@@ -81,9 +81,11 @@
         
         function onImageLoad(e){
             this.loading = false;
+            var view = e instanceof YoxView ? e : e.data.view;
+            if (view.currentItem.url !== this.src)
+                return false;
 
-            var view = e instanceof YoxView ? e : e.data.view,
-                item = view.currentItem,
+            var item = view.currentItem,
                 position = view.getPosition(item, view.containerDimensions, view.options);
 
             view.transition.call(view, position);
@@ -549,8 +551,11 @@
 
                 this.triggerEvent("beforeSelect", [{ newItem: item, oldItem: currentItem }, data]);
 				this.currentItem = item;
-                //this.getCurrentPanel()[0].abortLoad = true;
-                this.cache.withItem(item, this, function(){
+
+                this.cache.withItem(item, this, function(loadedItem){
+                    if (loadedItem !== this.currentItem)
+                        return false;
+
                     var $panel = this.getCurrentPanel();
                     if (!$panel[0].loading)
                         $panel = this.getPanel(true);
@@ -852,10 +857,13 @@
             }
 
             function onLoadImage(e){
+                if (!this.width || !this.height)
+                    return false;
+
                 var cacheImage = cacheImages[currentCachedImageIndex = e.data.cacheImageIndex],
                     item = cacheImage.item,
                     view = cacheImage.view;
-                
+
                 item.width = this.width;
                 item.height = this.height;
                 item.ratio = this.height / this.width;
