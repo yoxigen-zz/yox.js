@@ -633,10 +633,10 @@
 			currentPopupContainerIsDocElement,
 			currentItem,
             thumbnailsActions = {
-                createThumbnail: function(item){
+                createThumbnail: function(item, options){
                     var $thumbnail = $("<a>", {
                         href: item.link || item.url,
-                        title: item.title,
+                        title: options.renderThumbnailsTitle !== false ? item.title : undefined,
                         data: { yoxviewIndex: item.id }
                     });
 
@@ -679,7 +679,7 @@
                                     documentFragment = document.createDocumentFragment();
                                     for(var j = 0, count = sourceData.items.length; j < count; j++){
                                         var item = sourceData.items[j],
-                                            thumbnailEl = view.options.createThumbnail(item);
+                                            thumbnailEl = view.options.createThumbnail(item, view.options);
         
                                         $(thumbnailEl).data("yoxviewIndex", item.id);
                                         item.thumbnail.element = thumbnailEl;

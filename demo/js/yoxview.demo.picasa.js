@@ -1,4 +1,5 @@
 var popupContainer =  document.getElementById("popupContainer"),
+    $contents = $("#contents"),
     $thumbnailsPanel = $("#thumbnailsPanel"),
     $thumbnailsContainer = $("#thumbnails"),
     $albums = $("#albums"),
@@ -17,6 +18,8 @@ var popupContainer =  document.getElementById("popupContainer"),
     imagesInit;
 
 function setContainerSize(){
+    $contents.width(docElement.clientWidth - $albums.width() - 1);
+
     var height = docElement.clientHeight - heightToSubtract;
     if (!imagesInit)
         height += $thumbnailsPanel.height() + info.clientHeight + 2;
@@ -64,6 +67,7 @@ $albums.yoxview({
     }
     ],
     handleThumbnailClick: false,
+    renderThumbnailsTitle: false,
     events: {
         createThumbnails: function(e, data){
             $.each(data.items, function(){
@@ -89,7 +93,7 @@ $albums.yoxview({
 $thumbnailsContainer.yoxview({
     delayOpen: true,
     enableKeyboard: true,
-    margin: { top: 10, right: 45, bottom: 10, left: 150 },
+    margin: { top: 10, right: 45, bottom: 10, left: 45 },
     container: popupContainer,
     controls: {
         prev: $("#yoxviewPrev"),

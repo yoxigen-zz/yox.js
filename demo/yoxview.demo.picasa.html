@@ -22,22 +22,24 @@
                 <input id="source_input" value="https://picasaweb.google.com/112402114851229244394" />
             </div>
         </header>
-		<div id="popupContainer">
-            <div id="albums"></div>
-            <a href="#" title="Previous" class="yoxviewControlBtn yoxviewControlBtn_prev" id="yoxviewPrev"></a>
-            <a href="#" title="Next" class="yoxviewControlBtn yoxviewControlBtn_next" id="yoxviewNext"></a>
-            <div id="loader"></div>
-		</div>
-        <div id="info">
-            <h2 id="infoTitle"></h2>
-            <a href="#" id="slideshowBtn">Slideshow</a>
-            <span id="itemCounter"></span>
-        </div>
-        <div id="thumbnailsPanel">
-            <a href="#" id="thumbnailsLeft" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-left" data-yoxscroll-click="page-left"></a>
-            <a href="#" id="thumbnailsRight" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-right" data-yoxscroll-click="page-right"></a>
-            <img id="thumbnailsLoader" src="img/ajax-loader-black.gif" />
-            <div id="thumbnails" class="thumbnails yoxview"></div>
+        <div id="albums"></div>
+        <div id="contents">
+            <div id="popupContainer">
+                <a href="#" title="Previous" class="yoxviewControlBtn yoxviewControlBtn_prev" id="yoxviewPrev"></a>
+                <a href="#" title="Next" class="yoxviewControlBtn yoxviewControlBtn_next" id="yoxviewNext"></a>
+                <div id="loader"></div>
+            </div>
+            <div id="info">
+                <h2 id="infoTitle"></h2>
+                <a href="#" id="slideshowBtn">Slideshow</a>
+                <span id="itemCounter"></span>
+            </div>
+            <div id="thumbnailsPanel">
+                <a href="#" id="thumbnailsLeft" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-left" data-yoxscroll-click="page-left"></a>
+                <a href="#" id="thumbnailsRight" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-right" data-yoxscroll-click="page-right"></a>
+                <img id="thumbnailsLoader" src="img/ajax-loader-black.gif" />
+                <div id="thumbnails" class="thumbnails yoxview"></div>
+            </div>
         </div>
 		<script src="js/yoxview.demo.picasa.js"></script>
         <script id="albumInfoTemplate" type="text/x-jquery-tmpl">

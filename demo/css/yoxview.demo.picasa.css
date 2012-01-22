@@ -17,8 +17,6 @@
 }
 #albums a:hover, #albums a.selected{ opacity: 1 }
 #albums a img{ position: absolute; right: 0; top: 0; border: none }
-#loader{ margin-left: 30px }
-.yoxviewControlBtn_prev{ left: 104px }
 
 .albumInfo{
     -moz-transition: left 300ms ease-out 0s;

@@ -25,6 +25,7 @@
 
     YoxScroll.prototype = (function(){
         var defaults = {
+                centerContentsIfNotScrollable: true,
                 events: {
                     buttonholdstart: function(e, btn){
                         applyButtonMethod.call(this, btn, "holdstart");
@@ -41,7 +42,8 @@
                 scrollByTime: .5, // The time, in seconds, it takes the scroll to complete, when a page / scrollBy command is given
                 scrollToEasing: "ease-in-out",
                 scrollToElementTime: .2, // The time, in seconds, it takes the scroll to complete when scrollTo is called with an HTML element or jQuery object
-                scrollVelocity: 500 // pixels / second
+                scrollVelocity: 500, // pixels / second
+                toggleButtons: true // If true and buttons are provided, the buttons are hidden if no scroll is required, and displayed if it is.
             },
             $window = $(window),
             mousedownStartPoint,
@@ -366,10 +368,17 @@
                     self = this;
 
                 // Merge the options events with the default ones:
-                var optionsEvents = $.extend({}, options.events);
-                delete options.events;
+                var optionsEvents = $.extend({}, options.events),
+                    dynamicEvents = {};
 
+                delete options.events;
                 var viewOptions = $.extend(true, {}, defaults, options);
+
+                if (viewOptions.toggleButtons)
+                    viewOptions.events.changeStatus = function(e, ui){
+                        this.options.elements.toggle(ui.scrollEnabled);
+                    };
+
                 for(var eventName in optionsEvents){
                     var eventHandlers = viewOptions.events[eventName],
                         events = optionsEvents[eventName];
@@ -406,8 +415,8 @@
                 $container.children().appendTo(elements.$slider);
                 elements.$slider.appendTo(elements.$container);
 
-                this.update();
                 this.initEvents();
+                this.update();
                 this.initButtons();
 
                 addEvents.call(self, elements.$slider);
@@ -482,12 +491,17 @@
                     scrollPosition += currentPosition;
 
                 scrollPosition = Math.min(Math.max(scrollPosition, this.minPosition), 0);
+
                 if (time === undefined){
                     var scrollDistance = Math.abs(scrollPosition - currentPosition);
                     time = scrollDistance / this.options.scrollVelocity;
                 }
-                $slider.css("transition", "left " + time + "s " + (scrollOptions.easing || this.options.scrollToEasing))
-                    .css("left", scrollPosition);
+                if (scrollPosition === 0 && scrollOptions.allowCenter !== false && this.options.centerContentsIfNotScrollable && !this.enableDrag)
+                    this.elements.$slider.css({ transition: "none", left: this.minPosition / 2 });
+                else{
+                    $slider.css("transition", "left " + time + "s " + (scrollOptions.easing || this.options.scrollToEasing))
+                        .css("left", scrollPosition);
+                }
             },
             stopScroll: function(){
                 var v = this.options.scrollVelocity / 20,
@@ -513,8 +527,14 @@
                     var enableDrag = self.minPosition < 0;
                     if (enableDrag !== self.enableDrag){
                         self.enableDrag = enableDrag;
-                        if (!enableDrag)
+                        if ((!enableDrag && !self.options.centerContentsIfNotScrollable) || (parseInt(enableDrag && self.elements.$slider.css("left"), 10) > 0)){
                             self.elements.$slider.css({ transition: "none", "left": 0 });
+                        }
+                        self.triggerEvent("changeStatus", { scrollEnabled: enableDrag });
+                    }
+
+                    if (self.options.centerContentsIfNotScrollable && !enableDrag){
+                        self.elements.$slider.css({ transition: "none", left: self.minPosition / 2 });
                     }
                 });
             }
