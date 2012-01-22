@@ -55,7 +55,6 @@
             eventTimestamp,
             currentTimespan,
             scrollEasing = "cubic-bezier(.15, .03, .15, .16)",
-            //scrollEasing = "linear",
             decceleration = 2.5,
             isMobile = isMobile(),
             eventNames = {
@@ -242,34 +241,36 @@
             currentDelta = event.pageX - mousePos;
             mousePos = event.pageX;
 
-            var pos = startPosition + mousePos - mousedownStartPoint,
-                currentDirection = Math.abs(currentDelta) / currentDelta;
+            if (this.enableDrag){
+                var pos = startPosition + mousePos - mousedownStartPoint,
+                    currentDirection = Math.abs(currentDelta) / currentDelta;
 
-            if (pos >= minPosition && pos <= 0)
-                $slider.css("left", pos);
-            else{
-                if (!currentDelta || currentDirection !== direction){
-                    resetDrag.call(currentView);
+                if (pos >= minPosition && pos <= 0)
+                    $slider.css("left", pos);
+                else{
+                    if (!currentDelta || currentDirection !== direction){
+                        resetDrag.call(currentView);
+                    }
+                    if (pos < minPosition && lastSliderPosition !== minPosition)
+                        $slider.css("left", pos = minPosition);
+                    else if (pos > 0 && lastSliderPosition !== 0)
+                        $slider.css("left", pos = 0);
+
                 }
-                if (pos < minPosition && lastSliderPosition !== minPosition)
-                    $slider.css("left", pos = minPosition);
-                else if (pos > 0 && lastSliderPosition !== 0)
-                    $slider.css("left", pos = 0);
 
+                moved = true;
+                direction = currentDirection;
+                lastSliderPosition = pos;
             }
-
-            moved = true;
-            direction = currentDirection;
-            lastSliderPosition = pos;
         }
 
         // Called on move event:
         var trackMousePos = isMobile
             ? function(e){
-                dragSlider(window.event.touches[0], e.data.$slider, e.data.minPosition);
+                dragSlider.call(e.data.view, window.event.touches[0], e.data.$slider, e.data.minPosition);
             }
             : function(e){
-                dragSlider(e, e.data.$slider, e.data.minPosition)
+                dragSlider.call(e.data.view, e, e.data.$slider, e.data.minPosition)
             };
         function move(time, distance, startFromCurrentPosition){
             var $slider = this.elements.$slider;
@@ -297,7 +298,7 @@
 
             e.data.view.elements.$window.off(eventNames.up, onMouseUp);
 
-            if (currentDelta !== 0){
+            if (e.data.view.enableDrag && currentDelta !== 0){
                 var v = Math.min(Math.abs(currentDelta) / (currentTimespan * 7), 0.86),
                     time = v * decceleration,
                     distance = Math.round((v*v) * decceleration * 1000);
@@ -307,6 +308,37 @@
                 currentView = null;
             }
             return false;
+        }
+
+        function addEvents($slider){
+            var self = this;
+            $slider.on(eventNames.down, function(e){
+                var event = isMobile ? window.event.touches[0] : e;
+                e.preventDefault();
+                mousePos = event.pageX;
+                eventTimestamp = event.timeStamp || new Date();
+                resetDrag.call(self, e);
+
+                if (self.enableDrag)
+                    $slider.css({ transition: "none", left: $slider.css("left") });
+
+                currentDelta = 0;
+                moved = false;
+
+                currentView = self;
+                //dragIntervalId = setInterval(function(){ dragSlider.call(self, self.elements.$slider, self.minPosition); }, dragInterval);
+
+                $(window).on(eventNames.move, { $slider: $slider, minPosition: self.minPosition, view: self }, trackMousePos)
+                    .on(eventNames.up, { view: self }, onMouseUp);
+            })
+            .on(eventNames.up, function(e){
+                e.preventDefault();
+                var currentMousePos = mousePos,
+                    isClickDistance = currentMousePos > mousedownStartPoint - 4 && currentMousePos < mousedownStartPoint + 4;
+
+                if ((self.enableDrag && !moved) || isClickDistance)
+                    self.triggerEvent("click", e);
+            });
         }
 
         return {
@@ -357,12 +389,11 @@
 
                 this.$eventsElement = $("<div>");
 
-                var elements = {
+                var elements = this.elements = {
                     $window: $(window),
                     $container: $(this.container),
                     $slider: $("<div>", { "class": "yoxscrollSlider", css: options.isHorizontal ? { height: "100%" } : { width: "100%" } })
                 };
-                this.elements = elements;
 
                 if ($.browser.webkit) // Enable hardware acceleration in webkit:
                     elements.$slider[0].style.setProperty("-webkit-transform", "translateZ(0)", null);
@@ -379,30 +410,8 @@
                 this.initEvents();
                 this.initButtons();
 
-                elements.$slider.on(eventNames.down, function(e){
-                    var event = isMobile ? window.event.touches[0] : e;
-                    e.preventDefault();
-                    mousePos = event.pageX;
-                    eventTimestamp = event.timeStamp || new Date();
-                    resetDrag.call(self, e);
-
-                    elements.$slider.css({ transition: "none", left: elements.$slider.css("left") });
-                    currentDelta = 0;
-                    moved = false;
-                    
-                    currentView = self;
-                    //dragIntervalId = setInterval(function(){ dragSlider.call(self, self.elements.$slider, self.minPosition); }, dragInterval);
-
-                    elements.$window.on(eventNames.move, { $slider: elements.$slider, minPosition: self.minPosition }, trackMousePos)
-                        .on(eventNames.up, { view: self }, onMouseUp);
-                })
-                .on(eventNames.up, function(e){
-                    e.preventDefault();
-                    var currentMousePos = mousePos;
-                    if (!moved || (currentMousePos > mousedownStartPoint - 4 && currentMousePos < mousedownStartPoint + 4) )
-                        self.triggerEvent("click", e);
-                })
-                .on("click", function(e){ e.preventDefault(); });
+                addEvents.call(self, elements.$slider);
+                elements.$slider.on("click", function(e){ e.preventDefault(); });
             },
             initButtons: function(){
                 if (!this.options.elements)
@@ -500,6 +509,13 @@
                     self.elements.$slider.width(sliderWidth);
                     self.containerSize = self.elements.$container.width();
                     self.minPosition = self.containerSize - sliderWidth;
+
+                    var enableDrag = self.minPosition < 0;
+                    if (enableDrag !== self.enableDrag){
+                        self.enableDrag = enableDrag;
+                        if (!enableDrag)
+                            self.elements.$slider.css({ transition: "none", "left": 0 });
+                    }
                 });
             }
         };
