@@ -45,12 +45,13 @@
         
         $("#thumbnails").yoxview({
             enableKeyboard: true,
-            enlarge: false,
+            enlarge: true,
             resizeMode: "fill",
-            source: { url: "https://picasaweb.google.com/105098710956916751721/TheGathering2006Purmerend", thumbsize: 104 },
+            source: { url: "https://picasaweb.google.com/105098710956916751721/USA", thumbsize: 104, authkey: "Gv1sRgCNDmkbS8-aii7AE" },
             zoom: true,
             container: container,
             selectedThumbnailClass: "selected",
+            transitionTime: 1000,
             events: {
                 cacheStart: function(e, item){ loader.style.display = "inline" },
                 cacheEnd: function(e, item){ loader.style.display = "none" },

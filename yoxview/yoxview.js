@@ -105,10 +105,10 @@
                 }
 
                 return {
-                    left: (containerDimensions.width - newWidth) / 2,
-                    top: (containerDimensions.height - newHeight) / 2,
-                    width: newWidth,
-                    height: newHeight
+                    left: Math.round((containerDimensions.width - newWidth) / 2),
+                    top: Math.round((containerDimensions.height - newHeight) / 2),
+                    width: Math.round(newWidth),
+                    height: Math.round(newHeight)
                 };
             },
             fit: function(item, containerDimensions, options){
@@ -252,6 +252,59 @@
 
                         panels[1].css("opacity", currentPanelIndex);
                         $frame.css(frameCss);
+                    }
+                };
+            })(),
+            fade: (function(){
+                var panels,
+                    currentPanelIndex = 1,
+                    defaultTransitionTime,
+                    currentTransitionTime;
+
+                return {
+                    create: function($container){
+                        var view = this;
+                        panels = [];
+                        for(var i=0; i<2; i++){
+                            var $img = $("<img>", { src: "", "class": "yoxviewImg" });
+                            if (i > 0)
+                                $img.css({opacity: "0"});
+
+                            $img.css({ transition: ["opacity ", this.options.transitionTime, "ms linear"].join("") });
+                            if ($.browser.webkit)
+                                $img[0].style.setProperty("-webkit-transform", "translateZ(0)");
+
+                            $img.on("load", { view: view }, onImageLoad);
+                            panels.push($img.appendTo($container));
+                        }
+                    },
+                    getCurrentPanel: function(){
+                        return panels[currentPanelIndex];
+                    },
+                    getPanel: function(item){
+                        currentPanelIndex = currentPanelIndex ? 0 : 1;
+                        return panels[currentPanelIndex];
+                    },
+                    transition: function(position, time){
+                        if (time !== undefined){
+                            if (isNaN(time))
+                                throw new TypeError("Invalid value for transition time, must be a number (in milliseconds).");
+                        }
+                        else
+                            time = defaultTransitionTime;
+
+                        //if (time !== currentTransitionTime){
+//                            panelCss.transition = "opacity " + time + "ms linear";
+//                            currentTransitionTime = time;
+//                        }
+
+                        panels[currentPanelIndex].css(position);
+                        if (this.options.enlarge && this.options.resizeMode === "fill")
+                            panels[1].css({ opacity: currentPanelIndex });
+                        else{
+                            panels[currentPanelIndex ? 0 : 1].css({ opacity: 0 });
+                            panels[currentPanelIndex].css({ opacity: 1 });
+                        }
                     }
                 };
             })()
@@ -717,7 +770,7 @@
                         select: function(e, item){
                             var view = this;
                             if (this.isPlaying)
-                                this.playTimeoutId = setTimeout(function(){ view.next.call(view, true); }, this.options.slideshowDelay);
+                                this.playTimeoutId = setTimeout(function(){ view.next.call(view, true); }, this.options.slideshowDelay + (this.options.transitionTime || 0));
                         },
                         thumbnailClick: function(e, item){
                             e.preventDefault();
@@ -732,6 +785,7 @@
                 },
                 mode: {
                     fill: {
+                        transition: "fade",
                         enlarge: true,
                         margin: 0,
                         padding: 0

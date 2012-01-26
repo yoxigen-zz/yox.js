@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YoxView 3.0 fullscreen demo</title>
+    <link rel="Stylesheet" type="text/css" href="css/demo.css" />
+    <link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="../yoxview/yoxview.js"></script>
+    <script type="text/javascript" src="../yoxview/datasources/yoxview.data.element.js"></script>
+    <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
+    <style>
+        html,body{ height: 100% }
+        body{ background: Black }
+        #main{ position: relative; height: 100% }
+        #yoxviewContainer{ height: 100%; overflow: hidden; }
+        #thumbnails{
+            height: 85px; width: 100%;
+            position: absolute; z-index: 100;
+            bottom: 0; left: 0;
+            text-align: center;
+            background: rgba(0,0,0,.3);
+            border-top: 1px solid rgba(0, 0, 0, 0.3);
+            white-space: nowrap;
+        }
+        #thumbnails a{ display: inline-block; margin: 10px 4px 0; outline: none  }
+        #thumbnails img{ height: 63px; border: solid 1px #757575;box-shadow: -1px 2px 5px rgba(0,0,0,.3) }
+        #thumbnails a:hover img, #thumbnails a.selected img{ border: solid 1px White; }
+        #line{ position: absolute; width: 100%; height: 1px; left: 0; top: 0; background: rgba(255,255,255,.15) }
+    </style>
+</head>
+<body>
+    <div id="main">
+        <div id="yoxviewContainer"></div>
+        <div id="thumbnails">
+            <div id="line"></div>
+        </div>
+    </div>
+    <script>
+        var $thumbnails = $("#thumbnails").yoxview({
+            enableKeyboard: true,
+            enlarge: true,
+            resizeMode: "fit",
+            transition: "fade",
+            margin: 0,
+            source: { url: "https://picasaweb.google.com/105098710956916751721/USA", thumbsize: 104, authkey: "Gv1sRgCNDmkbS8-aii7AE" },
+            container: document.getElementById("yoxviewContainer"),
+            selectedThumbnailClass: "selected",
+            transitionTime: 300,
+            events: {
+                loadItem: function(e, item){ $(item.thumbnail.element).addClass("loaded"); },
+                init: function(){ this.selectItem(0); }
+            }
+        });
+
+        $(window).on("resize", function(){
+            $thumbnails.yoxview("update");
+        });
+    </script>
+</body>
+</html>
