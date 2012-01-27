@@ -10,7 +10,7 @@
     <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
     <style>
         html,body{ height: 100% }
-        body{ background: Black }
+        body{ background: Black; overflow: hidden; }
         #main{ position: relative; height: 100% }
         #yoxviewContainer{ height: 100%; overflow: hidden; }
         #thumbnails{
@@ -21,12 +21,17 @@
             background: rgba(0,0,0,.3);
             border-top: 1px solid rgba(0, 0, 0, 0.3);
             white-space: nowrap;
+            opacity: 1;
+            -webkit-transition: opacity 300ms ease-out;
+            -moz-transition: opacity 300ms ease-out;
+            -o-transition: opacity 300ms ease-out;
         }
         #thumbnails a{ display: inline-block; margin: 10px 4px 0; outline: none  }
         #thumbnails img{ height: 63px; border: solid 1px #757575;box-shadow: -1px 2px 5px rgba(0,0,0,.3) }
         #thumbnails a:hover img, #thumbnails a.selected img{ border: solid 1px White; }
         #line{ position: absolute; width: 100%; height: 1px; left: 0; top: 0; background: rgba(255,255,255,.15) }
     </style>
+    <script src="js/ga.js"></script>
 </head>
 <body>
     <div id="main">
@@ -37,23 +42,46 @@
     </div>
     <script>
         var $thumbnails = $("#thumbnails").yoxview({
-            enableKeyboard: true,
-            enlarge: true,
-            resizeMode: "fit",
-            transition: "fade",
-            margin: 0,
-            source: { url: "https://picasaweb.google.com/105098710956916751721/USA", thumbsize: 104, authkey: "Gv1sRgCNDmkbS8-aii7AE" },
-            container: document.getElementById("yoxviewContainer"),
-            selectedThumbnailClass: "selected",
-            transitionTime: 300,
-            events: {
-                loadItem: function(e, item){ $(item.thumbnail.element).addClass("loaded"); },
-                init: function(){ this.selectItem(0); }
-            }
-        });
+                enableKeyboard: true,
+                enlarge: true,
+                resizeMode: "fit",
+                transition: "fade",
+                margin: 0,
+                source: { url: "https://picasaweb.google.com/105098710956916751721/USA", thumbsize: 104, authkey: "Gv1sRgCNDmkbS8-aii7AE" },
+                container: document.getElementById("yoxviewContainer"),
+                selectedThumbnailClass: "selected",
+                transitionTime: 300,
+                events: {
+                    loadItem: function(e, item){ $(item.thumbnail.element).addClass("loaded"); },
+                    init: function(){ this.selectItem(0); },
+                    createThumbnails: function(){
+                        mousemoveTimeoutId = setTimeout(function(){ $thumbnails.css({ opacity: 0 }); document.body.style.cursor = "none"; }, 3000);
+                        document.addEventListener("mousemove", function(e){
+                            if (!lastPos || e.pageX < lastPos.x - 4 || e.pageX > lastPos.x + 4 || e.pageY < lastPos.y - 4 || e.pageY > lastPos.y + 4){
+                                clearTimeout(mousemoveTimeoutId);
+                                $thumbnails.css("opacity", "1");
+                                document.body.style.cursor = "default";
+
+                                mousemoveTimeoutId = setTimeout(function(){
+                                    if (e.pageY >= thumbnailsRect.top)
+                                        return;
+
+                                    $thumbnails.css({ opacity: 0 });
+                                    document.body.style.cursor = "none";
+                                }, 2000);
+                            }
+                            lastPos = { x: e.pageX, y: e.pageY };
+                       }, false);
+                    }
+                }
+            }),
+            lastPos,
+            thumbnailsRect = $thumbnails[0].getClientRects()[0],
+            mousemoveTimeoutId;
 
         $(window).on("resize", function(){
             $thumbnails.yoxview("update");
+            thumbnailsRect = $thumbnails[0].getClientRects()[0];
         });
     </script>
 </body>
