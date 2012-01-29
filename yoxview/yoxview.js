@@ -369,6 +369,12 @@
             });
         }
 
+        var onOptionsChange = {
+            resizeMode: function(resizeMode){
+                this.getPosition = resizeCalculateFunctions[resizeMode];
+            }
+        };
+
         return {
             addDataSource: function(dataSource){
                 if (dataSources[dataSource.name])
@@ -526,6 +532,29 @@
                 this.direction = 1;
 				var nextItemId = this.currentItem.id === this.items.length ? 0 : this.currentItem.id;
 				this.selectItem(nextItemId, undefined, slideshow);
+            },
+            option: function(option, value){
+                var options;
+                if (value === undefined && typeof(option) === "object")
+                    options = option;
+                else{
+                    options = {};
+                    options[option] = value;
+                }
+
+                // Some options require special treatment once changed:
+                for(var opt in options){
+                    var prevValue = this.options[opt],
+                        newValue = options[opt];
+
+                    if (prevValue !== newValue){
+                        var onChange = onOptionsChange[opt];
+                        if (onChange)
+                            onChange.call(this, newValue, prevValue);
+                    }
+                }
+
+                $.extend(true, this.options, options);
             },
             toggleSlideshow: function(){
                 var view = this;
