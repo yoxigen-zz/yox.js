@@ -305,6 +305,10 @@
                             panels[currentPanelIndex ? 0 : 1].css({ opacity: 0 });
                             panels[currentPanelIndex].css({ opacity: 1 });
                         }
+                    },
+                    update: function(updateData){
+                        if (updateData.resizeMode && updateData.resizeMode !== this.options.resizeMode && this.options.enlarge && updateData.resizeMode === "fill")
+                            panels[0].css({ opacity: 1 });
                     }
                 };
             })()
@@ -365,7 +369,8 @@
                 getCurrentPanel: transitionMode.getCurrentPanel,
                 transition: transitionMode.transition,
                 getPosition: resizeCalculateFunctions[view.options.resizeMode],
-                elements: elements
+                elements: elements,
+                updateTransition: transitionMode.update
             });
         }
 
@@ -554,6 +559,7 @@
                     }
                 }
 
+                this.updateTransition && this.updateTransition.call(this, options);
                 $.extend(true, this.options, options);
             },
             toggleSlideshow: function(){
@@ -683,7 +689,7 @@
             unload: function(){
                 // SOON
             },
-            update: function(){
+            update: function(force){
                 var self = this;
                 if (this.options.transitionTime){
                     if (this.updateTransitionTimeoutId){
@@ -692,7 +698,7 @@
                     }
                 }
                 var containerDimensions = { width: this.elements.$container.width(), height: this.elements.$container.height() };
-                if (!this.containerDimensions || containerDimensions.width !== this.containerDimensions.width || containerDimensions.height !== this.containerDimensions.height){
+                if (force || !this.containerDimensions || containerDimensions.width !== this.containerDimensions.width || containerDimensions.height !== this.containerDimensions.height){
                     this.containerDimensions = containerDimensions;
                     if (this.currentItem){
                         this.transition(this.getPosition(this.currentItem, this.containerDimensions, this.options), 0);
