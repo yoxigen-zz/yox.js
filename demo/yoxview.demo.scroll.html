@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YoxView 3.0 scroll demo</title>
+    <link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
+    <link rel="Stylesheet" type="text/css" href="../yoxscroll/yoxscroll.css" />
+    <link rel="Stylesheet" type="text/css" href="css/demo.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="../yoxview/data.js"></script>
+    <script type="text/javascript" src="../yoxview/datasources/yoxview.data.element.js"></script>
+    <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
+    <script type="text/javascript" src="../yoxview/yoxview.js"></script>
+    <script type="text/javascript" src="../yoxscroll/jquery.yoxscroll.js"></script>
+    <style>
+        #thumbnailsPanel{
+            height: 500px;
+            position: absolute;
+            top: 50%;
+            margin-top: -250px;
+            left: 0;
+            width: 100%;
+            border-width: 1px 0 1px;
+            border-style: solid;
+            border-color: Black;
+            background: #eee;
+            overflow: hidden;
+        }
+        #thumbnailsPanel img{
+            height: 500px;
+            vertical-align: top;
+            border-width: 0 1px 0 0;
+            border-style: solid;
+            border-color: Black;
+        }
+        #thumbnailsPanel a:last-child img{ border-width: 0 }
+        .yoxviewFrame{ display: none }
+    </style>
+    <script src="js/ga.js"></script>
+</head>
+<body>
+    <div id="loader"></div>
+    <div id="thumbnailsPanel">
+        <a href="#" id="thumbnailsLeft" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-left" data-yoxscroll-click="page-left"></a>
+        <a href="#" id="thumbnailsRight" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-right" data-yoxscroll-click="page-right"></a>
+        <div id="thumbnails" class="thumbnails yoxview"></div>
+    </div>
+    <script>
+        var $thumbnailsContainer = $("#thumbnails"),
+            loader = document.getElementById("loader");
+
+        $thumbnailsContainer.yoxview({
+            delayOpen: true,
+            enableKeyboard: true,
+            //popupPadding: 20,
+            events: {
+                beforeSelect: function(e, items, data){
+                    try{
+                        $thumbnailsContainer.yoxscroll("scrollTo", items.newItem.thumbnail.element, { centerElement: !data, time: .5 });
+                    }
+                    catch(e){ }
+                },
+                close: function(){ info.innerHTML = "" },
+                cacheStart: function(e, item){ loader.style.display = "inline" },
+                cacheEnd: function(e, item){ loader.style.display = "none" },
+                init: function(){this.selectItem(0); },
+                loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
+                createThumbnails: function(e, data){
+                    $thumbnailsContainer.yoxscroll("update");
+                    if (this.initialized)
+                        this.selectItem(data.items[0]);
+                }
+            },
+            handleThumbnailClick: false,
+            selectedThumbnailClass: "selectedThumbnail",
+            data: new YoxData({ source: {
+                type: "picasa",
+                url: "https://picasaweb.google.com/105098710956916751721/USA",
+                thumbsize: 900,
+                cropThumbnails: false,
+                authkey: "Gv1sRgCNDmkbS8-aii7AE"
+            }}),
+            zoom: true,
+            transform: true,
+            transitionTime: 300
+        })
+        .yoxscroll({
+            events: {
+                click: function(e, originalEvent){ $thumbnailsContainer.yoxview("selectItem", originalEvent.target.parentNode, "yoxscroll"); }
+            },
+            elements: $(".thumbnailsBtn"),
+            pressedButtonClass: "enabledThumbnailsButton"
+        });
+    </script>
+</body>
+</html>

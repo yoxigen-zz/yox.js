@@ -1,4 +1,4 @@
-$.yoxview.addDataSource(function(){
+YoxData.prototype.addDataSource(function(){
 	var dataSourceName = "element";
 
     var isElement = typeof(HTMLElement) === "object"

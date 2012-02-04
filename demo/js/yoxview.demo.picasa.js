@@ -32,11 +32,11 @@ function setContainerSize(){
 setContainerSize();
 
 function setUser(){
-    $albums.yoxview("source", {
+    albumsDataSource.source({
         url: sourceInput.value,
         thumbsize: 104,
         cropThumbnails: true
-    })
+    });
 }
 
 $(window).resize(function(){
@@ -59,15 +59,33 @@ function createAlbumInfo(data, thumbnailEl){
     $(thumbnailEl).wrapInner($("#albumInfoTemplate").tmpl(data));
 }
 
-$albums.yoxview({
-    source: [{
+var albumsDataSource = new YoxData({ source: {
+        type: "picasa",
         url: document.getElementById("source_input").value,
         thumbsize: 104,
         cropThumbnails: true
-    }
-    ],
+    }}),
+    thumbnailsDataSource = new YoxData({
+        events: {
+            loadSourcesStart: function(e, data){
+                thumbnailsLoader.style.display = "block";
+                if (!(data instanceof jQuery) && !imagesInit){
+                    imagesInit = true;
+                    setContainerSize();
+                    $(".yoxviewControlBtn").show();
+                }
+            },
+            loadSources: function(e, data){
+                thumbnailsLoader.style.display = "none";
+            }
+        }
+    });
+
+
+$albums.yoxview({
     handleThumbnailClick: false,
     renderThumbnailsTitle: false,
+    data: albumsDataSource,
     events: {
         createThumbnails: function(e, data){
             $.each(data.items, function(){
@@ -82,11 +100,12 @@ $albums.yoxview({
     .on("click", "a", function(e){
         e.preventDefault();
         $(".selected", $albums).removeClass("selected");
-        $thumbnailsContainer.yoxview("source", {
+        thumbnailsDataSource.source({
             url: this.getAttribute("href"),
             cropThumbnails: false,
             thumbsize: 104
         });
+
         this.className = "selected";
     });
 
@@ -99,6 +118,7 @@ $thumbnailsContainer.yoxview({
         prev: $("#yoxviewPrev"),
         next: $("#yoxviewNext")
     },
+    data: thumbnailsDataSource,
     //popupPadding: 20,
     events: {
         beforeSelect: function(e, items, data){
@@ -118,17 +138,6 @@ $thumbnailsContainer.yoxview({
         cacheEnd: function(e, item){ loader.style.display = "none" },
         init: function(){ this.items.length && this.selectItem(0); },
         loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
-        loadSourcesStart: function(e, data){
-            thumbnailsLoader.style.display = "block";
-            if (!(data instanceof jQuery) && !imagesInit){
-                imagesInit = true;
-                setContainerSize();
-                $(".yoxviewControlBtn").show();
-            }
-        },
-        loadSources: function(e, data){
-            thumbnailsLoader.style.display = "none";
-        },
         createThumbnails: function(e, data){
             $thumbnailsContainer.yoxscroll("update");
             if (this.initialized)

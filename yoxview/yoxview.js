@@ -396,23 +396,34 @@
 
                 this.triggerEvent("loadSources", { createThumbnails: createThumbnails, items: items });
             },
-            addSources: function(sources){
-                this.triggerEvent("loadSourcesStart", sources);
+            addDataSources: function(dataSource){
+                var self = this,
+                    dataSourceItems = dataSource.getData();
 
-                var deferredPromises = [],
-                    self = this;
-
-                if (sources && !(sources instanceof Array))
-                    sources = [sources];
-
-                for(var i=0; i<sources.length; i++){
-                    var promise = this.loadSource(sources[i]);
-                    if (promise)
-                        deferredPromises.push(promise);
+                function appendItems(data){
+                    var dataItems = data.items;
+                    dataItems && (self.items = self.items.concat(dataItems));
                 }
 
-                $.when.apply(this, deferredPromises).done(function () {
-                    self.triggerEvent("loadSources", arguments);
+                if (dataSourceItems && dataSourceItems.length){
+                    for(var i=0; i < dataSourceItems.length; i++){
+                        appendItems(dataSourceItems[i]);
+                    }
+
+                    self.triggerEvent("loadSources", dataSourceItems);
+                }
+
+                dataSource.addEventListener("loadSources", function(e, sources){
+                    for(var i=0; i < sources.length; i++){
+                        appendItems(sources[i]);
+                    }
+
+                    // Should probably remove the following and do it ONLY with YoxData:
+                    self.triggerEvent("loadSources", sources);
+                });
+
+                dataSource.addEventListener("clear", function(){
+                    self.removeItems();
                 });
             },
             addEventListener: function(eventName, eventHandler){
@@ -433,16 +444,7 @@
 			},
             items: [],
             init: function(){
-                var self = this,
-                    sources = [this.container],
-                    optionsSource = this.options.source;
-
-                if (optionsSource){
-                    if (optionsSource instanceof Array)
-                        sources = sources.concat(optionsSource);
-                    else
-                        sources.push(optionsSource);
-                }
+                var self = this;
 
                 this.options.margin = utils.distributeMeasures(this.options.margin);
                 this.options.padding = utils.distributeMeasures(this.options.padding);
@@ -459,7 +461,7 @@
                         self.addEventListener(eventName, eventHandlers);
                 }
 
-                this.addSources(sources);
+                this.options.data && this.addDataSources(this.options.data);
 
                 createViewer(this);
                 
@@ -503,33 +505,6 @@
                 this.selectItem(this.items.length - 1);
 
 			},
-            loadSource: function(source){
-                var self = this,
-                    sourceIsObject = typeof(source) === "object",
-                    sourceUrl = sourceIsObject ? source.url : source,
-                    sourceOptions = sourceIsObject ? source : {},
-                    onLoadSource = function(sourceData){ self.store(sourceUrl, sourceData); dfd.resolve(sourceData); };
-
-                for(var dataSourceName in dataSources){
-                    var dataSource = dataSources[dataSourceName];
-
-                    if (dataSource.match(sourceUrl)){
-                        var dfd = $.Deferred(),
-                            savedSourceData = self.store(sourceUrl);
-
-                        if (savedSourceData)
-                            onLoadSource(savedSourceData);
-                        else{
-                            dataSource.load(sourceUrl, sourceOptions, onLoadSource,
-                                function(error){
-                                    dfd.reject();
-                                }
-                            )
-                        }
-                        return dfd;
-                    }
-                }
-            },
             next: function(slideshow){
                 if (!this.currentItem)
 					return false;
@@ -663,25 +638,6 @@
                     else
                         onImageLoad.call($panel[0], this);
                 });
-            },
-            source: function(sources){
-                this.removeItems();
-                this.addSources(sources);
-            },
-            store: function(key, data){
-                if (!this.options.storeDataSources || !window.localStorage || typeof(key) !== "string")
-                    return;
-
-                var keyName = "yoxview.source." + key;
-
-                if (!data){
-                    var item = window.localStorage.getItem(keyName);
-                    if (item)
-                        return JSON.parse(item);
-
-                    return;
-                }
-                window.localStorage.setItem(keyName, JSON.stringify(data));
             },
             triggerEvent: function(eventName, data){
                 $(this.container).trigger(eventName + ".yoxview", data);
@@ -850,61 +806,6 @@
                 }
 			},
 			$window = $(window);
-        
-		var viewActions = {
-			// Closes the popup, resets the viewer.
-			close: function(){
-				if (!isOpen)
-					return false;
-					
-				viewActions.resizeToThumbnail(currentItem.thumbnail.image, true);
-				setTimeout(function(){ elements.$yoxviewPopup.hide(); }, currentView.options.transitionTime);
-				
-				if (currentView.options.enableKeyPresses)
-					$.yoxview.keyPresses.disable();
-				
-		        currentView.triggerEvent("close");
-
-                elements.$background.hide();
-				currentView = currentPopupContainer = currentPopupContainerDimensions = currentViewSelectedThumbnailClass = currentPopupContainerIsDocElement = currentItem = null;
-				isOpen = false;
-				
-				return true;
-			},
-			// Opens the popup; 1. Set the popup on the thumbnail, 2. Sets the current view and item, 3. Selects the specified item.
-			// Params: e (object): { item (object): itemData, viewId (number): ID of the view to open.
-			open: function(e){
-                e = e || {};
-                currentView = views[e.viewId || 0];
-				if (!isOpen && false){
-					currentView = views[e.viewId || 0];
-					currentViewSelectedThumbnailClass = currentView.options.selectedThumbnailClass;
-
-					if (!e.item)
-						e.item = currentView.items[0];
-
-                    viewActions.updatePopup();
-					viewActions.resizeToThumbnail(e.item.thumbnail.image, false);
-					
-					currentPopupContainer = currentView.options.container;
-					currentPopupContainerIsDocElement = currentPopupContainer === docElement;
-					viewActions.setPopupContainerDimensions();
-					viewActions.resizeStaticStyleTransitions = viewActions.resizeStaticStyleTransitionsDefault.replace(/TIME/g, currentView.options.transitionTime + "ms");
-					
-
-
-                    currentView.triggerEvent("beforeOpen", { item: e.item });
-
-                    if (currentView.options.container === docElement)
-                        elements.$background.show();
-				}
-
-                if (currentView.options.enableKeyPresses)
-						$.yoxview.keyPresses.enable();
-                
-				currentView.selectItem(e.item);
-			}
-		};
 
         var cache = (function(){
             var currentCacheIndex,
@@ -1103,9 +1004,6 @@
                 }
 
 				return new YoxView(container, views.length, viewOptions, cache);
-			},
-			addDataSource: function(dataSource){
-                YoxView.prototype.addDataSource(dataSource);
 			},
             platform: platform
 		}

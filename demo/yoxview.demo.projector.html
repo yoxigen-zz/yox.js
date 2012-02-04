@@ -4,8 +4,9 @@
 		<title>YoxView 3.0 Demo</title>
 		<link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-		<script type="text/javascript" src="../yoxview/yoxview.js"></script>
+        <script type="text/javascript" src="../yoxview/data.js"></script>
         <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
+		<script type="text/javascript" src="../yoxview/yoxview.js"></script>
 		<style>
 			body{ padding: 0; margin: 0; font-family: Calibri, Arial, Sans-Serif; overflow: hidden;  }
 			h1{ font-size: 14pt; color: #666; margin: 0; padding: 0; display: inline; font-weight: normal }
@@ -40,12 +41,11 @@
                 -moz-transition: all 300ms ease-out;
                 -webkit-transition: all 300ms ease-out;
                 border: solid 1px Black;
-                box-shadow: 0 0 10px rgba(0,0,0,0.7);
+                /*box-shadow: 0 0 10px rgba(0,0,0,0.7);*/
                 opacity: 0;
                 -webkit-transform: translateZ(0);
-                background: url("img/ajax-loader.gif") no-repeat scroll center center White;
             }
-			#thumbnails img{ height: 100%; border-radius: 50%; }
+			#thumbnails img{ height: 100%; width: 100% }
             #thumbnails a.selectedThumbnail, #thumbnails a:hover { width: 82px; height: 82px; margin-left: -41px; margin-top: -53px; }
 
             .thumbnailsBtn{
@@ -227,6 +227,17 @@
                     prev: $("#yoxviewPrev"),
                     next: $("#yoxviewNext")
                 },
+                data:  new YoxData({
+                    source: {
+                        type: "picasa",
+                        url: "https://picasaweb.google.com/105098710956916751721/Trips",
+                        thumbsize: 104,
+                        cropThumbnails: false
+                    },
+                    events: {
+                        loadSources: function(e, data){ console.log("loaded: ", data); }
+                    }
+                }),
                 //popupPadding: 20,
                 events: {
                     close: function(){ info.innerHTML = "" },
@@ -244,12 +255,6 @@
                     slideshowStart: function(){ $slideshowBtn.addClass("slideshowBtn_on"); }
                 },
 				selectedThumbnailClass: "selectedThumbnail",
-                source: [{
-                    url: "https://picasaweb.google.com/105098710956916751721/Plants",
-                    thumbsize: 72,
-                    cropThumbnails: true,
-                    "max-results": 25
-                }],
                 zoom: true,
                 transform: true,
                 transitionTime: 300

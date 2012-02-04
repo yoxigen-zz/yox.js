@@ -1,4 +1,4 @@
-$.yoxview.addDataSource(function(){
+YoxData.prototype.addDataSource((function(){
 	var dataSourceName = "picasa",
         picasaRegex = /^https?:\/\/picasaweb\.google\./,
         picasaMatchRegex = /https?:\/\/picasaweb\.google\.\w+\/([^\/#\?]+)\/?([^\/#\?]+)?(\?([^#]*))?/,
@@ -15,11 +15,11 @@ $.yoxview.addDataSource(function(){
             imgmax: picasaUncropSizes[picasaUncropSizes.length - 1],
             fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href))"
         };
-    
+
     function getDataFromUrl(url, options){
         var urlMatch = url.match(picasaMatchRegex),
             data = $.extend({}, defaults, options);
-        
+
         if (urlMatch && urlMatch.length > 1)
         {
             data.user = urlMatch[1];
@@ -145,4 +145,4 @@ $.yoxview.addDataSource(function(){
             });
 	    }
     };
-}());
+})());

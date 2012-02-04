@@ -48,6 +48,18 @@ $slideshowBtn.on("click", function(e){
     $thumbnailsContainer.yoxview("toggleSlideshow");
 });
 
+var dataSource = new YoxData({
+    source: {
+        type: "picasa",
+        url: "https://picasaweb.google.com/105098710956916751721/Trips",
+        thumbsize: 104,
+        cropThumbnails: false
+    },
+    events: {
+        loadSources: function(e, data){ console.log("loaded: ", data); }
+    }
+});
+
 $("#addBtn").on("click", function(e){ e.preventDefault(); $addPanel.slideToggle("fast"); });
 $thumbnailsContainer.yoxview({
     delayOpen: true,
@@ -58,6 +70,7 @@ $thumbnailsContainer.yoxview({
         prev: $("#yoxviewPrev"),
         next: $("#yoxviewNext")
     },
+    data: dataSource,
     //popupPadding: 20,
     events: {
         beforeSelect: function(e, items, data){
@@ -87,12 +100,6 @@ $thumbnailsContainer.yoxview({
     },
     handleThumbnailClick: false,
     selectedThumbnailClass: "selectedThumbnail",
-    source: [{
-        url: "https://picasaweb.google.com/105098710956916751721/Trips",
-        thumbsize: 104,
-        cropThumbnails: false
-    }
-    ],
     zoom: true,
     transform: true,
     //transition: "evaporate",
