@@ -79,6 +79,28 @@ var albumsDataSource = new YoxData({ source: {
                 thumbnailsLoader.style.display = "none";
             }
         }
+    }),
+    thumbs = new YoxThumbnails($thumbnailsContainer, {
+        data: thumbnailsDataSource,
+        handleClick: false,
+        events: {
+            create: function(){
+                $thumbnailsContainer.yoxscroll("update");
+            }
+        }
+    }),
+    albumThumbs = new YoxThumbnails($albums, {
+        data: albumsDataSource,
+        handleClick: false,
+        events: {
+            create: function(data){
+                $.each(data.thumbnails, function(i){
+                    createAlbumInfo(data.items[i].data.album, this);
+                });
+
+                $(data.thumbnails[0]).trigger("click");
+            }
+        }
     });
 
 
@@ -87,13 +109,8 @@ $albums.yoxview({
     renderThumbnailsTitle: false,
     data: albumsDataSource,
     events: {
-        createThumbnails: function(e, data){
-            $.each(data.items, function(){
-                createAlbumInfo(this.data.album, this.thumbnail.element);
-            });
-
+        load: function(e, data){
             document.title = document.getElementById("pageTitle").innerHTML = data.sources[0].data.author.name + "'s gallery";
-            $("a:first", $albums).trigger("click");
         }
     }
 })
@@ -118,28 +135,25 @@ $thumbnailsContainer.yoxview({
         prev: $("#yoxviewPrev"),
         next: $("#yoxviewNext")
     },
+    createThumbnails: false,
     data: thumbnailsDataSource,
     //popupPadding: 20,
     events: {
         beforeSelect: function(e, items, data){
-            try{
-                $thumbnailsContainer.yoxscroll("scrollTo", items.newItem.thumbnail.element, { centerElement: !data });
-            }
-            catch(e){ }
+            $thumbnailsContainer.yoxscroll("scrollTo", items.newItem.thumbnail.element, { centerElement: !data });
+            thumbs.select(items.newItem.id - 1);
         },
         close: function(){ info.innerHTML = "" },
         select: function(e, item){
             infoTitle.innerHTML = item.title || "";
             itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
             document.title = title + (item ? " - " + item.title : "");
-
         },
         cacheStart: function(e, item){ loader.style.display = "inline" },
         cacheEnd: function(e, item){ loader.style.display = "none" },
         init: function(){ this.items.length && this.selectItem(0); },
         loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
-        createThumbnails: function(e, data){
-            $thumbnailsContainer.yoxscroll("update");
+        load: function(e, data){
             if (this.initialized)
                 this.selectItem(data.items[0]);
         },
@@ -147,7 +161,7 @@ $thumbnailsContainer.yoxview({
         slideshowStart: function(){ $slideshowBtn.addClass("slideshowBtn_on"); }
     },
     handleThumbnailClick: false,
-    selectedThumbnailClass: "selectedThumbnail",
+    //selectedThumbnailClass: "selectedThumbnail",
     zoom: true,
     transform: true,
     //transition: "evaporate",
@@ -155,7 +169,9 @@ $thumbnailsContainer.yoxview({
 })
 .yoxscroll({
     events: {
-        click: function(e, originalEvent){ $thumbnailsContainer.yoxview("selectItem", originalEvent.target.parentNode, "yoxscroll"); }
+        click: function(e, originalEvent){
+            $thumbnailsContainer.yoxview("selectItem", parseInt(originalEvent.target.parentNode.getAttribute("data-yoxthumbindex"), 10), "yoxscroll");
+        }
     },
     elements: $(".thumbnailsBtn"),
     pressedButtonClass: "enabledThumbnailsButton"

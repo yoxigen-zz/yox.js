@@ -6,6 +6,7 @@
     <link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="../yoxview/data.js"></script>
+    <script type="text/javascript" src="../yoxview/thumbnails.js"></script>
     <script type="text/javascript" src="../yoxview/datasources/yoxview.data.element.js"></script>
     <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
     <script type="text/javascript" src="../yoxview/yoxview.js"></script>
@@ -47,7 +48,7 @@
         }
         #thumbnails a{ display: inline-block; margin: 10px 4px 0; outline: none  }
         #thumbnails img{ height: 63px; border: solid 1px #757575;box-shadow: -1px 2px 5px rgba(0,0,0,.3) }
-        #thumbnails a:hover img, #thumbnails a.selected img{ border: solid 1px White; }
+        #thumbnails a:hover img, #thumbnails a.selectedThumbnail img{ border: solid 1px White; }
         #line{ position: absolute; width: 100%; height: 1px; left: 0; top: 0; background: rgba(255,255,255,.15) }
 
         #description{
@@ -91,120 +92,129 @@
         </p>
     </div>
     <script>
-        (function(){
-            var $thumbnails = $("#thumbnails").yoxview({
-                    enableKeyboard: true,
-                    enlarge: true,
-                    resizeMode: "fill",
-                    transition: "fade",
-                    margin: 0,
-                    data: new YoxData({ source: { url: "https://picasaweb.google.com/105098710956916751721/USA", thumbsize: 104, authkey: "Gv1sRgCNDmkbS8-aii7AE" }}),
-                    container: document.getElementById("yoxviewContainer"),
-                    selectedThumbnailClass: "selected",
-                    transitionTime: 300,
-                    events: {
-                        cacheStart: function(e, item){ loader.style.display = "inline" },
-                        cacheEnd: function(e, item){ loader.style.display = "none" },
-                        loadItem: function(e, item){ $(item.thumbnail.element).addClass("loaded"); },
-                        init: function(){ this.selectItem(0); }
-                    }
-                }),
-                $gallery = $("#gallery"),
-                galleryOriginalHeight = $gallery.height(),
-                lastPos,
-                thumbnailsRect = $thumbnails[0].getClientRects()[0],
-                mousemoveTimeoutId,
-                isFullScreen,
-                isFullScreenApi,
-                loader = document.getElementById("loader");
-
-            function emptyFunction(){};
-
-            document.cancelFullScreen = document.cancelFullScreen || document.mozCancelFullScreen || document.webkitCancelFullScreen || emptyFunction;
-            HTMLElement.prototype.requestFullScreen = HTMLElement.prototype.requestFullScreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullScreen || emptyFunction;
-            isFullScreenApi = document.cancelFullScreen !== emptyFunction;
-
-            function onFullScreenChange(e){
-                if (isFullScreenApi)
-                    isFullScreen = !isFullScreen;
-
-                if (isFullScreen){
-                    mousemoveTimeoutId = setTimeout(function(){ $thumbnails.css({ opacity: 0 }); document.body.style.cursor = "none"; }, 3000);
-                    $thumbnails.yoxview("option", "resizeMode", "fit");
+        var dataSource = new YoxData({ source: { url: "https://picasaweb.google.com/105098710956916751721/USA", thumbsize: 104, authkey: "Gv1sRgCNDmkbS8-aii7AE" }}),
+            $thumbnails = $("#thumbnails").yoxview({
+                enableKeyboard: true,
+                enlarge: true,
+                resizeMode: "fill",
+                transition: "fade",
+                margin: 0,
+                data: dataSource,
+                container: document.getElementById("yoxviewContainer"),
+                selectedThumbnailClass: "selected",
+                transitionTime: 300,
+                events: {
+                    beforeSelect: function(e, items, data){ thumbs.select(items.newItem.id - 1); },
+                    cacheStart: function(e, item){ loader.style.display = "inline" },
+                    cacheEnd: function(e, item){ loader.style.display = "none" },
+                    loadItem: function(e, item){ $(item.thumbnail.element).addClass("loaded"); },
+                    init: function(){ this.selectItem(0); }
                 }
-                else{
-                    clearTimeout(mousemoveTimeoutId);
-                    $thumbnails.css("opacity", "1");
-                    $gallery[0].style.height = galleryOriginalHeight + "px";
-                    document.body.style.cursor = "default";
-                    $thumbnails.yoxview("option", "resizeMode", "fill");
+            }),
+            thumbs = new YoxThumbnails($thumbnails, {
+                data: dataSource,
+                events: {
+                    click: function(e){
+                        $thumbnails.yoxview("selectItem", e.index);
+                    },
+                    create: function(){ this.select(0); }
                 }
+            }),
+            $gallery = $("#gallery"),
+            galleryOriginalHeight = $gallery.height(),
+            lastPos,
+            thumbnailsRect = $thumbnails[0].getClientRects()[0],
+            mousemoveTimeoutId,
+            isFullScreen,
+            isFullScreenApi,
+            loader = document.getElementById("loader");
 
-                //if (!isFullScreenApi)
-                    onResize();
+        function emptyFunction(){};
 
-                var $window = $(window),
-                    windowEventCaller = isFullScreen ? $window.on : $window.off;
+        document.cancelFullScreen = document.cancelFullScreen || document.mozCancelFullScreen || document.webkitCancelFullScreen || emptyFunction;
+        HTMLElement.prototype.requestFullScreen = HTMLElement.prototype.requestFullScreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullScreen || emptyFunction;
+        isFullScreenApi = document.cancelFullScreen !== emptyFunction;
 
-                windowEventCaller.call($window, "mousemove", onMouseMove);
-                if (!isFullScreenApi)
-                    windowEventCaller.call($(document), "keydown", onKeyDown);
-            }
-
+        function onFullScreenChange(e){
             if (isFullScreenApi)
-                document.addEventListener(document.mozCancelFullScreen ? "mozfullscreenchange" : "webkitfullscreenchange", onFullScreenChange, false);
+                isFullScreen = !isFullScreen;
 
-            function toggleFullScreen(){
-                if (isFullScreenApi){
-                    if (isFullScreen)
-                        document.cancelFullScreen();
-                    else{
-                        $gallery[0].style.height = "100%";
-                        $gallery[0].requestFullScreen();
-                    }
-                }
+            if (isFullScreen){
+                mousemoveTimeoutId = setTimeout(function(){ $thumbnails.css({ opacity: 0 }); document.body.style.cursor = "none"; }, 3000);
+                $thumbnails.yoxview("option", "resizeMode", "fit");
+            }
+            else{
+                clearTimeout(mousemoveTimeoutId);
+                $thumbnails.css("opacity", "1");
+                $gallery[0].style.height = galleryOriginalHeight + "px";
+                document.body.style.cursor = "default";
+                $thumbnails.yoxview("option", "resizeMode", "fill");
+            }
+
+            //if (!isFullScreenApi)
+                onResize();
+
+            var $window = $(window),
+                windowEventCaller = isFullScreen ? $window.on : $window.off;
+
+            windowEventCaller.call($window, "mousemove", onMouseMove);
+            if (!isFullScreenApi)
+                windowEventCaller.call($(document), "keydown", onKeyDown);
+        }
+
+        if (isFullScreenApi)
+            document.addEventListener(document.mozCancelFullScreen ? "mozfullscreenchange" : "webkitfullscreenchange", onFullScreenChange, false);
+
+        function toggleFullScreen(){
+            if (isFullScreenApi){
+                if (isFullScreen)
+                    document.cancelFullScreen();
                 else{
-                    isFullScreen = !isFullScreen;
-                    $gallery.css({
-                        position: isFullScreen ? "fixed" : "relative",
-                        height: isFullScreen ? "100%" : galleryOriginalHeight,
-                        border: isFullScreen ? "none" : "solid 1px Black",
-                        "zIndex": isFullScreen ? "100" : "1"
-                    });
-                    onFullScreenChange();
+                    $gallery[0].style.height = "100%";
+                    $gallery[0].requestFullScreen();
                 }
             }
-
-            function onResize(){
-                $thumbnails.yoxview("update", true);
-                thumbnailsRect = $thumbnails[0].getClientRects()[0];
+            else{
+                isFullScreen = !isFullScreen;
+                $gallery.css({
+                    position: isFullScreen ? "fixed" : "relative",
+                    height: isFullScreen ? "100%" : galleryOriginalHeight,
+                    border: isFullScreen ? "none" : "solid 1px Black",
+                    "zIndex": isFullScreen ? "100" : "1"
+                });
+                onFullScreenChange();
             }
+        }
 
-            function onKeyDown(e){
-                if (e.keyCode === 27)
-                    toggleFullScreen();
+        function onResize(){
+            $thumbnails.yoxview("update", true);
+            thumbnailsRect = $thumbnails[0].getClientRects()[0];
+        }
+
+        function onKeyDown(e){
+            if (e.keyCode === 27)
+                toggleFullScreen();
+        }
+
+        function onMouseMove(e){
+            if (!lastPos || e.pageX < lastPos.x - 4 || e.pageX > lastPos.x + 4 || e.pageY < lastPos.y - 4 || e.pageY > lastPos.y + 4){
+                clearTimeout(mousemoveTimeoutId);
+                $thumbnails.css("opacity", "1");
+                document.body.style.cursor = "default";
+
+                mousemoveTimeoutId = setTimeout(function(){
+                    if (e.pageY >= thumbnailsRect.top)
+                        return;
+
+                    $thumbnails.css({ opacity: 0 });
+                    document.body.style.cursor = "none";
+                }, 2000);
             }
+            lastPos = { x: e.pageX, y: e.pageY };
+        }
 
-            function onMouseMove(e){
-                if (!lastPos || e.pageX < lastPos.x - 4 || e.pageX > lastPos.x + 4 || e.pageY < lastPos.y - 4 || e.pageY > lastPos.y + 4){
-                    clearTimeout(mousemoveTimeoutId);
-                    $thumbnails.css("opacity", "1");
-                    document.body.style.cursor = "default";
-
-                    mousemoveTimeoutId = setTimeout(function(){
-                        if (e.pageY >= thumbnailsRect.top)
-                            return;
-
-                        $thumbnails.css({ opacity: 0 });
-                        document.body.style.cursor = "none";
-                    }, 2000);
-                }
-                lastPos = { x: e.pageX, y: e.pageY };
-            }
-
-            $gallery.on("dblclick", toggleFullScreen);
-            $(window).on("resize", onResize);
-        })();
+        $gallery.on("dblclick", toggleFullScreen);
+        $(window).on("resize", onResize);
     </script>
 </body>
 </html>

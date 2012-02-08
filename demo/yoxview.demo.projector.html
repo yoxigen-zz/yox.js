@@ -5,6 +5,7 @@
 		<link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <script type="text/javascript" src="../yoxview/data.js"></script>
+        <script type="text/javascript" src="../yoxview/thumbnails.js"></script>
         <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
 		<script type="text/javascript" src="../yoxview/yoxview.js"></script>
 		<style>
@@ -38,14 +39,14 @@
                 margin-left: -36px;
                 margin-top: -48px;
                 z-index: 31;
-                -moz-transition: all 300ms ease-out;
-                -webkit-transition: all 300ms ease-out;
+                -moz-transition: all 500ms ease-out;
+                -webkit-transition: all 500ms ease-out;
                 border: solid 1px Black;
-                /*box-shadow: 0 0 10px rgba(0,0,0,0.7);*/
+                -webkit-box-shadow: 0 0 10px rgba(0,0,0,0.7);
                 opacity: 0;
                 -webkit-transform: translateZ(0);
             }
-			#thumbnails img{ height: 100%; width: 100% }
+			#thumbnails img{ height: 100%; width: 100%; -webkit-border-radius: 50% }
             #thumbnails a.selectedThumbnail, #thumbnails a:hover { width: 82px; height: 82px; margin-left: -41px; margin-top: -53px; }
 
             .thumbnailsBtn{
@@ -160,7 +161,24 @@
                 isInit,
                 heightToSubtract = document.getElementsByTagName("header")[0].clientHeight,
                 title = document.title,
-                thumbnailsOpen = false;
+                thumbnailsOpen = false,
+                dataSource = new YoxData({
+                    source: {
+                        type: "picasa",
+                        url: "https://picasaweb.google.com/105098710956916751721/Trips",
+                        thumbsize: 104,
+                        cropThumbnails: false
+                    }
+                }),
+                thumbs = new YoxThumbnails($thumbnailsContainer, {
+                    data: dataSource,
+                    events: {
+                        click: function(e){
+                            $thumbnailsContainer.yoxview("selectItem", e.index);
+                        },
+                        create: function(){ this.select(0); }
+                    }
+                });
 				
 			function setContainerSize(){
                 var height = docElement.clientHeight - heightToSubtract;
@@ -190,7 +208,7 @@
                     open = !thumbnailsOpen;
 
                 $thumbs.each(function(i, thumbnail){
-                    setTimeout(function(){
+                    //setTimeout(function(){
                         var pos = open
                             ? { left: Math.cos(Math.PI * 2 * i / nThumbs) * radius, top: (Math.sin(Math.PI * 2 * i / nThumbs + Math.PI) * radius) - topOffset, opacity: 1 }
                             : { left: 0, top: 0, opacity: 0 };
@@ -201,7 +219,7 @@
                         if (i === nThumbs - 1){
                             thumbnailsOpen = open;
                         }
-                    }, delay * i);
+                    //}, delay * i);
                 });
 
                 $thumbnailsPanel.css("opacity", open ? .5 : 0);
@@ -227,19 +245,10 @@
                     prev: $("#yoxviewPrev"),
                     next: $("#yoxviewNext")
                 },
-                data:  new YoxData({
-                    source: {
-                        type: "picasa",
-                        url: "https://picasaweb.google.com/105098710956916751721/Trips",
-                        thumbsize: 104,
-                        cropThumbnails: false
-                    },
-                    events: {
-                        loadSources: function(e, data){ console.log("loaded: ", data); }
-                    }
-                }),
+                data: dataSource,
                 //popupPadding: 20,
                 events: {
+                    beforeSelect: function(e, items, data){ thumbs.select(items.newItem.id - 1); },
                     close: function(){ info.innerHTML = "" },
                     select: function(e, item){
                         infoTitle.innerHTML = item.title || "";

@@ -54,9 +54,16 @@ var dataSource = new YoxData({
         url: "https://picasaweb.google.com/105098710956916751721/Trips",
         thumbsize: 104,
         cropThumbnails: false
-    },
+    }
+});
+
+var thumbs = new YoxThumbnails($thumbnailsContainer, {
+    data: dataSource,
+    handleClick: false,
     events: {
-        loadSources: function(e, data){ console.log("loaded: ", data); }
+        create: function(data){
+            $thumbnailsContainer.yoxscroll("update");
+        }
     }
 });
 
@@ -70,28 +77,26 @@ $thumbnailsContainer.yoxview({
         prev: $("#yoxviewPrev"),
         next: $("#yoxviewNext")
     },
+    createThumbnails: false,
     data: dataSource,
     //popupPadding: 20,
     events: {
         beforeSelect: function(e, items, data){
-            try{
-                $thumbnailsContainer.yoxscroll("scrollTo", items.newItem.thumbnail.element, { centerElement: !data });
-            }
-            catch(e){ }
+            var thumbnailIndex = items.newItem.id - 1;
+            $thumbnailsContainer.yoxscroll("scrollTo", thumbs.thumbnails[thumbnailIndex], { centerElement: !data });
+            thumbs.select(thumbnailIndex);
         },
         close: function(){ info.innerHTML = "" },
         select: function(e, item){
             infoTitle.innerHTML = item.title || "";
             itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
             document.title = title + (item ? " - " + item.title : "");
-
         },
         cacheStart: function(e, item){ loader.style.display = "inline" },
         cacheEnd: function(e, item){ loader.style.display = "none" },
         init: function(){this.selectItem(0); },
         loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
-        createThumbnails: function(e, data){
-            $thumbnailsContainer.yoxscroll("update");
+        load: function(e, data){
             if (this.initialized)
                 this.selectItem(data.items[0]);
         },
@@ -99,7 +104,7 @@ $thumbnailsContainer.yoxview({
         slideshowStart: function(){ $slideshowBtn.addClass("slideshowBtn_on"); }
     },
     handleThumbnailClick: false,
-    selectedThumbnailClass: "selectedThumbnail",
+    //selectedThumbnailClass: "selectedThumbnail",
     zoom: true,
     transform: true,
     //transition: "evaporate",
@@ -107,9 +112,12 @@ $thumbnailsContainer.yoxview({
 })
 .yoxscroll({
     events: {
-        click: function(e, originalEvent){ $thumbnailsContainer.yoxview("selectItem", originalEvent.target.parentNode, "yoxscroll"); }
+        click: function(e, originalEvent){
+            $thumbnailsContainer.yoxview("selectItem", parseInt(originalEvent.target.parentNode.getAttribute("data-yoxthumbindex"), 10), "yoxscroll");
+        }
     },
     elements: $(".thumbnailsBtn"),
     pressedButtonClass: "enabledThumbnailsButton"
 });
+
 isInit = true;

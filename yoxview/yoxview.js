@@ -387,14 +387,14 @@
 
                 dataSources[dataSource.name] = dataSource;
             },
-            addItems: function(items, createThumbnails){
+            addItems: function(items){
                 if (!items)
                     return false;
 
                 if (!(items instanceof Array))
                     items = [items];
 
-                this.triggerEvent("loadSources", { createThumbnails: createThumbnails, items: items });
+                this.triggerEvent("loadSources", { items: items });
             },
             addDataSources: function(dataSource){
                 var self = this,
@@ -464,22 +464,6 @@
                 this.options.data && this.addDataSources(this.options.data);
 
                 createViewer(this);
-                
-                // Apply event handlers:
-                if (this.options.handleThumbnailClick){
-                    this.container.on("click.yoxview", "a:has('img')", function(e){
-                        e.preventDefault();
-                        self.triggerEvent("thumbnailClick", self.items[$(e.currentTarget).data("yoxviewIndex") - 1]);
-                    });
-                }
-
-                if (this.options.selectedThumbnailClass)
-                    this.addEventListener("beforeSelect", function(e, data){
-                        if (data.oldItem)
-                            $(data.oldItem.thumbnail.element).removeClass(this.options.selectedThumbnailClass);
-
-                        $(data.newItem.thumbnail.element).addClass(this.options.selectedThumbnailClass);
-                    });
 
                 if (this.options.enableKeyboard)
                     this.enableKeyboard();
@@ -560,22 +544,9 @@
 				this.selectItem(prevItemId);
             },
             removeItems: function(){
-                this.removeThumbnails();
                 this.triggerEvent("removeItems", this.items);
                 this.currentItem = undefined;
                 this.items = [];
-            },
-            removeThumbnails: function(){
-                var removedThumbnails = [];
-
-                for(var i=0, count = this.items.length; i < count; i++){
-                    var item = this.items[i];
-                    if (item.thumbnail && item.thumbnail.generated){
-                        removedThumbnails.push($(item.thumbnail.element).remove());
-                        delete item.thumbnail.element;
-                    }
-                }
-                this.triggerEvent("removeThumbnails", removedThumbnails);
             },
             removeEventListener: function(eventName, eventHandler){
                 if (eventHandler && typeof(eventHandler) !== "function")
@@ -593,7 +564,7 @@
 
                 if (!isNaN(item)){
                     if (item >= this.items.length || item < 0)
-                        throw new Error("Invalid item index.");
+                        throw new Error("Invalid item index: " + item);
                     
                     item = this.items[item];
                 }
@@ -602,7 +573,11 @@
                         item = $(item);
 
                     if (item instanceof jQuery){
-                        item = this.items[item.data("yoxviewIndex") - 1];
+                        var index = item.data("yoxviewIndex");
+                        if (isNaN(index))
+                            index = parseInt(item.attr("data-yoxviewIndex"), 10);
+
+                        item = this.items[index];
                     }
                 }
 
@@ -667,38 +642,12 @@
 	$.yoxview = (function(){
 		var views = [],
             platform = getPlatform(),
-			isOpen = false,
-			elements = {}, // $yoxviewPopup
 			docElement = document.documentElement,
-			currentView,
-            currentViewSelectedThumbnailClass,
-			currentPopupContainer,
-			currentPopupContainerDimensions,
-			currentPopupContainerIsDocElement,
-			currentItem,
-            thumbnailsActions = {
-                createThumbnail: function(item, options){
-                    var $thumbnail = $("<a>", {
-                        href: item.link || item.url,
-                        title: options.renderThumbnailsTitle !== false ? item.title : undefined,
-                        data: { yoxviewIndex: item.id }
-                    });
-
-                    $thumbnail.append($("<img>", {
-                        src: item.thumbnail.src,
-                        alt: item.title
-                    }));
-
-                    return $thumbnail[0];
-                }
-            },
 			config = {
                 defaults: {
                     cacheImagesInBackground: true, // If true, full-size images are cached even while the gallery hasn't been opened yet.
-                    createThumbnail: thumbnailsActions.createThumbnail, // A function that creates a thumbnail element when YoxView generates thumbnails. (Flickr, Picasa, etc.)
                     enableKeyPresses: true, // If set to false, YoxView won't catch any keyboard press events. To change individual keys, use keyPress.
                     enlarge: false, // Whether to enlarge images to fit the container
-                    handleThumbnailClick: true, // Whether clicks on thumbnails should be handled. Set to false to implement clicks using the API.
                     keyPress: { left: "prev", right: "next", up: "prev", down: "next", escape: "close", home: "first", end: "last", enter: "toggleSlideshow" }, // Functions to apply on key presses
                     events: { // Predefined event handlers
                         backgroundClick: function(){ $.yoxview.close() },
@@ -711,47 +660,21 @@
                             this.removeEventListener("init");
                         },
                         loadSources: function(e){
-                            var documentFragment,
-                                createItems = [],
+                            var createItems = [],
                                 view = this,
                                 sources = Array.prototype.slice.call(arguments, 1),
                                 originalNumberOfItems = view.items.length;
-                            
+
                             for(var i=0; i < sources.length; i++){
                                 var sourceData = sources[i];
-                                if (sourceData.createThumbnails){
-                                    documentFragment = document.createDocumentFragment();
-                                    for(var j = 0, count = sourceData.items.length; j < count; j++){
-                                        var item = sourceData.items[j],
-                                            thumbnailEl = view.options.createThumbnail(item, view.options);
-        
-                                        $(thumbnailEl).data("yoxviewIndex", item.id);
-                                        item.thumbnail.element = thumbnailEl;
-                                        item.thumbnail.generated = true;
-
-                                        var thumbnailImages = thumbnailEl.getElementsByTagName("img");
-                                        if (thumbnailImages.length)
-                                            item.thumbnail.image = thumbnailImages[0];
-        
-                                        documentFragment.appendChild(thumbnailEl);
-                                    }
-                                }
-        
                                 view.items = view.items.concat(sourceData.items);
                                 createItems = createItems.concat(sourceData.items);
                             }
-        
-                            for(var i=originalNumberOfItems, count=view.items.length; i < count; i++){
-                                var item = view.items[i];
-                                item.id = i + 1;
-                                if (item.thumbnail && item.thumbnail.element)
-                                    $(item.thumbnail.element).data("yoxviewIndex", item.id);
-                            }
-        
-                            if (documentFragment){
-                                view.container[0].appendChild(documentFragment);
-                                view.triggerEvent("createThumbnails", { items: createItems, sources: sources });
-                            }
+
+                            for(var i=originalNumberOfItems, count=view.items.length; i < count; i++)
+                                view.items[i].id = i + 1;
+
+                            view.triggerEvent("load", { items: createItems, sources: sources });
 
                             if (!view.initialized){
                                 view.initialized = true;
@@ -762,10 +685,6 @@
                             var view = this;
                             if (this.isPlaying)
                                 this.playTimeoutId = setTimeout(function(){ view.next.call(view, true); }, this.options.slideshowDelay + (this.options.transitionTime || 0));
-                        },
-                        thumbnailClick: function(e, item){
-                            e.preventDefault();
-                            this.selectItem(item);
                         }
                     }, // A function to call when the popup's background is clicked. (Applies only in popup mode)
                     container: docElement, // The element in which the viewer is rendered. Defaults to the whole window.
@@ -804,8 +723,7 @@
                         transitionTime: 300 // The time it takes to animate transitions between items or opening and closing.
                     }
                 }
-			},
-			$window = $(window);
+			};
 
         var cache = (function(){
             var currentCacheIndex,
@@ -821,6 +739,7 @@
             
             for(var i=0; i<concurrentCachedImagesCount; i++){
                 var cacheImage = new Image();
+                cacheImage.setAttribute("data-id", i);
                 $(cacheImage).on("load", { cacheImageIndex: i }, onLoadImage);
                 cacheImages.push({ img: cacheImage });
             }
@@ -857,6 +776,7 @@
                 item.width = this.width;
                 item.height = this.height;
                 item.ratio = this.height / this.width;
+
                 item.isLoaded = true;
 
                 if (item.id === loadingItemId)
@@ -906,7 +826,7 @@
                         return true;
                     }
                 }
-                
+
                 currentCacheIndex = item.id - 1;
                 
                 if (!item.isLoaded && item.type === "image"){
@@ -914,8 +834,9 @@
                     cacheImage.item = item;
                     cacheImage.view = view;
                     cacheImage.img.src = "";
-                    cacheImage.img.src = item.url;
                     cacheImage.onCache = onCache;
+
+                    cacheImage.img.src = item.url;
                     cachingCount++;
 
                     if (++currentCachedImageIndex === cacheImages.length)
