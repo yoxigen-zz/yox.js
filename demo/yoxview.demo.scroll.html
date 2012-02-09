@@ -32,7 +32,7 @@
         #thumbnailsPanel img{
             height: 512px;
             vertical-align: top;
-
+            border: none;
             cursor: move;
         }
         #thumbnailsPanel a:last-child img{ border-width: 0 }
@@ -54,12 +54,14 @@
             opacity: .6;
             -moz-transition: opacity 200ms ease-out;
             -webkit-transition: opacity 200ms ease-out;
+            outline: none;
         }
         #smallThumbnails a:hover, #smallThumbnails a.selectedThumbnail{ opacity: 1 }
         #smallThumbnails a.selectedThumbnail{ box-shadow: 1px 1px 5px rgba(0,0,0,.8) }
         #smallThumbnails img{
             height: 48px;
             width: 48px;
+            border: none;
             /*border: solid 1px Black;*/
         }
 
