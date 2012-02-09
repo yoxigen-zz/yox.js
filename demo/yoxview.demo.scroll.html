@@ -14,25 +14,25 @@
     <script type="text/javascript" src="../yoxscroll/jquery.yoxscroll.js"></script>
     <style>
         #thumbnailsPanel{
-            height: 500px;
+            height: 512px;
             position: absolute;
             top: 50%;
-            margin-top: -280px;
+            margin-top: -286px;
             left: 0;
             width: 100%;
+
             border-width: 1px 0 1px;
             border-style: solid;
-            border-color: Black;
+            border-color: #ddd;
+
             background: #eee;
             overflow: hidden;
             cursor: move;
         }
         #thumbnailsPanel img{
-            height: 500px;
+            height: 512px;
             vertical-align: top;
-            border-width: 0 1px 0 0;
-            border-style: solid;
-            border-color: Black;
+
             cursor: move;
         }
         #thumbnailsPanel a:last-child img{ border-width: 0 }
@@ -40,20 +40,27 @@
             text-align: center;
             position: absolute;
             top: 50%;
-            margin-top: 225px;
+            margin-top: 233px;
             width: 100%;
         }
         #smallThumbnails a{
+            -moz-transition: opacity 200ms ease-out 0s;
+            border-radius: 5px 5px 5px 5px;
             display: inline-block;
-            margin: 5px;
+            height: 48px;
+            padding: 3px;
+            width: 48px;
+            border: solid 1px Transparent;
             opacity: .6;
             -moz-transition: opacity 200ms ease-out;
             -webkit-transition: opacity 200ms ease-out;
         }
         #smallThumbnails a:hover, #smallThumbnails a.selectedThumbnail{ opacity: 1 }
+        #smallThumbnails a.selectedThumbnail{ box-shadow: 1px 1px 5px rgba(0,0,0,.8) }
         #smallThumbnails img{
-            height: 45px;
-            border: solid 1px Black;
+            height: 48px;
+            width: 48px;
+            /*border: solid 1px Black;*/
         }
 
         .yoxviewFrame{ display: none }
@@ -73,13 +80,15 @@
             loader = document.getElementById("loader"),
             dataSource = new YoxData({ source: {
                 type: "picasa",
-                url: "https://picasaweb.google.com/105098710956916751721/USA",
-                thumbsize: 900,
+                url: "https://picasaweb.google.com/105098710956916751721/Nexus",
+                thumbsize: 48,
+                imgmax: 512,
                 cropThumbnails: false,
-                authkey: "Gv1sRgCNDmkbS8-aii7AE"
+                authkey: "Gv1sRgCM_q18qf-p7qBg"
             }}),
             scroll = new YoxThumbnails($thumbnailsContainer, {
                 data: dataSource,
+                useFullImages: true,
                 events: {
                     create: function(){ $thumbnailsContainer.yoxscroll("update"); }
                 }
@@ -94,8 +103,13 @@
             });
 
         function gotoImage(imageIndex){
-            $thumbnailsContainer.yoxscroll("scrollTo", scroll.thumbnails[imageIndex], { centerElement: true, time: .5 });
+            $thumbnailsContainer.yoxview("selectItem", imageIndex);
+            //$thumbnailsContainer.yoxscroll("scrollTo", scroll.thumbnails[imageIndex], { centerElement: true, time: .5 });
         }
+
+        $(window).resize(function(){
+            $thumbnailsContainer.yoxscroll("update");
+        });
 
         $thumbnailsContainer.yoxview({
             delayOpen: true,
@@ -103,7 +117,8 @@
             events: {
                 beforeSelect: function(e, items, data){
                     var index = items.newItem.id - 1;
-                    gotoImage(index);
+                    $thumbnailsContainer.yoxscroll("scrollTo", scroll.thumbnails[index], { centerElement: true, time: .5 });
+                    //gotoImage(index);
                     thumbs.select(index);
                 },
                 close: function(){ info.innerHTML = "" },
