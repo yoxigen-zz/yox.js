@@ -71,7 +71,7 @@
                 });
 
             $thumbnail.append($("<img>", {
-                src: item.thumbnail.src,
+                src: this.options.useFullImages ? item.url : item.thumbnail.src,
                 alt: item.title
             }));
 
