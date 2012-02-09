@@ -17,7 +17,7 @@
             height: 500px;
             position: absolute;
             top: 50%;
-            margin-top: -340px;
+            margin-top: -280px;
             left: 0;
             width: 100%;
             border-width: 1px 0 1px;
@@ -25,6 +25,7 @@
             border-color: Black;
             background: #eee;
             overflow: hidden;
+            cursor: move;
         }
         #thumbnailsPanel img{
             height: 500px;
@@ -32,19 +33,22 @@
             border-width: 0 1px 0 0;
             border-style: solid;
             border-color: Black;
+            cursor: move;
         }
         #thumbnailsPanel a:last-child img{ border-width: 0 }
         #smallThumbnails{
             text-align: center;
             position: absolute;
             top: 50%;
-            margin-top: 167px;
+            margin-top: 225px;
             width: 100%;
         }
         #smallThumbnails a{
             display: inline-block;
             margin: 5px;
             opacity: .6;
+            -moz-transition: opacity 200ms ease-out;
+            -webkit-transition: opacity 200ms ease-out;
         }
         #smallThumbnails a:hover, #smallThumbnails a.selectedThumbnail{ opacity: 1 }
         #smallThumbnails img{
