@@ -1,4 +1,5 @@
-function YoxData(options){
+yoxview = {};
+yox.data = function(options){
     this.$eventsElement = $("<div>");
     this.data = [];
     this.options = $.extend(true, {}, this.defaults, options);
@@ -11,7 +12,7 @@ function YoxData(options){
     this.options.source && this.addSources(this.options.source);
 }
 
-YoxData.prototype = {
+yox.data.prototype = {
     dataSources: {},
     defaults: {
 

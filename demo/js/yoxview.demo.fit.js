@@ -48,7 +48,7 @@ $slideshowBtn.on("click", function(e){
     $thumbnailsContainer.yoxview("toggleSlideshow");
 });
 
-var dataSource = new YoxData({
+var dataSource = new yox.data({
     source: {
         type: "picasa",
         url: "https://picasaweb.google.com/105098710956916751721/Trips",
@@ -57,7 +57,7 @@ var dataSource = new YoxData({
     }
 });
 
-var thumbs = new YoxThumbnails($thumbnailsContainer, {
+var thumbs = new yox.thumbnails($thumbnailsContainer, {
     data: dataSource,
     handleClick: false,
     events: {
@@ -95,7 +95,7 @@ $thumbnailsContainer.yoxview({
         cacheStart: function(e, item){ loader.style.display = "inline" },
         cacheEnd: function(e, item){ loader.style.display = "none" },
         init: function(){this.selectItem(0); },
-        loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
+        loadItem: function(e, item){ $(thumbs.thumbnails[item.id - 1]).addClass("loadedThumbnail"); },
         load: function(e, data){
             if (this.initialized)
                 this.selectItem(data.items[0]);

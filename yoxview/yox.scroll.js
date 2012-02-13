@@ -10,20 +10,20 @@
                 return yoxscroll[options].apply(yoxscroll, Array.prototype.slice.call(arguments, 1));
             }
             else if (typeof options === 'object' || !options){
-                $this.data("yoxscroll", new YoxScroll(this, options));
+                $this.data("yoxscroll", new yox.scroll(this, options));
             }
             else
-              $.error( 'Method ' +  options + ' does not exist on YoxScroll.' );
+              $.error( 'Method ' +  options + ' does not exist on yox.scroll.' );
         }
         return this;
     };
 
-    function YoxScroll(container, opt){
+    yox.scroll = function(container, opt){
         this.container = container;
         this.init(opt);
     }
 
-    YoxScroll.prototype = (function(){
+    yox.scroll.prototype = (function(){
         var defaults = {
                 centerContentsIfNotScrollable: true,
                 events: {
@@ -111,28 +111,29 @@
                 }
             };
 
-        function loadImages(parentEl, onLoad){
+        function loadImages(parentEl, onLoad, onLoadImage){
             var $parentEl = $(parentEl),
                 images = parentEl.getElementsByTagName("img"),
                 imgCount = images.length,
                 key = new Date();
 
             if (!imgCount){
-                onLoad(0);
+                onLoad && onLoad(0);
                 return;
             }
 
             var loadedCount = 0,
                 onLoadImg = function(e){
+                    onLoadImage && onLoadImage.call(this, e);
                     if ((e instanceof Date || e.target.nodeName === "IMG") && ++loadedCount === imgCount){
                         parentEl.removeEventListener("load", onLoadImg, true);
-                        onLoad(imgCount);
-
+                        onLoad && onLoad(imgCount);
                     }
                 },
                 onLoadImgIE = function(e){
+                    onLoadImage && onLoadImage.call(this, e);
                     if (++loadedCount === imgCount){
-                        onLoad(imgCount);
+                        onLoad && onLoad(imgCount);
                     }
                     e.srcElement.detachEvent("onload", onLoadImgIE);
                 };
@@ -401,7 +402,7 @@
                 var elements = this.elements = {
                     $window: $(window),
                     $container: $(this.container),
-                    $slider: $("<div>", { "class": "yoxscrollSlider", css: options.isHorizontal ? { height: "100%" } : { width: "100%" } })
+                    $slider: $("<div>", { "class": "yoxscrollSlider", css: $.extend({ position: "relative", top: 0, left: 0 }, options.isHorizontal ? { height: "100%" } : { width: "100%" }) })
                 };
 
                 if ($.browser.webkit) // Enable hardware acceleration in webkit:
@@ -496,8 +497,9 @@
                     var scrollDistance = Math.abs(scrollPosition - currentPosition);
                     time = scrollDistance / this.options.scrollVelocity;
                 }
-                if (scrollPosition === 0 && scrollOptions.allowCenter !== false && this.options.centerContentsIfNotScrollable && !this.enableDrag)
+                if (scrollPosition === 0 && scrollOptions.allowCenter !== false && this.options.centerContentsIfNotScrollable && !this.enableDrag){
                     this.elements.$slider.css({ transition: "none", left: this.minPosition / 2 });
+                }
                 else{
                     $slider.css("transition", "left " + time + "s " + (scrollOptions.easing || this.options.scrollToEasing))
                         .css("left", scrollPosition);
@@ -518,7 +520,7 @@
             update: function(){
                 var self = this;
                 this.elements.$container.children(":not(.yoxscrollSlider)").appendTo(this.elements.$slider);
-                loadImages(this.elements.$container[0], function(){
+                function onLoadImage(){
                     var sliderWidth = self.calculateSliderSize();
                     self.elements.$slider.width(sliderWidth);
                     self.containerSize = self.elements.$container.width();
@@ -536,7 +538,9 @@
                     if (self.options.centerContentsIfNotScrollable && !enableDrag){
                         self.elements.$slider.css({ transition: "none", left: self.minPosition / 2 });
                     }
-                });
+                }
+
+                loadImages(this.elements.$container[0], undefined, onLoadImage);
             }
         };
     })();

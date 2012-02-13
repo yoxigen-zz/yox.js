@@ -5,11 +5,14 @@
     <link rel="Stylesheet" type="text/css" href="css/demo.css" />
     <link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="../yoxview/data.js"></script>
-    <script type="text/javascript" src="../yoxview/thumbnails.js"></script>
-    <script type="text/javascript" src="../yoxview/datasources/yoxview.data.element.js"></script>
-    <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
-    <script type="text/javascript" src="../yoxview/yoxview.js"></script>
+    <script type="text/javascript" src="../yoxview/yox.js"></script>
+    <script type="text/javascript" src="../yoxview/yox.data.js"></script>
+    <script type="text/javascript" src="../yoxview/yox.thumbnails.js"></script>
+    <script type="text/javascript" src="../yoxview/datasources/yox.data.element.js"></script>
+    <script type="text/javascript" src="../yoxview/datasources/yox.data.picasa.js"></script>
+    <script type="text/javascript" src="../yoxview/yox.view.js"></script>
+    <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.js"></script>
+    <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.fade.js"></script>
     <style>
         html,body{ height: 100%; }
         body{ overflow: hidden; }
@@ -92,7 +95,7 @@
         </p>
     </div>
     <script>
-        var dataSource = new YoxData({ source: { url: "https://picasaweb.google.com/105098710956916751721/USA", thumbsize: 104, authkey: "Gv1sRgCNDmkbS8-aii7AE" }}),
+        var dataSource = new yox.data({ source: { url: "https://picasaweb.google.com/105098710956916751721/USA", thumbsize: 104, authkey: "Gv1sRgCNDmkbS8-aii7AE" }}),
             $thumbnails = $("#thumbnails").yoxview({
                 enableKeyboard: true,
                 enlarge: true,
@@ -101,17 +104,16 @@
                 margin: 0,
                 data: dataSource,
                 container: document.getElementById("yoxviewContainer"),
-                selectedThumbnailClass: "selected",
                 transitionTime: 300,
                 events: {
                     beforeSelect: function(e, items, data){ thumbs.select(items.newItem.id - 1); },
                     cacheStart: function(e, item){ loader.style.display = "inline" },
                     cacheEnd: function(e, item){ loader.style.display = "none" },
-                    loadItem: function(e, item){ $(item.thumbnail.element).addClass("loaded"); },
+                    loadItem: function(e, item){ $(thumbs.thumbnails[item.id - 1]).addClass("loaded"); },
                     init: function(){ this.selectItem(0); }
                 }
             }),
-            thumbs = new YoxThumbnails($thumbnails, {
+            thumbs = new yox.thumbnails($thumbnails, {
                 data: dataSource,
                 events: {
                     click: function(e){

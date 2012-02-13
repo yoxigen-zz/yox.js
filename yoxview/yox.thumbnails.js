@@ -1,5 +1,5 @@
 (function($, undefined){
-    function YoxThumbnails(container, options){
+    yox.thumbnails = function(container, options){
         var self = this;
         
         this.container = container instanceof jQuery ? container[0] : container;
@@ -23,7 +23,7 @@
         }
     }
 
-    YoxThumbnails.prototype = {
+    yox.thumbnails.prototype = {
         addDataSources: function(dataSource){
             var self = this,
                 dataSourceItems = dataSource.getData();
@@ -123,5 +123,5 @@
         }
     };
 
-    window.YoxThumbnails = YoxThumbnails;
+    window.yox.thumbnails = yox.thumbnails;
 })(jQuery);

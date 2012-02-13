@@ -1,4 +1,4 @@
-YoxData.prototype.addDataSource((function(){
+yox.data.prototype.addDataSource((function(){
 	var dataSourceName = "picasa",
         picasaRegex = /^https?:\/\/picasaweb\.google\./,
         picasaMatchRegex = /https?:\/\/picasaweb\.google\.\w+\/([^\/#\?]+)\/?([^\/#\?]+)?(\?([^#]*))?/,

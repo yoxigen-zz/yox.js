@@ -67,7 +67,7 @@
         }
     })();
 
-	function YoxView(container, id, options, cache){
+	yox.view = function(container, id, options, cache){
 		this.container = container;
 		this.options = options;
 		this.id = id;
@@ -76,12 +76,12 @@
 		this.init();
 	}
 
-	YoxView.prototype = (function(){
+    yox.view.prototype = (function(){
         var dataSources = {};
         
-        function onImageLoad(e){
+        function onImageLoad(e){console.log("onLoad: ", this.src);
             this.loading = false;
-            var view = e instanceof YoxView ? e : e.data.view;
+            var view = e instanceof yox.view ? e : e.data.view;
             if (view.currentItem.url !== this.src)
                 return false;
 
@@ -134,186 +134,6 @@
             }
         };
 
-        var transitions = {
-            evaporate: (function(){
-                var panels,
-                    currentPanelIndex = 1,
-                    defaultTransitionTime,
-                    currentTransitionTime;
-
-                return {
-                    create: function($container){
-                        var view = this;
-                        currentTransitionTime = this.options.transitionTime;
-                        defaultTransitionTime = this.options.transitionTime;
-
-                        panels = [];
-                        for(var i=0; i<2; i++){
-                            var $img = $("<img>", { src: "", "class": "yoxviewImg" });
-                            if (i > 0)
-                                $img.css({opacity: "0"});
-
-                            $img.css({ transition: ["all ", this.options.transitionTime, "ms ease-out"].join("") });
-                            if ($.browser.webkit)
-                                $img[0].style.setProperty("-webkit-transform", "translateZ(0)");
-
-                            $img.on("load", { view: view }, onImageLoad);
-                            panels.push($img.appendTo($container));
-                        }
-                    },
-                    getPanel: function(item){
-                        currentPanelIndex = currentPanelIndex ? 0 : 1;
-                        return panels[currentPanelIndex];
-                    },
-                    transition: function(position, time){
-                        if (time !== undefined){
-                            if (isNaN(time))
-                                throw new TypeError("Invalid value for transition time, must be a number (in milliseconds).");
-                        }
-                        else
-                            time = defaultTransitionTime;
-
-                        if (time !== currentTransitionTime){
-                            for(var i=panels.length; i--;){
-                                panels[i].css("transition", "all " + time + "ms ease-out");
-                            }
-                            currentTransitionTime = time;
-                        }
-
-                        var currentPanel = panels[currentPanelIndex ? 0 : 1].css("z-index", "2"),
-                            newPanel = panels[currentPanelIndex],
-                            panelCss = $.extend({ transition: "all  0ms ease-out", "z-index": "1" },
-                                resizeCalculateFunctions.fit(
-                                    $.extend({}, position, { ratio: position.height / position.width }),
-                                    { width: currentPanel.width(), height: currentPanel.height() }));
-
-                        newPanel.css(panelCss);
-                        currentPanel.css({ transition: "all " + time + "ms ease-out", opacity: 0 });
-                        newPanel.css($.extend({ transition: "all " + time + "ms ease-out", opacity: 1 }, position));
-                    }
-                };
-            })(),
-            morph: (function(){
-                var $frame,
-                    panels,
-                    currentPanelIndex = 1,
-                    defaultTransitionTime,
-                    currentTransitionTime;
-
-                return {
-                    create: function($container){
-                        var view = this;
-                        $frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + this.options.resizeMode + " yoxviewFrame_" + $.yoxview.platform}).appendTo($container);
-                        if (this.options.transitionTime){
-                            currentTransitionTime = this.options.transitionTime;
-                            defaultTransitionTime = this.options.transitionTime;
-                            $frame.css("transition", "all " + defaultTransitionTime + "ms ease-out");
-                            if ($.browser.webkit)
-                                $frame[0].style.setProperty("-webkit-transform", "translateZ(0)");
-                        }
-
-                        panels = [];
-                        for(var i=0; i<2; i++){
-                            var $img = $("<img>", { src: "", "class": "yoxviewImg" });
-                            if (i > 0)
-                                $img.css({opacity: "0"});
-
-                            $img.css({ transition: ["all ", this.options.transitionTime, "ms ease-out"].join("") });
-                            if ($.browser.webkit)
-                                $img[0].style.setProperty("-webkit-transform", "translateZ(0)");
-
-                            $img.on("load", { view: view }, onImageLoad);
-                            panels.push($img.appendTo($frame));
-                        }
-                    },
-                    getCurrentPanel: function(){
-                        return panels[currentPanelIndex];
-                    },
-                    getPanel: function(item){
-                        currentPanelIndex = currentPanelIndex ? 0 : 1;
-                        return panels[currentPanelIndex];
-                    },
-                    transition: function(position, time){
-                        var panelCss = { opacity: currentPanelIndex },
-                            frameCss = $.extend({}, position);
-
-                        if (time !== undefined){
-                            if (isNaN(time))
-                                throw new TypeError("Invalid value for transition time, must be a number (in milliseconds).");
-                        }
-                        else
-                            time = defaultTransitionTime;
-
-                        if (time !== currentTransitionTime){
-                            panelCss.transition = "opacity " + time + "ms ease-out";
-                            frameCss.transition = "all " + time + "ms ease-out";
-                            currentTransitionTime = time;
-                        }
-
-                        panels[1].css("opacity", currentPanelIndex);
-                        $frame.css(frameCss);
-                    }
-                };
-            })(),
-            fade: (function(){
-                var panels,
-                    currentPanelIndex = 1,
-                    defaultTransitionTime,
-                    currentTransitionTime;
-
-                return {
-                    create: function($container){
-                        var view = this;
-                        panels = [];
-                        for(var i=0; i<2; i++){
-                            var $img = $("<img>", { src: "", "class": "yoxviewImg" });
-                            if (i > 0)
-                                $img.css({opacity: "0"});
-
-                            $img.css({ transition: ["opacity ", this.options.transitionTime, "ms linear"].join("") });
-                            if ($.browser.webkit)
-                                $img[0].style.setProperty("-webkit-transform", "translateZ(0)");
-
-                            $img.on("load", { view: view }, onImageLoad);
-                            panels.push($img.appendTo($container));
-                        }
-                    },
-                    getCurrentPanel: function(){
-                        return panels[currentPanelIndex];
-                    },
-                    getPanel: function(item){
-                        currentPanelIndex = currentPanelIndex ? 0 : 1;
-                        return panels[currentPanelIndex];
-                    },
-                    transition: function(position, time){
-                        if (time !== undefined){
-                            if (isNaN(time))
-                                throw new TypeError("Invalid value for transition time, must be a number (in milliseconds).");
-                        }
-                        else
-                            time = defaultTransitionTime;
-
-                        //if (time !== currentTransitionTime){
-//                            panelCss.transition = "opacity " + time + "ms linear";
-//                            currentTransitionTime = time;
-//                        }
-
-                        panels[currentPanelIndex].css(position);
-                        if (this.options.enlarge && this.options.resizeMode === "fill")
-                            panels[1].css({ opacity: currentPanelIndex });
-                        else{
-                            panels[currentPanelIndex ? 0 : 1].css({ opacity: 0 });
-                            panels[currentPanelIndex].css({ opacity: 1 });
-                        }
-                    },
-                    update: function(updateData){
-                        if (updateData.resizeMode && updateData.resizeMode !== this.options.resizeMode && this.options.enlarge && updateData.resizeMode === "fill")
-                            panels[0].css({ opacity: 1 });
-                    }
-                };
-            })()
-        };
-
         var keyboard = {
 			map: {
 	            40: 'down',
@@ -359,11 +179,16 @@
             else if (elements.$container.css("position") === "static")
                 elements.$container.css("position", "relative");
 
-            var transitionMode = typeof view.options.transition === "string" ? transitions[view.options.transition] : view.options.transition;
-            if (!transitionMode)
+            var transitionModeConstructor = typeof view.options.transition === "string" ? view.transitions[view.options.transition] : view.options.transition;
+            if (!transitionModeConstructor)
                 throw new Error("Invalid transition - \"" + view.options.transition + "\" doesn't exist.");
 
-            transitionMode.create.call(view, elements.$container);
+            var transitionMode = new transitionModeConstructor();
+
+            if (!(transitionMode instanceof yox.viewTransition))
+                throw new Error("Invalid transition - transition constructors must have yox.viewTransition as prototype.");
+
+            transitionMode.create.call(view, elements.$container, onImageLoad);
             $.extend(view, {
                 getPanel: transitionMode.getPanel,
                 getCurrentPanel: transitionMode.getCurrentPanel,
@@ -521,6 +346,7 @@
                 this.updateTransition && this.updateTransition.call(this, options);
                 $.extend(true, this.options, options);
             },
+            transitions: {},
             toggleSlideshow: function(){
                 var view = this;
 
@@ -599,8 +425,8 @@
                         $panel = this.getPanel(true);
 
                     $panel[0].loading = true;
-
                     if ($panel.attr("src") !== item.url){
+                        $panel.attr("src", "");
                         $panel.attr("src", item.url);
                         /*
                         if (window.chrome){ // This fixes a bug in Chrome 16, without it the second image doesn't show on the first run.
@@ -804,7 +630,7 @@
             }
 
             function cacheItem(view, item, onCache){
-                if (!(view instanceof YoxView))
+                if (!(view instanceof yox.view))
                     throw new TypeError("Invalid view for cacheItem.");
 
                 if (!view)
@@ -924,7 +750,7 @@
                         eventHandlers.push(events);
                 }
 
-				return new YoxView(container, views.length, viewOptions, cache);
+				return new yox.view(container, views.length, viewOptions, cache);
 			},
             platform: platform
 		}

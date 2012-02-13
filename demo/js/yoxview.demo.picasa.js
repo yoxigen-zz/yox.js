@@ -59,13 +59,13 @@ function createAlbumInfo(data, thumbnailEl){
     $(thumbnailEl).wrapInner($("#albumInfoTemplate").tmpl(data));
 }
 
-var albumsDataSource = new YoxData({ source: {
+var albumsDataSource = new yox.data({ source: {
         type: "picasa",
         url: document.getElementById("source_input").value,
         thumbsize: 104,
         cropThumbnails: true
     }}),
-    thumbnailsDataSource = new YoxData({
+    thumbnailsDataSource = new yox.data({
         events: {
             loadSourcesStart: function(e, data){
                 thumbnailsLoader.style.display = "block";
@@ -80,7 +80,7 @@ var albumsDataSource = new YoxData({ source: {
             }
         }
     }),
-    thumbs = new YoxThumbnails($thumbnailsContainer, {
+    thumbs = new yox.thumbnails($thumbnailsContainer, {
         data: thumbnailsDataSource,
         handleClick: false,
         events: {
@@ -89,7 +89,7 @@ var albumsDataSource = new YoxData({ source: {
             }
         }
     }),
-    albumThumbs = new YoxThumbnails($albums, {
+    albumThumbs = new yox.thumbnails($albums, {
         data: albumsDataSource,
         handleClick: false,
         events: {
@@ -150,9 +150,11 @@ $thumbnailsContainer.yoxview({
             document.title = title + (item ? " - " + item.title : "");
         },
         cacheStart: function(e, item){ loader.style.display = "inline" },
-        cacheEnd: function(e, item){ loader.style.display = "none" },
+        cacheEnd: function(e, item){
+            loader.style.display = "none";
+        },
         init: function(){ this.items.length && this.selectItem(0); },
-        loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
+        loadItem: function(e, item){ $(thumbs.thumbnails[item.id - 1]).addClass("loadedThumbnail"); },
         load: function(e, data){
             if (this.initialized)
                 this.selectItem(data.items[0]);

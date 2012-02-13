@@ -3,15 +3,17 @@
 <head>
     <title>YoxView 3.0 scroll demo</title>
     <link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
-    <link rel="Stylesheet" type="text/css" href="../yoxscroll/yoxscroll.css" />
     <link rel="Stylesheet" type="text/css" href="css/demo.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="../yoxview/data.js"></script>
-    <script type="text/javascript" src="../yoxview/thumbnails.js"></script>
-    <script type="text/javascript" src="../yoxview/datasources/yoxview.data.element.js"></script>
-    <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
-    <script type="text/javascript" src="../yoxview/yoxview.js"></script>
-    <script type="text/javascript" src="../yoxscroll/jquery.yoxscroll.js"></script>
+    <script type="text/javascript" src="../yoxview/yox.js"></script>
+    <script type="text/javascript" src="../yoxview/yox.data.js"></script>
+    <script type="text/javascript" src="../yoxview/yox.thumbnails.js"></script>
+    <script type="text/javascript" src="../yoxview/datasources/yox.data.element.js"></script>
+    <script type="text/javascript" src="../yoxview/datasources/yox.data.picasa.js"></script>
+    <script type="text/javascript" src="../yoxview/yox.view.js"></script>
+    <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.js"></script>
+    <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.morph.js"></script>
+    <script type="text/javascript" src="../yoxview/yox.scroll.js"></script>
     <style>
         #thumbnailsPanel{
             height: 512px;
@@ -80,7 +82,7 @@
     <script>
         var $thumbnailsContainer = $("#thumbnails"),
             loader = document.getElementById("loader"),
-            dataSource = new YoxData({ source: {
+            dataSource = new yox.data({ source: {
                 type: "picasa",
                 url: "https://picasaweb.google.com/105098710956916751721/Nexus",
                 thumbsize: 48,
@@ -88,14 +90,14 @@
                 cropThumbnails: false,
                 authkey: "Gv1sRgCM_q18qf-p7qBg"
             }}),
-            scroll = new YoxThumbnails($thumbnailsContainer, {
+            scroll = new yox.thumbnails($thumbnailsContainer, {
                 data: dataSource,
                 useFullImages: true,
                 events: {
                     create: function(){ $thumbnailsContainer.yoxscroll("update"); }
                 }
             }),
-            thumbs = new YoxThumbnails($("#smallThumbnails"), {
+            thumbs = new yox.thumbnails($("#smallThumbnails"), {
                 data: dataSource,
                 events: {
                     click: function(e){

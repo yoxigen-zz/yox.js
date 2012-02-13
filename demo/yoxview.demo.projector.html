@@ -4,10 +4,13 @@
 		<title>YoxView 3.0 Demo</title>
 		<link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-        <script type="text/javascript" src="../yoxview/data.js"></script>
-        <script type="text/javascript" src="../yoxview/thumbnails.js"></script>
-        <script type="text/javascript" src="../yoxview/datasources/yoxview.data.picasa.js"></script>
-		<script type="text/javascript" src="../yoxview/yoxview.js"></script>
+        <script type="text/javascript" src="../yoxview/yox.js"></script>
+        <script type="text/javascript" src="../yoxview/yox.data.js"></script>
+        <script type="text/javascript" src="../yoxview/yox.thumbnails.js"></script>
+        <script type="text/javascript" src="../yoxview/datasources/yox.data.picasa.js"></script>
+		<script type="text/javascript" src="../yoxview/yox.view.js"></script>
+        <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.js"></script>
+        <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.morph.js"></script>
 		<style>
 			body{ padding: 0; margin: 0; font-family: Calibri, Arial, Sans-Serif; overflow: hidden;  }
 			h1{ font-size: 14pt; color: #666; margin: 0; padding: 0; display: inline; font-weight: normal }
@@ -162,7 +165,7 @@
                 heightToSubtract = document.getElementsByTagName("header")[0].clientHeight,
                 title = document.title,
                 thumbnailsOpen = false,
-                dataSource = new YoxData({
+                dataSource = new yox.data({
                     source: {
                         type: "picasa",
                         url: "https://picasaweb.google.com/105098710956916751721/Trips",
@@ -170,7 +173,7 @@
                         cropThumbnails: false
                     }
                 }),
-                thumbs = new YoxThumbnails($thumbnailsContainer, {
+                thumbs = new yox.thumbnails($thumbnailsContainer, {
                     data: dataSource,
                     events: {
                         click: function(e){
