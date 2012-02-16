@@ -49,67 +49,86 @@ $slideshowBtn.on("click", function(e){
 });
 
 var dataSource = new yox.data({
-    source: {
-        type: "picasa",
-        url: "https://picasaweb.google.com/105098710956916751721/Trips",
-        thumbsize: 104,
-        cropThumbnails: false
-    }
+    source: [
+        {
+            type: "element",
+            element: document.getElementById("thumbnails")
+        },
+        {
+            type: "picasa",
+            url: "https://picasaweb.google.com/105098710956916751721/Trips",
+            thumbsize: 104,
+            cropThumbnails: false
+        }
+    ]
 });
 
 var thumbs = new yox.thumbnails($thumbnailsContainer, {
-    data: dataSource,
-    handleClick: false,
-    events: {
-        create: function(data){
-            $thumbnailsContainer.yoxscroll("update");
+        data: dataSource,
+        handleClick: false,
+        events: {
+            create: function(data){
+                $thumbnailsContainer.yoxscroll("update");
+            }
         }
+    }),
+    yoxviewOptions = {
+        delayOpen: true,
+        enableKeyboard: true,
+        margin: { top: 10, right: 45, bottom: 10, left: 45 },
+        container: popupContainer,
+        controls: {
+            prev: $("#yoxviewPrev"),
+            next: $("#yoxviewNext")
+        },
+        createThumbnails: false,
+        data: dataSource,
+        //popupPadding: 20,
+        events: {
+            beforeSelect: function(e, items, data){
+                var thumbnailIndex = items.newItem.id - 1;
+                $thumbnailsContainer.yoxscroll("scrollTo", thumbs.thumbnails[thumbnailIndex], { centerElement: !data });
+                thumbs.select(thumbnailIndex);
+            },
+            close: function(){ info.innerHTML = "" },
+            select: function(e, item){
+                infoTitle.innerHTML = item.title || "";
+                itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
+                document.title = title + (item ? " - " + item.title : "");
+            },
+            cacheStart: function(e, item){ loader.style.display = "inline" },
+            cacheEnd: function(e, item){ loader.style.display = "none" },
+            init: function(){this.selectItem(0); },
+            loadItem: function(e, item){ $(thumbs.thumbnails[item.id - 1]).addClass("loadedThumbnail"); },
+            load: function(e, data){
+                if (this.initialized)
+                    this.selectItem(data.items[0]);
+            },
+            slideshowStop: function(){ $slideshowBtn.removeClass("slideshowBtn_on"); },
+            slideshowStart: function(){ $slideshowBtn.addClass("slideshowBtn_on"); }
+        },
+        handleThumbnailClick: false,
+        //selectedThumbnailClass: "selectedThumbnail",
+        zoom: true,
+        transform: true,
+        transition: "morph",
+        transitionTime: 300
+    },
+    queryOptions = {};
+
+var queryOptionsStr = document.location.href.match(/\?(.*)$/);
+if (queryOptionsStr){
+    queryOptionsStr = queryOptionsStr[1].split("&");
+    for(var i=0; i<queryOptionsStr.length; i++){
+        var keyValue = queryOptionsStr[i].split("=");
+        queryOptions[keyValue[0]] = keyValue[1];
     }
-});
+}
+$.extend(yoxviewOptions, queryOptions);
+
 
 $("#addBtn").on("click", function(e){ e.preventDefault(); $addPanel.slideToggle("fast"); });
-$thumbnailsContainer.yoxview({
-    delayOpen: true,
-    enableKeyboard: true,
-    margin: { top: 10, right: 45, bottom: 10, left: 45 },
-    container: popupContainer,
-    controls: {
-        prev: $("#yoxviewPrev"),
-        next: $("#yoxviewNext")
-    },
-    createThumbnails: false,
-    data: dataSource,
-    //popupPadding: 20,
-    events: {
-        beforeSelect: function(e, items, data){
-            var thumbnailIndex = items.newItem.id - 1;
-            $thumbnailsContainer.yoxscroll("scrollTo", thumbs.thumbnails[thumbnailIndex], { centerElement: !data });
-            thumbs.select(thumbnailIndex);
-        },
-        close: function(){ info.innerHTML = "" },
-        select: function(e, item){
-            infoTitle.innerHTML = item.title || "";
-            itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
-            document.title = title + (item ? " - " + item.title : "");
-        },
-        cacheStart: function(e, item){ loader.style.display = "inline" },
-        cacheEnd: function(e, item){ loader.style.display = "none" },
-        init: function(){this.selectItem(0); },
-        loadItem: function(e, item){ $(thumbs.thumbnails[item.id - 1]).addClass("loadedThumbnail"); },
-        load: function(e, data){
-            if (this.initialized)
-                this.selectItem(data.items[0]);
-        },
-        slideshowStop: function(){ $slideshowBtn.removeClass("slideshowBtn_on"); },
-        slideshowStart: function(){ $slideshowBtn.addClass("slideshowBtn_on"); }
-    },
-    handleThumbnailClick: false,
-    //selectedThumbnailClass: "selectedThumbnail",
-    zoom: true,
-    transform: true,
-    //transition: "evaporate",
-    transitionTime: 300
-})
+$thumbnailsContainer.yoxview(yoxviewOptions)
 .yoxscroll({
     events: {
         click: function(e, originalEvent){
