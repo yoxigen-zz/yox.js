@@ -11,11 +11,14 @@ yox.data.prototype.addDataSource(function(){
 
 	return {
 		name: dataSourceName,
-		match: function(source){ return isElement(source) || source instanceof jQuery; },
-		load: function(source, options, callback){
-			var imagesData = [];
+		match: function(source){
+            return isElement(source) || source instanceof jQuery || (source.element && isElement(source.element) || source.element instanceof jQuery);
+        },
+		load: function(source, callback){
+			var imagesData = [],
+                element = source instanceof HTMLElement ? source : source.element;
 
-			$("a:has('img')", source).each(function(){
+			$("a:has('img')", element).each(function(){
 				var thumbnailImg = $("img:first", this)[0];
 				
 				imagesData.push({
@@ -33,7 +36,8 @@ yox.data.prototype.addDataSource(function(){
             var data = {
                 items: imagesData,
                 source: source,
-                sourceType: dataSourceName
+                sourceType: dataSourceName,
+                createThumbnails: false
             };
 
 			if (callback)

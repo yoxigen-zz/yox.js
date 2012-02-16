@@ -29,20 +29,17 @@
                 dataSourceItems = dataSource.getData();
 
             if (dataSourceItems && dataSourceItems.length){
-                this.createThumbnails(dataSourceItems);
+                this.createThumbnails({ items: dataSourceItems });
             }
 
             dataSource.addEventListener("loadSources", function(e, source){
                 self.clear();
                 this.itemCount = 0;
-                if (source instanceof Array)
-                {
-                    for(var i=0; i < source.length; i++){
-                        self.createThumbnails(source[i].items);
-                    }
+                var sources =  Array.prototype.slice.call(arguments, 1);
+                for(var i=0; i < sources.length; i++){
+                    var source = sources[i];
+                        self.createThumbnails(source);
                 }
-                else
-                    self.createThumbnails(source.items);
             });
 
             dataSource.addEventListener("clear", function(){
@@ -77,35 +74,51 @@
 
             return $thumbnail[0];
         },
-        createThumbnails: function(itemsData){
-            var self = this;
-            if ($.tmpl){
-                var thumbs = $.tmpl($.template(this.template), itemsData, { options: this.options, getIndex: function(){ return self.itemCount++; } });
-                thumbs.appendTo(this.container);
-                this.thumbnails = thumbs;
-            }
-            else{
-                var documentFragment = document.createDocumentFragment();
-                for(var i = 0, count = itemsData.length; i < count; i++, this.itemCount++){
-                    var item = itemsData[i],
-                        thumbnailEl = this.createThumbnail(item);
+        createThumbnails: function(source){
+            var self = this,
+                thumbnailElements;
 
-                    thumbnailEl.setAttribute("data-yoxthumbindex", i);
-                    item.thumbnail.element = thumbnailEl;
-                    item.thumbnail.generated = true;
+            this.thumbnails = this.thumbnails || $();
+            if (source.createThumbnails !== false){
+                if ($.tmpl){
+                    var thumbs = $.tmpl($.template(this.template), source.items, { options: this.options, getIndex: function(){ return self.itemCount++; } });
+                    thumbs.appendTo(this.container);
+                    this.thumbnails = thumbs;
+                }
+                else{
+                    var documentFragment = document.createDocumentFragment();
+                    for(var i = 0, count = source.items.length; i < count; i++, this.itemCount++){
+                        var item = source.items[i],
+                            thumbnailEl = this.createThumbnail(item);
 
-                    var thumbnailImages = thumbnailEl.getElementsByTagName("img");
-                    if (thumbnailImages.length)
-                        item.thumbnail.image = thumbnailImages[0];
+                        thumbnailEl.setAttribute("data-yoxthumbindex", this.itemCount);
+                        item.thumbnail.element = thumbnailEl;
+                        item.thumbnail.generated = true;
 
-                    documentFragment.appendChild(thumbnailEl);
+                        var thumbnailImages = thumbnailEl.getElementsByTagName("img");
+                        if (thumbnailImages.length)
+                            item.thumbnail.image = thumbnailImages[0];
+
+                        documentFragment.appendChild(thumbnailEl);
+                    }
+
+                    this.container.appendChild(documentFragment);
+                    this.thumbnails = this.thumbnails.add($(this.container).children("." + this.options.thumbnailClass));
                 }
 
-                this.container.appendChild(documentFragment);
-                this.thumbnails = $(this.container).children("." + this.options.thumbnailClass);
+                thumbnailElements = this.container.childNodes;
+            }
+            else{
+                var $thumbnails = $("a:has(img)", this.container)
+                    .attr("data-yoxthumbindex", function(i){
+                        return self.itemCount++;
+                    });
+
+                this.thumbnails = this.thumbnails.add($thumbnails);
+                thumbnailElements = $thumbnails.get();
             }
 
-            this.triggerEvent("create", { thumbnails: this.container.childNodes, items: itemsData });
+            this.triggerEvent("create", { thumbnails: thumbnailElements, items: source.items });
         },
         defaults: {
             renderThumbnailsTitle: true,

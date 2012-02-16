@@ -99,9 +99,9 @@ yox.data.prototype.addDataSource((function(){
 
 	return {
 		name: dataSourceName,
-		match: function(source){ return picasaRegex.test(source); },
-		load: function(source, options, callback){
-            var picasaData = getDataFromUrl(source, options);
+		match: function(source){ return source.url && picasaRegex.test(source.url); },
+		load: function(source, callback){
+            var picasaData = getDataFromUrl(source.url, source);
 
             $.ajax({
                 url: getFeedUrl(picasaData),

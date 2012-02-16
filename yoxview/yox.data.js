@@ -44,7 +44,7 @@ yox.data.prototype = {
             for(var i=0; i < arguments.length; i++)
                 self.data.push(arguments[i]);
 
-            self.triggerEvent("loadSources", arguments);
+            self.triggerEvent("loadSources", Array.prototype.slice.call(arguments, 0));
         });
     },
     clear: function(){
@@ -65,23 +65,23 @@ yox.data.prototype = {
         return this.dataSources[dataSourceName];
     },
     loadSource: function(source){
-        var sourceIsObject = typeof(source) === "object",
-            sourceUrl = sourceIsObject ? source.url : source,
-            sourceOptions = sourceIsObject ? source : {},
-            dataSource = source.type ? this.getDataSource(source.type) : this.findDataSource(sourceUrl),
+        var dataSource = source.type ? this.getDataSource(source.type) : this.findDataSource(source),
             self = this;
 
         if (!dataSource)
             return;
 
         var dfd = $.Deferred(),
-            onLoadSource = function(sourceData){ self.store(sourceUrl, sourceData); dfd.resolve(sourceData); },
-            savedSourceData = this.store(sourceUrl);
+            onLoadSource = function(sourceData){
+                self.store(source, sourceData);
+                dfd.resolve(sourceData);
+            },
+            savedSourceData = this.store(source);
 
         if (savedSourceData)
             onLoadSource(savedSourceData);
         else{
-            dataSource.load(sourceUrl, sourceOptions, onLoadSource,
+            dataSource.load(source, onLoadSource,
                 function(error){
                     dfd.reject();
                 }
@@ -99,11 +99,11 @@ yox.data.prototype = {
         this.clear();
         this.addSources.apply(this, arguments);
     },
-    store: function(key, data){
-        if (!this.options.storeDataSources || !window.localStorage || typeof(key) !== "string")
+    store: function(source, data){
+        if (!this.options.storeDataSources || !window.localStorage || typeof(key) !== "string" || !source.url)
             return;
 
-        var keyName = this.namespace + ".source." + key;
+        var keyName = this.namespace + ".source." + source.url;
 
         if (!data){
             var item = window.localStorage.getItem(keyName);

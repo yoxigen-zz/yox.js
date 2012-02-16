@@ -42,29 +42,23 @@
             return supportedProp;
         }
 
-        var transitionDuration = styleSupport("transitionDuration");
-        if (transitionDuration && transitionDuration !== "transitionDuration") {
-            $.cssHooks.transitionDuration = {
-                get: function( elem, computed, extra ) {
-                    return $.css( elem, transitionDuration );
-                },
-                set: function( elem, value) {
-                    elem.style[ transitionDuration ] = value;
-                }
-            };
+        function addCssHook(cssProperty){
+            var supportedProperty = styleSupport(cssProperty);
+            if (supportedProperty && supportedProperty !== cssProperty) {
+                $.cssHooks[cssProperty] = {
+                    get: function( elem, computed, extra ) {
+                        return $.css( elem, supportedProperty );
+                    },
+                    set: function( elem, value) {
+                        elem.style[ supportedProperty ] = value;
+                    }
+                };
+            }
         }
 
-        var transition = styleSupport("transition");
-        if (transition && transition !== "transition") {
-            $.cssHooks.transition = {
-                get: function(elem, computed, extra){
-                    return $.css(elem, transition);
-                },
-                set: function(elem, value){
-                    elem.style[transition] = value;
-                }
-            };
-        }
+        var cssHooks = ["transition", "transitionDuration", "transform", "transformStyle", "backfaceVisibility", "perspective"];
+        for(var i=cssHooks.length; i--;)
+            addCssHook(cssHooks[i]);
     })();
 
 	yox.view = function(container, id, options, cache){
@@ -79,7 +73,7 @@
     yox.view.prototype = (function(){
         var dataSources = {};
         
-        function onImageLoad(e){console.log("onLoad: ", this.src);
+        function onImageLoad(e){
             this.loading = false;
             var view = e instanceof yox.view ? e : e.data.view;
             if (view.currentItem.url !== this.src)
@@ -225,23 +219,12 @@
                 var self = this,
                     dataSourceItems = dataSource.getData();
 
-                function appendItems(data){
-                    var dataItems = data.items;
-                    dataItems && (self.items = self.items.concat(dataItems));
-                }
-
                 if (dataSourceItems && dataSourceItems.length){
-                    for(var i=0; i < dataSourceItems.length; i++){
-                        appendItems(dataSourceItems[i]);
-                    }
-
                     self.triggerEvent("loadSources", dataSourceItems);
                 }
 
-                dataSource.addEventListener("loadSources", function(e, sources){
-                    for(var i=0; i < sources.length; i++){
-                        appendItems(sources[i]);
-                    }
+                dataSource.addEventListener("loadSources", function(e, source){
+                    var sources =  Array.prototype.slice.call(arguments, 1);
 
                     // Should probably remove the following and do it ONLY with YoxData:
                     self.triggerEvent("loadSources", sources);
@@ -458,7 +441,7 @@
                 if (force || !this.containerDimensions || containerDimensions.width !== this.containerDimensions.width || containerDimensions.height !== this.containerDimensions.height){
                     this.containerDimensions = containerDimensions;
                     if (this.currentItem){
-                        this.transition(this.getPosition(this.currentItem, this.containerDimensions, this.options), 0);
+                        this.transition(this.getPosition(this.currentItem, this.containerDimensions, this.options), 0, true);
                     }
                 }
             }
@@ -493,12 +476,14 @@
 
                             for(var i=0; i < sources.length; i++){
                                 var sourceData = sources[i];
+                                console.log(originalNumberOfItems, sourceData.items.length);
                                 view.items = view.items.concat(sourceData.items);
                                 createItems = createItems.concat(sourceData.items);
                             }
 
-                            for(var i=originalNumberOfItems, count=view.items.length; i < count; i++)
+                            for(var i=originalNumberOfItems, count=view.items.length; i < count; i++){
                                 view.items[i].id = i + 1;
+                            }
 
                             view.triggerEvent("load", { items: createItems, sources: sources });
 
