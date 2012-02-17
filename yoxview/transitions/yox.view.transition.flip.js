@@ -63,7 +63,7 @@ yox.view.transitions.flip = function(){
         return panels[currentPanelIndex];
     };
 
-    this.transition = function(options){console.log("Trans", (new Error()).stack);
+    this.transition = function(options){
         self.getCurrentPanel().css(options.position);
         if (options.isUpdate){
             $frame.css({
