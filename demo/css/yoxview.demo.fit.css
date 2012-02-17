@@ -1,7 +1,7 @@
 html, body{ height: 100% }
 body{ padding: 0; margin: 0; font-family: Calibri, Arial, Sans-Serif; overflow: hidden;  }
 h1{ font-size: 14pt; color: #fff; margin: 0; padding: 0; display: inline; font-weight: normal }
-header{ height: 35px; line-height: 34px; padding-left: 11px; background: Black; z-index: 2; overflow: hidden; }
+header{ height: 35px; line-height: 34px; padding-left: 11px; background: Black; z-index: 2; overflow: hidden; color: White; }
 header a{ color: #aaa; text-decoration: none }
 header a:hover{ color: White }
 #contents{ float: left }
@@ -32,9 +32,9 @@ header a:hover{ color: White }
 #thumbnailsRight:hover{ background-position: -27px -160px; }
 #thumbnailsRight:active, #thumbnailsRight.enabledThumbnailsButton{ background-position: -54px -160px }
 
-#popupContainer{
+#popupContainer, #viewer{
     background: #0d0d0d;
-    overflow: hidden;
+    z-index: 10;
 }
 #info{
     background: none repeat scroll 0 0 #0A0A0A;
