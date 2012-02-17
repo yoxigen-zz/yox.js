@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>YoxView 3.0 Demo - Transitions</title>
+		<link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
+        <link rel="Stylesheet" type="text/css" href="css/yoxview.demo.fit.css" />
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <script type="text/javascript" src="../yoxview/yox.js"></script>
+        <script type="text/javascript" src="../yoxview/yox.data.js"></script>
+        <script type="text/javascript" src="../yoxview/yox.thumbnails.js"></script>
+        <script type="text/javascript" src="../yoxview/datasources/yox.data.picasa.js"></script>
+		<script type="text/javascript" src="../yoxview/yox.view.js"></script>
+		<script type="text/javascript" src="../yoxview/transitions/yox.view.transition.js"></script>
+		<script type="text/javascript" src="../yoxview/transitions/yox.view.transition.morph.js"></script>
+		<script type="text/javascript" src="../yoxview/transitions/yox.view.transition.fade.js"></script>
+		<script type="text/javascript" src="../yoxview/transitions/yox.view.transition.flip.js"></script>
+        <script type="text/javascript" src="../yoxview/yox.scroll.js"></script>
+        <script src="js/ga.js"></script>
+	</head>
+	<body>
+		<header>
+            <h1>YoxView 3.0 Demo</h1>
+            <div style="float: right; padding-right: 15px;">
+                <label for="transitionSelect">Transition:</label>
+                <select id="transitionSelect"></select>
+            </div>
+        </header>
+		<div id="viewer">
+            <a href="#" title="Previous" class="yoxviewControlBtn yoxviewControlBtn_prev" id="yoxviewPrev"></a>
+            <a href="#" title="Next" class="yoxviewControlBtn yoxviewControlBtn_next" id="yoxviewNext"></a>
+            <div id="loader"></div>
+		</div>
+        <div id="info">
+            <h2 id="infoTitle"></h2>
+            <a href="#" id="slideshowBtn">Slideshow</a>
+            <span id="itemCounter"></span>
+        </div>
+        <div id="thumbnailsPanel">
+            <a href="#" id="thumbnailsLeft" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-left" data-yoxscroll-click="page-left"></a>
+            <a href="#" id="thumbnailsRight" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-right" data-yoxscroll-click="page-right"></a>
+            <div id="thumbnails" class="thumbnails yoxview"></div>
+        </div>
+		<script src="js/yoxview.demo.transitions.js"></script>
+	</body>
+</html>
