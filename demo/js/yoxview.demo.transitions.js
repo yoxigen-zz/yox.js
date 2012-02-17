@@ -35,7 +35,7 @@ var dataSource = new yox.data({
     cache: true,
     source: {
         type: "picasa",
-        url: "https://picasaweb.google.com/105098710956916751721/Trips",
+        url: "https://picasaweb.google.com/112402114851229244394/Collages",
         thumbsize: 104,
         cropThumbnails: false
     }
@@ -96,33 +96,69 @@ var thumbs = new yox.thumbnails($thumbnailsContainer, {
         },
         handleThumbnailClick: false,
         transition: "morph",
+        //resizeMode: "fill",
         transitionTime: 300
     };
 
-function getQueryOptions(){
-    var queryOptions = {},
-        queryOptionsStr = document.location.href.match(/#(.*)$/);
-
-    if (queryOptionsStr){
-        queryOptionsStr = queryOptionsStr[1].split("&");
-        for(var i=0; i<queryOptionsStr.length; i++){
-            var keyValue = queryOptionsStr[i].split("=");
-            queryOptions[keyValue[0]] = keyValue[1];
-        }
-    }
-
-    return queryOptions;
-}
-
-$.extend(yoxviewOptions, getQueryOptions());
-
+$.extend(yoxviewOptions, getHashOptions());
 $thumbnailsContainer.yoxview(yoxviewOptions);
 
 transitionSelect.onchange = function(){
     var options = { transition: this.value };
-    options.transitionTime = this.value === "flip" ? 1000 : 300;
-    $thumbnailsContainer.yoxview("option", options);
+    if (!timeChanged){
+        options.transitionTime = this.value === "flip" ? 1000 : 300;
+        transitionTime.value = options.transitionTime;
+    }
+    setHashOptions(options);
 }
+
+function setHashOptions(options){
+    var hash = [];
+    for (var optionName in options)
+        hash.push([optionName, "=", options[optionName]].join(""));
+    document.location.href = "#" + hash.join("&");
+}
+
+function getHashOptions(){
+    var hashOptions = {},
+        hashOptionsStr = document.location.href.match(/#(.*)$/);
+
+    if (hashOptionsStr){
+        hashOptionsStr = hashOptionsStr[1].split("&");
+        for(var i=0; i<hashOptionsStr.length; i++){
+            var keyValue = hashOptionsStr[i].split("=");
+            hashOptions[keyValue[0]] = keyValue[1];
+        }
+    }
+
+    return hashOptions;
+}
+window.addEventListener("hashchange", function(){
+    $thumbnailsContainer.yoxview("option", getHashOptions());
+}, false);
+
+var transitionTimeStr = document.getElementById("transitionTimeStr"),
+    transitionTimeTimeoutId,
+    transitionTime = document.getElementById("transitionTime"),
+    timeChanged = false;
+
+transitionTime.onchange = function(){
+    timeChanged = true;
+    clearTimeout(transitionTimeTimeoutId);
+    var timeNumber = parseInt(this.value, 10);
+    if (!isNaN(timeNumber)){
+        transitionTimeStr.innerHTML = this.value;
+        transitionTimeTimeoutId = setTimeout(function(){
+            var options = { transition: transitionSelect.value, transitionTime: timeNumber };
+            setHashOptions(options);
+        }, 100);
+    }
+}
+$(transitionTime).on("keyup", function(e){
+    if(e.keyCode === 13)
+        $(this).trigger("change");
+});
+
 for(var transitionName in yox.view.transitions){
     transitionEl = document.createElement("option");
     transitionEl.value = transitionName;
