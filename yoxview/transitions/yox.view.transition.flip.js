@@ -5,21 +5,24 @@ yox.view.transitions.flip = function(){
         defaultTransitionTime,
         currentTransitionTime,
         currentDeg = -180,
+        currentItemIndex = 0,
         self = this;
 
     this.create = function($container, onLoad){
         var view = this;
-        this.$container = $container;
+        self.$container = $container;
         $container.css("perspective", "800px");
         $frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + this.options.resizeMode + " yoxviewFrame_" + $.yoxview.platform + " yoxviewFrame_flip"}).appendTo($container);
         if (this.options.transitionTime){
             currentTransitionTime = defaultTransitionTime = this.options.transitionTime;
             $frame.css({
-                transition: "all " + defaultTransitionTime + "ms ease-out",
+                transition: yox.utils.browser.getCssPrefix() + "transform " + defaultTransitionTime + "ms ease-out",
                 transformStyle: "preserve-3d",
-                width: "100%",
+                width: $container.width() - this.options.margin.horizontal,
+                left: this.options.margin.left,
                 height: "100%",
-                border: "none"
+                border: "none",
+                overflow: "visible"
             });
         }
 
@@ -35,7 +38,9 @@ yox.view.transitions.flip = function(){
                 position: "absolute",
                 top: "50%", left: "50%",
                 width: 0, height: 0,
-                border: "solid 1px #666"
+                border: "solid 1px #666",
+                transform: i ? "rotateY(180deg)" : "rotateY(0)", // The rotate(0) is for Firefox, which otherwise displays the backface (bug exists in version 11)
+                marginLeft: "-" + this.options.margin.left + "px"
             });
 
             $img.attr("data-index", i);
@@ -45,7 +50,7 @@ yox.view.transitions.flip = function(){
     };
 
     this.destroy = function(){
-        this.$container.css("perspective", "");
+        self.$container.css("perspective", "");
         $frame.remove();
     };
 
@@ -58,24 +63,17 @@ yox.view.transitions.flip = function(){
         return panels[currentPanelIndex];
     };
 
-    this.transition = function(options){
-        if (options.duration !== undefined){
-            if (isNaN(options.duration))
-                throw new TypeError("Invalid value for transition time, must be a number (in milliseconds).");
-        }
-        else
-            options.duration = defaultTransitionTime;
-
-        if (options.duration !== currentTransitionTime){
-            //panelCss.transition = "opacity " + time + "ms ease-out";
-            position.transition = "all " + options.duration + "ms ease-out";
-            currentTransitionTime = options.duration;
-        }
-
+    this.transition = function(options){console.log("Trans", (new Error()).stack);
         self.getCurrentPanel().css(options.position);
-
-        if (!options.isUpdate){
-            currentDeg -= 180;
+        if (options.isUpdate){
+            $frame.css({
+                width: self.$container.width() - this.options.margin.horizontal,
+                left: this.options.margin.left
+            });
+        }
+        else {
+            currentDeg += options.index > currentItemIndex ? 180 : -180;
+            currentItemIndex = options.index;
             $frame.css("transform", "rotateY(" + currentDeg + "deg)");
         }
     };
