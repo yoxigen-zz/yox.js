@@ -15,7 +15,7 @@ yox.data = function(options){
 yox.data.prototype = {
     dataSources: {},
     defaults: {
-
+        cache: false // Set this to true to enable caching on localStorage. Cache is used only for external sources - it saves the data retrieved from the source (what's return from the source's load() method).
     },
     namespace: "yoxdata",
     addDataSource: function(dataSource){
@@ -100,8 +100,8 @@ yox.data.prototype = {
         this.addSources.apply(this, arguments);
     },
     store: function(source, data){
-        if (!this.options.storeDataSources || !window.localStorage || typeof(key) !== "string" || !source.url)
-            return;
+        if (!this.options.cache || !window.localStorage || !source.url)
+            return false;
 
         var keyName = this.namespace + ".source." + source.url;
 
@@ -110,7 +110,7 @@ yox.data.prototype = {
             if (item)
                 return JSON.parse(item);
 
-            return;
+            return null;
         }
         window.localStorage.setItem(keyName, JSON.stringify(data));
     },
