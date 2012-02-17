@@ -1,14 +1,17 @@
 // Prototype for all transition classes
 
-yox.viewTransition = function(){
+yox.view.transition = function(){
 
 };
 
-yox.viewTransition.prototype = {
+yox.view.transition.prototype = {
     // Creates all the elements and event handlers required for the transition:
     // $container: The container in which the panels are rendered (jQuery instance).
     // onLoad: A function to call when an item is ready to display.
     create: function($container, onLoad){ throw new Error("'create' method isn't implemented for this transition type.") },
+
+    // Removes all elements created by the transition type and clears memory (by nullifying variables, etc.).
+    destroy: function(){ throw new Error("'destroy' method isn't implemented for this transition type."); },
 
     // Returns the currently displaying panel (the last that was used):
     getCurrentPanel: function(){ throw new Error("'getCurrentPanel' method isn't implemented for this transition type.") },
