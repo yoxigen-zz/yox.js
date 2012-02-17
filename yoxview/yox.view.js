@@ -18,48 +18,7 @@
 		return this;
 	};
 
-    (function(){
-        function styleSupport( prop ) {
-            var vendorProp, supportedProp,
-                capProp = prop.charAt(0).toUpperCase() + prop.slice(1),
-                prefixes = [ "Moz", "Webkit", "O", "ms" ],
-                div = document.createElement( "div" );
-
-            if ( prop in div.style ) {
-                supportedProp = prop;
-            } else {
-                for ( var i = 0; i < prefixes.length; i++ ) {
-                    vendorProp = prefixes[i] + capProp;
-                    if ( vendorProp in div.style ) {
-                        supportedProp = vendorProp;
-                        break;
-                    }
-                }
-            }
-
-            div = null;
-            $.support[ prop ] = supportedProp;
-            return supportedProp;
-        }
-
-        function addCssHook(cssProperty){
-            var supportedProperty = styleSupport(cssProperty);
-            if (supportedProperty && supportedProperty !== cssProperty) {
-                $.cssHooks[cssProperty] = {
-                    get: function( elem, computed, extra ) {
-                        return $.css( elem, supportedProperty );
-                    },
-                    set: function( elem, value) {
-                        elem.style[ supportedProperty ] = value;
-                    }
-                };
-            }
-        }
-
-        var cssHooks = ["transition", "transitionDuration", "transform", "transformStyle", "backfaceVisibility", "perspective"];
-        for(var i=cssHooks.length; i--;)
-            addCssHook(cssHooks[i]);
-    })();
+    yox.utils.css.addJqueryCssHooks(["transition", "transitionDuration", "transform", "transformStyle", "backfaceVisibility", "perspective"]);
 
 	yox.view = function(container, id, options, cache){
 		this.container = container;
@@ -82,7 +41,7 @@
             var item = view.currentItem,
                 position = view.getPosition(item, view.containerDimensions, view.options);
 
-            view.transition.transition.call(view, { position: position });
+            view.transition.transition.call(view, { position: position, index: item.id - 1 });
             view.triggerEvent("select", item);
         }
 
@@ -443,7 +402,7 @@
                 if (force || !this.containerDimensions || containerDimensions.width !== this.containerDimensions.width || containerDimensions.height !== this.containerDimensions.height){
                     this.containerDimensions = containerDimensions;
                     if (this.currentItem){
-                        this.transition.transition({
+                        this.transition.transition.call(this, {
                             position: this.getPosition(this.currentItem, this.containerDimensions, this.options),
                             duration: 0,
                             isUpdate: true
@@ -482,7 +441,6 @@
 
                             for(var i=0; i < sources.length; i++){
                                 var sourceData = sources[i];
-                                console.log(originalNumberOfItems, sourceData.items.length);
                                 view.items = view.items.concat(sourceData.items);
                                 createItems = createItems.concat(sourceData.items);
                             }
