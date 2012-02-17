@@ -32,12 +32,23 @@ $slideshowBtn.on("click", function(e){
 });
 
 var dataSource = new yox.data({
+    cache: true,
     source: {
         type: "picasa",
         url: "https://picasaweb.google.com/105098710956916751721/Trips",
         thumbsize: 104,
         cropThumbnails: false
     }
+});
+
+$thumbnailsContainer.yoxscroll({
+    events: {
+        click: function(e, originalEvent){
+            $thumbnailsContainer.yoxview("selectItem", parseInt(originalEvent.target.parentNode.getAttribute("data-yoxthumbindex"), 10), "yoxscroll");
+        }
+    },
+    elements: $(".thumbnailsBtn"),
+    pressedButtonClass: "enabledThumbnailsButton"
 });
 
 var thumbs = new yox.thumbnails($thumbnailsContainer, {
@@ -105,17 +116,7 @@ function getQueryOptions(){
 
 $.extend(yoxviewOptions, getQueryOptions());
 
-$thumbnailsContainer
-    .yoxview(yoxviewOptions)
-    .yoxscroll({
-        events: {
-            click: function(e, originalEvent){
-                $thumbnailsContainer.yoxview("selectItem", parseInt(originalEvent.target.parentNode.getAttribute("data-yoxthumbindex"), 10), "yoxscroll");
-            }
-        },
-        elements: $(".thumbnailsBtn"),
-        pressedButtonClass: "enabledThumbnailsButton"
-    });
+$thumbnailsContainer.yoxview(yoxviewOptions);
 
 transitionSelect.onchange = function(){
     var options = { transition: this.value };
