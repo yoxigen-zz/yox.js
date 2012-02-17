@@ -227,10 +227,10 @@
             },
             addDataSources: function(dataSource){
                 var self = this,
-                    dataSourceItems = dataSource.getData();
+                    dataSources = dataSource.getData();
 
-                if (dataSourceItems && dataSourceItems.length){
-                    self.triggerEvent("loadSources", dataSourceItems);
+                if (dataSources && dataSources.length){
+                    self.triggerEvent("loadSources", dataSources);
                 }
 
                 dataSource.addEventListener("loadSources", function(e, source){

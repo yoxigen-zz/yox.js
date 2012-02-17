@@ -25,21 +25,23 @@
 
     yox.thumbnails.prototype = {
         addDataSources: function(dataSource){
-            var self = this,
-                dataSourceItems = dataSource.getData();
-
-            if (dataSourceItems && dataSourceItems.length){
-                this.createThumbnails({ items: dataSourceItems });
-            }
-
-            dataSource.addEventListener("loadSources", function(e, source){
-                self.clear();
-                this.itemCount = 0;
-                var sources =  Array.prototype.slice.call(arguments, 1);
+            var self = this;
+            function renderSources(sources){
                 for(var i=0; i < sources.length; i++){
                     var source = sources[i];
                         self.createThumbnails(source);
                 }
+            }
+
+            var dataSources = dataSource.getData();
+            if (dataSources && dataSources.length)
+                renderSources(dataSources);
+
+
+            dataSource.addEventListener("loadSources", function(e, source){
+                self.clear();
+                this.itemCount = 0;
+                renderSources(Array.prototype.slice.call(arguments, 1));
             });
 
             dataSource.addEventListener("clear", function(){
