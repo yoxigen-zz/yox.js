@@ -58,28 +58,26 @@ yox.view.transitions.flip = function(){
         return panels[currentPanelIndex];
     };
 
-    this.transition = function(position, time, isUpdate){
-        if (time !== undefined){
-            if (isNaN(time))
+    this.transition = function(options){
+        if (options.duration !== undefined){
+            if (isNaN(options.duration))
                 throw new TypeError("Invalid value for transition time, must be a number (in milliseconds).");
         }
         else
-            time = defaultTransitionTime;
+            options.duration = defaultTransitionTime;
 
-        if (time !== currentTransitionTime){
+        if (options.duration !== currentTransitionTime){
             //panelCss.transition = "opacity " + time + "ms ease-out";
-            position.transition = "all " + time + "ms ease-out";
-            currentTransitionTime = time;
+            position.transition = "all " + options.duration + "ms ease-out";
+            currentTransitionTime = options.duration;
         }
 
-        self.getCurrentPanel().css(position);
+        self.getCurrentPanel().css(options.position);
 
-        if (!isUpdate){
+        if (!options.isUpdate){
             currentDeg -= 180;
-            //panels[1].css("opacity", currentPanelIndex);
             $frame.css("transform", "rotateY(" + currentDeg + "deg)");
         }
-
     };
 
     this.update = function(updateData){

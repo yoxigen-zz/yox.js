@@ -82,7 +82,7 @@
             var item = view.currentItem,
                 position = view.getPosition(item, view.containerDimensions, view.options);
 
-            view.transition.transition.call(view, position);
+            view.transition.transition.call(view, { position: position });
             view.triggerEvent("select", item);
         }
 
@@ -443,7 +443,11 @@
                 if (force || !this.containerDimensions || containerDimensions.width !== this.containerDimensions.width || containerDimensions.height !== this.containerDimensions.height){
                     this.containerDimensions = containerDimensions;
                     if (this.currentItem){
-                        this.transition.transition(this.getPosition(this.currentItem, this.containerDimensions, this.options), 0, true);
+                        this.transition.transition({
+                            position: this.getPosition(this.currentItem, this.containerDimensions, this.options),
+                            duration: 0,
+                            isUpdate: true
+                        });
                     }
                 }
             }

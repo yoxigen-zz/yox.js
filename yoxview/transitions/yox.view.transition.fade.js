@@ -36,15 +36,15 @@ yox.view.transitions.fade = function(){
         return panels[currentPanelIndex];
     };
 
-    this.transition = function(position, time){
-        if (time !== undefined){
-            if (isNaN(time))
+    this.transition = function(options){
+        if (options.duration !== undefined){
+            if (isNaN(options.duration))
                 throw new TypeError("Invalid value for transition time, must be a number (in milliseconds).");
         }
         else
-            time = defaultTransitionTime;
+            options.duration = defaultTransitionTime;
 
-        panels[currentPanelIndex].css(position);
+        panels[currentPanelIndex].css(options.position);
         if (this.options.enlarge && this.options.resizeMode === "fill")
             panels[1].css({ opacity: currentPanelIndex });
         else{

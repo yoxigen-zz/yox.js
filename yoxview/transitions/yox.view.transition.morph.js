@@ -50,24 +50,26 @@ yox.view.transitions.morph = function(){
         return panels[currentPanelIndex];
     };
 
-    this.transition = function(position, time){
+    this.transition = function(options){
         var panelCss = { opacity: currentPanelIndex },
-            frameCss = $.extend({}, position);
+            frameCss = $.extend({}, options.position);
 
-        if (time !== undefined){
-            if (isNaN(time))
+        if (options.duration !== undefined){
+            if (isNaN(options.duration))
                 throw new TypeError("Invalid value for transition time, must be a number (in milliseconds).");
         }
         else
-            time = defaultTransitionTime;
+            options.duration = defaultTransitionTime;
 
-        if (time !== currentTransitionTime){
-            panelCss.transition = "opacity " + time + "ms ease-out";
-            frameCss.transition = "all " + time + "ms ease-out";
-            currentTransitionTime = time;
+        if (options.duration !== currentTransitionTime){
+            panelCss.transition = "opacity " + options.duration + "ms ease-out";
+            frameCss.transition = "all " + options.duration + "ms ease-out";
+            currentTransitionTime = options.duration;
         }
 
-        panels[1].css("opacity", currentPanelIndex);
+        if (!options.isUpdate)
+            panels[1].css("opacity", currentPanelIndex);
+
         $frame.css(frameCss);
     };
 
