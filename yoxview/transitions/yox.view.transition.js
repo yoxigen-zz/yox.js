@@ -1,8 +1,7 @@
 // Prototype for all transition classes
 
-yox.view.transition = function(){
-
-};
+yox.view.transition = function(){};
+yox.view.transitions = {}; // Will hold the transition types
 
 yox.view.transition.prototype = {
     // Creates all the elements and event handlers required for the transition:

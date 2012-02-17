@@ -1,13 +1,15 @@
-yox.view.prototype.transitions.flip = function(){
+yox.view.transitions.flip = function(){
     var $frame,
         panels,
         currentPanelIndex = 1,
         defaultTransitionTime,
         currentTransitionTime,
-        currentDeg = -180;
+        currentDeg = -180,
+        self = this;
 
     this.create = function($container, onLoad){
         var view = this;
+        this.$container = $container;
         $container.css("perspective", "800px");
         $frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + this.options.resizeMode + " yoxviewFrame_" + $.yoxview.platform + " yoxviewFrame_flip"}).appendTo($container);
         if (this.options.transitionTime){
@@ -28,7 +30,6 @@ yox.view.prototype.transitions.flip = function(){
                 $img.css("transform", "rotateY(180deg)");
 
             $img.css({
-                transition: ["all ", this.options.transitionTime, "ms ease-out"].join(""),
                 backfaceVisibility: "hidden",
                 background: "Black",
                 position: "absolute",
@@ -41,6 +42,11 @@ yox.view.prototype.transitions.flip = function(){
             $img.on("load", { view: view }, onLoad);
             panels.push($img.appendTo($frame));
         }
+    };
+
+    this.destroy = function(){
+        this.$container.css("perspective", "");
+        $frame.remove();
     };
 
     this.getCurrentPanel = function(){
@@ -66,7 +72,7 @@ yox.view.prototype.transitions.flip = function(){
             currentTransitionTime = time;
         }
 
-        this.getCurrentPanel().css(position);
+        self.getCurrentPanel().css(position);
 
         if (!isUpdate){
             currentDeg -= 180;
@@ -75,6 +81,11 @@ yox.view.prototype.transitions.flip = function(){
         }
 
     };
+
+    this.update = function(updateData){
+        if (updateData.transitionTime !== undefined)
+            $frame.css("transitionDuration", updateData.transitionTime + "ms");
+    };
 };
 
-yox.view.prototype.transitions.flip.prototype = new yox.viewTransition();
+yox.view.transitions.flip.prototype = new yox.view.transition();

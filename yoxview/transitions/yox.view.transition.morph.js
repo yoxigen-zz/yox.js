@@ -1,4 +1,4 @@
-yox.view.prototype.transitions.morph = function(){
+yox.view.transitions.morph = function(){
     var $frame,
         panels,
         currentPanelIndex = 1,
@@ -10,7 +10,11 @@ yox.view.prototype.transitions.morph = function(){
         $frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + this.options.resizeMode + " yoxviewFrame_" + $.yoxview.platform}).appendTo($container);
         if (this.options.transitionTime){
             currentTransitionTime = defaultTransitionTime = this.options.transitionTime;
-            $frame.css("transition", "all " + defaultTransitionTime + "ms ease-out");
+            $frame.css({
+                transition: "all " + defaultTransitionTime + "ms ease-out",
+                top: "50%", left: "50%",
+                width: 0, height: 0
+            });
             if ($.browser.webkit) // GPU acceleration for webkit:
                 $frame[0].style.setProperty("-webkit-transform", "translateZ(0)");
         }
@@ -21,7 +25,9 @@ yox.view.prototype.transitions.morph = function(){
             if (i > 0)
                 $img.css({opacity: "0"});
 
-            $img.css({ transition: ["all ", this.options.transitionTime, "ms ease-out"].join("") });
+            $img.css({
+                transition: ["all ", this.options.transitionTime, "ms ease-out"].join("")
+            });
             if ($.browser.webkit)
                 $img[0].style.setProperty("-webkit-transform", "translateZ(0)");
 
@@ -29,6 +35,10 @@ yox.view.prototype.transitions.morph = function(){
             $img.on("load", { view: view }, onLoad);
             panels.push($img.appendTo($frame));
         }
+    };
+
+    this.destroy = function(){
+        $frame.remove();
     };
 
     this.getCurrentPanel = function(){
@@ -60,6 +70,14 @@ yox.view.prototype.transitions.morph = function(){
         panels[1].css("opacity", currentPanelIndex);
         $frame.css(frameCss);
     };
+
+    this.update = function(updateData){
+        if (updateData.transitionTime !== undefined){
+            $frame.css("transitionDuration", updateData.transitionTime + "ms");
+            for(var i=panels.length; i--;)
+                panels[i].css("transitionDuration", updateData.transitionTime + "ms");
+        }
+    };
 };
 
-yox.view.prototype.transitions.morph.prototype = new yox.viewTransition();
+yox.view.transitions.morph.prototype = new yox.view.transition();
