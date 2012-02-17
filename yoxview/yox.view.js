@@ -82,7 +82,7 @@
             var item = view.currentItem,
                 position = view.getPosition(item, view.containerDimensions, view.options);
 
-            view.transition.call(view, position);
+            view.transition.transition.call(view, position);
             view.triggerEvent("select", item);
         }
 
@@ -157,6 +157,20 @@
 			}
 		};
 
+        function setTransition(transition){
+            var transitionModeConstructor = typeof transition === "string" ? yox.view.transitions[transition] : transition;
+            if (!transitionModeConstructor)
+                throw new Error("Invalid transition - \"" + transition + "\" doesn't exist.");
+
+            var transitionMode = new transitionModeConstructor();
+
+            if (!(transitionMode instanceof yox.view.transition))
+                throw new Error("Invalid transition - transition constructors must have yox.view.transition as prototype.");
+
+            transitionMode.create.call(this, this.elements.$container, onImageLoad);
+            this.transition = transitionMode;
+        }
+
         function createViewer(view){
             var elements = {};
 
@@ -173,29 +187,25 @@
             else if (elements.$container.css("position") === "static")
                 elements.$container.css("position", "relative");
 
-            var transitionModeConstructor = typeof view.options.transition === "string" ? view.transitions[view.options.transition] : view.options.transition;
-            if (!transitionModeConstructor)
-                throw new Error("Invalid transition - \"" + view.options.transition + "\" doesn't exist.");
-
-            var transitionMode = new transitionModeConstructor();
-
-            if (!(transitionMode instanceof yox.viewTransition))
-                throw new Error("Invalid transition - transition constructors must have yox.viewTransition as prototype.");
-
-            transitionMode.create.call(view, elements.$container, onImageLoad);
             $.extend(view, {
-                getPanel: transitionMode.getPanel,
-                getCurrentPanel: transitionMode.getCurrentPanel,
-                transition: transitionMode.transition,
                 getPosition: resizeCalculateFunctions[view.options.resizeMode],
-                elements: elements,
-                updateTransition: transitionMode.update
+                elements: elements
             });
+
+            setTransition.call(view, view.options.transition);
         }
 
         var onOptionsChange = {
             resizeMode: function(resizeMode){
                 this.getPosition = resizeCalculateFunctions[resizeMode];
+            },
+            transition: function(newTransition){
+                this.transition.destroy.call(this);
+                setTransition.call(this, newTransition);
+
+                var currentItemId = this.currentItem.id - 1;
+                this.currentItem = null;
+                this.selectItem(currentItemId);
             }
         };
 
@@ -307,7 +317,7 @@
             },
             option: function(option, value){
                 var options;
-                if (value === undefined && typeof(option) === "object")
+                if (value === undefined && Object(option) === option)
                     options = option;
                 else{
                     options = {};
@@ -326,10 +336,9 @@
                     }
                 }
 
-                this.updateTransition && this.updateTransition.call(this, options);
+                this.transition.update && this.transition.update.call(this, options);
                 $.extend(true, this.options, options);
             },
-            transitions: {},
             toggleSlideshow: function(){
                 var view = this;
 
@@ -403,21 +412,14 @@
                     if (loadedItem !== this.currentItem)
                         return false;
 
-                    var $panel = this.getCurrentPanel();
+                    var $panel = this.transition.getCurrentPanel();
                     if (!$panel[0].loading)
-                        $panel = this.getPanel(true);
+                        $panel = this.transition.getPanel(true);
 
                     $panel[0].loading = true;
                     if ($panel.attr("src") !== item.url){
                         $panel.attr("src", "");
                         $panel.attr("src", item.url);
-                        /*
-                        if (window.chrome){ // This fixes a bug in Chrome 16, without it the second image doesn't show on the first run.
-                            var otherPanel = elements.panels[currentPanelIndex === 1 ? 0 : 1];
-                            if (!otherPanel.attr("src"))
-                                otherPanel.attr("src", item.url);
-                        }
-                        */
                     }
                     else
                         onImageLoad.call($panel[0], this);
@@ -441,7 +443,7 @@
                 if (force || !this.containerDimensions || containerDimensions.width !== this.containerDimensions.width || containerDimensions.height !== this.containerDimensions.height){
                     this.containerDimensions = containerDimensions;
                     if (this.currentItem){
-                        this.transition(this.getPosition(this.currentItem, this.containerDimensions, this.options), 0, true);
+                        this.transition.transition(this.getPosition(this.currentItem, this.containerDimensions, this.options), 0, true);
                     }
                 }
             }
