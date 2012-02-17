@@ -6,6 +6,7 @@
         <link rel="Stylesheet" type="text/css" href="css/yoxview.demo.fit.css" />
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <script type="text/javascript" src="../yoxview/yox.js"></script>
+        <script type="text/javascript" src="../yoxview/yox.utils.js"></script>
         <script type="text/javascript" src="../yoxview/yox.data.js"></script>
         <script type="text/javascript" src="../yoxview/yox.thumbnails.js"></script>
         <script type="text/javascript" src="../yoxview/datasources/yox.data.picasa.js"></script>
@@ -18,11 +19,16 @@
         <script src="js/ga.js"></script>
 	</head>
 	<body>
+        <img src="http://lh3.ggpht.com/-jfNxIDaayn0/TxARLzwDYGI/AAAAAAAABCc/QD7g6EUYjP4/s1600/Egrofan.jpg" style="display: none" alt="Image for Facebook" />
 		<header>
-            <h1>YoxView 3.0 Demo</h1>
+            <h1>YoxView 3.0 Demo - Transitions</h1>
             <div style="float: right; padding-right: 15px;">
-                <label for="transitionSelect">Transition:</label>
+                <label for="transitionSelect">Transition type:</label>
                 <select id="transitionSelect"></select>
+                &nbsp;
+                <label for="transitionTime">Transition time:</label>
+                <input type="range" id="transitionTime" value="300" min="0" max="5000" step="50" style="vertical-align: middle" />
+                <span id="transitionTimeStr">300</span>ms
             </div>
         </header>
 		<div id="viewer">
