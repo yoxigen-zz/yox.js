@@ -29,9 +29,6 @@ yox.view.transitions.flip = function(){
         panels = [];
         for(var i=0; i<2; i++){
             var $img = $("<img>", { src: "", "class": "yoxviewImg" });
-            if (i === 1)
-                $img.css("transform", "rotateY(180deg)");
-
             $img.css({
                 backfaceVisibility: "hidden",
                 background: "Black",
