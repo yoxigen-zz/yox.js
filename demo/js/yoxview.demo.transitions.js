@@ -106,7 +106,7 @@ $thumbnailsContainer.yoxview(yoxviewOptions);
 transitionSelect.onchange = function(){
     var options = { transition: this.value };
     if (!timeChanged){
-        options.transitionTime = this.value === "flip" ? 1000 : 300;
+        options.transitionTime = this.value === "flip" || this.value === "evaporate" ? 1000 : 300;
         transitionTime.value = options.transitionTime;
     }
     setHashOptions(options);
@@ -134,7 +134,15 @@ function getHashOptions(){
     return hashOptions;
 }
 window.addEventListener("hashchange", function(){
-    $thumbnailsContainer.yoxview("option", getHashOptions());
+    var hashOptions = getHashOptions();
+    $thumbnailsContainer.yoxview("option", hashOptions);
+
+    if (hashOptions.transitionTime !== undefined){
+        transitionTime.value = hashOptions.transitionTime;
+        transitionTimeStr.innerHTML = hashOptions.transitionTime;
+    }
+
+    hashOptions.transition && (transitionSelect.value = hashOptions.transition);
 }, false);
 
 var transitionTimeStr = document.getElementById("transitionTimeStr"),
