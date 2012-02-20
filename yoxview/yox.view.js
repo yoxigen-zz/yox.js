@@ -35,9 +35,9 @@
         function onImageLoad(e){
             this.loading = false;
             var view = e instanceof yox.view ? e : e.data.view;
-            if (view.currentItem.url !== this.src)
+            if (view.currentItem.url !== this.src){
                 return false;
-
+            }
             var item = view.currentItem,
                 position = view.getPosition(item, view.containerDimensions, view.options);
 
@@ -458,8 +458,9 @@
                         },
                         select: function(e, item){
                             var view = this;
-                            if (this.isPlaying)
-                                this.playTimeoutId = setTimeout(function(){ view.next.call(view, true); }, this.options.slideshowDelay + (this.options.transitionTime || 0));
+                            if (this.isPlaying){
+                                this.playTimeoutId = setTimeout(function(){ view.next.call(view, true); }, Number(this.options.slideshowDelay) + Number((this.options.transitionTime || 0)));
+                            }
                         }
                     }, // A function to call when the popup's background is clicked. (Applies only in popup mode)
                     container: docElement, // The element in which the viewer is rendered. Defaults to the whole window.
