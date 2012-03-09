@@ -6,7 +6,9 @@
         this.options = $.extend(true, {}, this.defaults, options);
         this.itemCount = 0;
 
-        this.$eventsElement = $("<div>");
+        var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
+        $.extend(this, eventsHandler);
+
         if (this.options.events){
             for(var eventName in this.options.events)
                 this.addEventListener(eventName, this.options.events[eventName]);
@@ -17,7 +19,7 @@
             $(this.container).on("click", "." + self.options.thumbnailClass, function(e){
                 var index = this.getAttribute("data-yoxthumbIndex");
                 e.preventDefault();
-                self.triggerEvent("click", { originalEvent: e, index: index });
+                self.triggerEvent("click", { originalEvent: e, index: index, target: this });
                 self.select(index);
             });
         }
@@ -38,23 +40,16 @@
                 renderSources(dataSources);
 
 
-            dataSource.addEventListener("loadSources", function(e, source){
+            dataSource.addEventListener("loadSources", function(sources){
                 self.clear();
                 this.itemCount = 0;
-                renderSources(Array.prototype.slice.call(arguments, 1));
+                renderSources(sources);
             });
 
             dataSource.addEventListener("clear", function(){
                 self.clear();
                 this.itemCount = 0;
             });
-        },
-        addEventListener: function(eventName, eventHandler){
-            var self = this;
-            if (!eventHandler || typeof(eventHandler) !== "function")
-                throw new Error("Invalid event handler, must be a function.");
-
-            this.$eventsElement.on(eventName + ".yoxthumbnails", function(e, data){ eventHandler.call(self, data); });
         },
         clear: function(){
             this.thumbnails && this.thumbnails.remove();
@@ -66,7 +61,7 @@
                 $thumbnail = $("<a>", {
                     href: item.link || item.url,
                     title: this.options.renderThumbnailsTitle !== false ? item.title : undefined,
-                    class: self.options.thumbnailClass
+                    "class": self.options.thumbnailClass
                 });
 
             $thumbnail.append($("<img>", {
@@ -132,10 +127,7 @@
             if (this.thumbnails)
                 this.currentSelectedThumbnail = this.thumbnails.eq(itemIndex).addClass(this.options.selectedThumbnailClass);
         },
-        template: "<a class='${$item.options.thumbnailClass}' href='${link || url}'{{if $item.options.renderThumbnailsTitle}} title='title'{{/if}} data-yoxthumbIndex='${$item.getIndex()}'><img src='${thumbnail.src}' alt='${title}' /></a>",
-        triggerEvent: function(eventName, data){
-            this.$eventsElement.trigger(eventName + ".yoxthumbnails", data);
-        }
+        template: "<a class='${$item.options.thumbnailClass}' href='${link || url}'{{if $item.options.renderThumbnailsTitle}} title='title'{{/if}} data-yoxthumbIndex='${$item.getIndex()}'><img src='${thumbnail.src}' alt='${title}' /></a>"
     };
 
     window.yox.thumbnails = yox.thumbnails;
