@@ -1,0 +1,28 @@
+﻿<project name="Build example" default="all" basedir=".">
+    <property name="jscompjar" location="compiler.jar" />
+
+    <taskdef name="jscomp"
+      classname="com.google.javascript.jscomp.ant.CompileTask"
+      classpath="${jscompjar}"/>
+
+	<target name="all" description="Concatenate all js files">
+		<concat destfile="yox.js" fixlastline="yes" encoding="UTF-8">
+			<filelist id="baseScripts" dir="../src" files="yox.js, yox.utils.js, yox.eventsHandler.js"/>
+			<filelist id="data" dir="../src/modules/yox.data" files="yox.data.js" />
+			<fileset dir="../src/modules/yox.data/datasources" includes="**/*.js" />
+			<fileset id="data" dir="../src/modules/yox.scroll" includes="**/*.js" />
+			<fileset id="data" dir="../src/modules/yox.thumbnails" includes="**/*.js" />
+			<filelist id="view" dir="../src/modules/yox.view" files="yox.view.js, yox.view.cache.js" />
+            <filelist id="view" dir="../src/modules/yox.view/transitions" files="yox.view.transition.js" />
+			<fileset id="transitions" dir="../src/modules/yox.view/transitions" includes="**/yox.view.transition.*.js" />
+			<filelist id="view" dir="../src/themes" files="yox.theme.js" />
+			<fileset dir="../src/themes/" includes="**/yox.theme.*.js" />
+		</concat>
+        <jscomp compilationLevel="simple" warning="quiet" debug="false" output="yox.min.js">
+          <sources dir="./">
+            <file name="yox.js" />
+          </sources>
+        </jscomp>
+	</target>
+    
+</project>
