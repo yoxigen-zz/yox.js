@@ -12,55 +12,40 @@ var viewer =  document.getElementById("viewer"),
     title = document.title,
     transitionSelect = document.getElementById("transitionSelect");
 
-function setContainerSize(){
-    var height = docElement.clientHeight - heightToSubtract;
-    viewer.style.height = height + "px";
-    if (isInit)
-        $thumbnailsContainer.yoxview("update");
-
-}
-
-setContainerSize();
-
-$(window).resize(function(){
-    setContainerSize();
-    $thumbnailsContainer.yoxscroll("update");
-});
-
-$slideshowBtn.on("click", function(e){
-    $thumbnailsContainer.yoxview("toggleSlideshow");
-});
-
-var dataSource = new yox.data({
-    cache: true,
-    source: {
-        type: "picasa",
-        url: "https://picasaweb.google.com/112402114851229244394/Collages",
-        thumbsize: 104,
-        cropThumbnails: false
-    }
-});
+var modules = {
+    data: new yox.data({
+        cache: true,
+        source: {
+            type: "picasa",
+            url: "https://picasaweb.google.com/112402114851229244394/Collages",
+            thumbsize: 104,
+            cropThumbnails: false,
+            imgmax: 1024
+        }
+    })
+};
 
 $thumbnailsContainer.yoxscroll({
     events: {
-        click: function(e, originalEvent){
-            $thumbnailsContainer.yoxview("selectItem", parseInt(originalEvent.target.parentNode.getAttribute("data-yoxthumbindex"), 10), "yoxscroll");
+        click: function(originalEvent){
+            modules.view.selectItem(parseInt(originalEvent.target.parentNode.getAttribute("data-yoxthumbindex"), 10), "yoxscroll");
         }
     },
     elements: $(".thumbnailsBtn"),
     pressedButtonClass: "enabledThumbnailsButton"
 });
 
-var thumbs = new yox.thumbnails($thumbnailsContainer, {
-        data: dataSource,
-        handleClick: false,
-        events: {
-            create: function(data){
-                $thumbnailsContainer.yoxscroll("update");
-            }
+modules.thumbnails = new yox.thumbnails($thumbnailsContainer, {
+    data: modules.data,
+    handleClick: false,
+    events: {
+        create: function(data){
+            $thumbnailsContainer.yoxscroll("update");
         }
-    }),
-    yoxviewOptions = {
+    }
+});
+
+var yoxviewOptions = {
         delayOpen: true,
         enableKeyboard: true,
         margin: { top: 10, right: 45, bottom: 10, left: 45 },
@@ -70,24 +55,24 @@ var thumbs = new yox.thumbnails($thumbnailsContainer, {
             next: $("#yoxviewNext")
         },
         createThumbnails: false,
-        data: dataSource,
+        data: modules.data,
         events: {
-            beforeSelect: function(e, items, data){
-                var thumbnailIndex = items.newItem.id - 1;
-                $thumbnailsContainer.yoxscroll("scrollTo", thumbs.thumbnails[thumbnailIndex], { centerElement: !data });
-                thumbs.select(thumbnailIndex);
+            beforeSelect: function(e){
+                var thumbnailIndex = e.newItem.id - 1;
+                $thumbnailsContainer.yoxscroll("scrollTo", modules.thumbnails.thumbnails[thumbnailIndex], { centerElement: !e.data });
+                modules.thumbnails.select(thumbnailIndex);
             },
             close: function(){ info.innerHTML = "" },
-            select: function(e, item){
+            select: function(item){
                 infoTitle.innerHTML = item.title || "";
                 itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
                 document.title = title + (item ? " - " + item.title : "");
             },
-            cacheStart: function(e, item){ loader.style.display = "inline" },
-            cacheEnd: function(e, item){ loader.style.display = "none" },
+            cacheStart: function(item){ loader.style.display = "inline" },
+            cacheEnd: function(item){ loader.style.display = "none" },
             init: function(){this.selectItem(0); },
-            loadItem: function(e, item){ $(thumbs.thumbnails[item.id - 1]).addClass("loadedThumbnail"); },
-            load: function(e, data){
+            loadItem: function(item){ $(modules.thumbnails.thumbnails[item.id - 1]).addClass("loadedThumbnail"); },
+            load: function(data){
                 if (this.initialized)
                     this.selectItem(data.items[0]);
             },
@@ -97,11 +82,33 @@ var thumbs = new yox.thumbnails($thumbnailsContainer, {
         handleThumbnailClick: false,
         transition: "morph",
         //resizeMode: "fill",
-        transitionTime: 300
+        transitionTime: 300,
+        slideshowDelay: 2000
     };
 
 $.extend(yoxviewOptions, getHashOptions());
-$thumbnailsContainer.yoxview(yoxviewOptions);
+
+
+function setContainerSize(){
+    var height = docElement.clientHeight - heightToSubtract;
+    viewer.style.height = height + "px";
+    if (isInit)
+        modules.view.update();
+}
+
+setContainerSize();
+modules.view = new yox.view(viewer, yoxviewOptions);
+$(window).resize(function(){
+    setContainerSize();
+    $thumbnailsContainer.yoxscroll("update");
+});
+
+$slideshowBtn.on("click", function(e){
+    modules.view.toggleSlideshow;
+});
+
+
+
 
 transitionSelect.onchange = function(){
     var options = { transition: this.value };
@@ -135,7 +142,7 @@ function getHashOptions(){
 }
 window.addEventListener("hashchange", function(){
     var hashOptions = getHashOptions();
-    $thumbnailsContainer.yoxview("option", hashOptions);
+    modules.view.option(hashOptions);
 
     if (hashOptions.transitionTime !== undefined){
         transitionTime.value = hashOptions.transitionTime;

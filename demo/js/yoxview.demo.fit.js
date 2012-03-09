@@ -41,7 +41,7 @@ function setSource(){
 
 $(window).resize(function(){
     setContainerSize();
-    $thumbnailsContainer.yoxscroll("update");
+    //$thumbnailsContainer.yoxscroll("update");
 });
 
 $slideshowBtn.on("click", function(e){
@@ -53,12 +53,6 @@ var dataSource = new yox.data({
         {
             type: "element",
             element: document.getElementById("thumbnails")
-        },
-        {
-            type: "picasa",
-            url: "https://picasaweb.google.com/105098710956916751721/Trips",
-            thumbsize: 104,
-            cropThumbnails: false
         }
     ]
 });
@@ -68,7 +62,7 @@ var thumbs = new yox.thumbnails($thumbnailsContainer, {
         handleClick: false,
         events: {
             create: function(data){
-                $thumbnailsContainer.yoxscroll("update");
+                //$thumbnailsContainer.yoxscroll("update");
             }
         }
     }),
@@ -87,7 +81,7 @@ var thumbs = new yox.thumbnails($thumbnailsContainer, {
         events: {
             beforeSelect: function(e, items, data){
                 var thumbnailIndex = items.newItem.id - 1;
-                $thumbnailsContainer.yoxscroll("scrollTo", thumbs.thumbnails[thumbnailIndex], { centerElement: !data });
+                //$thumbnailsContainer.yoxscroll("scrollTo", thumbs.thumbnails[thumbnailIndex], { centerElement: !data });
                 thumbs.select(thumbnailIndex);
             },
             close: function(){ info.innerHTML = "" },
@@ -98,7 +92,9 @@ var thumbs = new yox.thumbnails($thumbnailsContainer, {
             },
             cacheStart: function(e, item){ loader.style.display = "inline" },
             cacheEnd: function(e, item){ loader.style.display = "none" },
-            init: function(){this.selectItem(0); },
+            init: function(){
+                this.selectItem(0);
+            },
             loadItem: function(e, item){ $(thumbs.thumbnails[item.id - 1]).addClass("loadedThumbnail"); },
             load: function(e, data){
                 if (this.initialized)
@@ -111,8 +107,8 @@ var thumbs = new yox.thumbnails($thumbnailsContainer, {
         //selectedThumbnailClass: "selectedThumbnail",
         zoom: true,
         transform: true,
-        transition: "morph",
-        transitionTime: 300
+        transition: "flip",
+        transitionTime: 800
     },
     queryOptions = {};
 
