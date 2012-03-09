@@ -1,8 +1,9 @@
-yoxview = {};
 yox.data = function(options){
-    this.$eventsElement = $("<div>");
     this.data = [];
     this.options = $.extend(true, {}, this.defaults, options);
+
+    var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
+    $.extend(this, eventsHandler);
 
     if (this.options.events){
         for(var eventName in this.options.events)
@@ -17,15 +18,11 @@ yox.data.prototype = {
     defaults: {
         cache: false // Set this to true to enable caching on localStorage. Cache is used only for external sources - it saves the data retrieved from the source (what's return from the source's load() method).
     },
-    namespace: "yoxdata",
     addDataSource: function(dataSource){
         if (this.dataSources[dataSource.name])
             return false;
 
         this.dataSources[dataSource.name] = dataSource;
-    },
-    addEventListener: function(eventName, eventHandler){
-        this.$eventsElement.on(eventName + "." + this.namespace, $.proxy(eventHandler, self));
     },
     addSources: function(sourceArr){
         var deferredPromises = [],
@@ -113,8 +110,5 @@ yox.data.prototype = {
             return null;
         }
         window.localStorage.setItem(keyName, JSON.stringify(data));
-    },
-    triggerEvent: function(eventName, data){
-        this.$eventsElement.trigger(eventName + "." + this.namespace, data);
     }
 };
