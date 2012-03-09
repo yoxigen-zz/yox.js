@@ -2,154 +2,42 @@
 <html>
 <head>
     <title>YoxView 3.0 scroll demo</title>
-    <link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
+    <link rel="Stylesheet" type="text/css" href="../src/modules/yox.view/yoxview.css" />
     <link rel="Stylesheet" type="text/css" href="css/demo.css" />
+    <link rel="Stylesheet" type="text/css" href="../src/themes/scroll/yox.theme.scroll.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="../yoxview/yox.js"></script>
-    <script type="text/javascript" src="../yoxview/yox.utils.js"></script>
-    <script type="text/javascript" src="../yoxview/yox.data.js"></script>
-    <script type="text/javascript" src="../yoxview/yox.thumbnails.js"></script>
-    <script type="text/javascript" src="../yoxview/datasources/yox.data.element.js"></script>
-    <script type="text/javascript" src="../yoxview/datasources/yox.data.picasa.js"></script>
-    <script type="text/javascript" src="../yoxview/yox.view.js"></script>
-    <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.js"></script>
-    <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.morph.js"></script>
-    <script type="text/javascript" src="../yoxview/yox.scroll.js"></script>
-    <style>
-        #thumbnailsPanel{
-            height: 512px;
-            position: absolute;
-            top: 50%;
-            margin-top: -286px;
-            left: 0;
-            width: 100%;
 
-            border-width: 1px 0 1px;
-            border-style: solid;
-            border-color: #ddd;
-
-            background: #eee;
-            overflow: hidden;
-            cursor: move;
-        }
-        #thumbnailsPanel img{
-            height: 512px;
-            vertical-align: top;
-            border: none;
-            cursor: move;
-        }
-        #thumbnailsPanel a:last-child img{ border-width: 0 }
-        #smallThumbnails{
-            text-align: center;
-            position: absolute;
-            top: 50%;
-            margin-top: 233px;
-            width: 100%;
-        }
-        #smallThumbnails a{
-            -moz-transition: opacity 200ms ease-out 0s;
-            border-radius: 5px 5px 5px 5px;
-            display: inline-block;
-            height: 48px;
-            padding: 3px;
-            width: 48px;
-            border: solid 1px Transparent;
-            opacity: .6;
-            -moz-transition: opacity 200ms ease-out;
-            -webkit-transition: opacity 200ms ease-out;
-            outline: none;
-        }
-        #smallThumbnails a:hover, #smallThumbnails a.selectedThumbnail{ opacity: 1 }
-        #smallThumbnails a.selectedThumbnail{ box-shadow: 1px 1px 5px rgba(0,0,0,.8) }
-        #smallThumbnails img{
-            height: 48px;
-            width: 48px;
-            border: none;
-            /*border: solid 1px Black;*/
-        }
-
-        .yoxviewFrame{ display: none }
-    </style>
+    <script type="text/javascript" src="../src/yox.js"></script>
+    <script type="text/javascript" src="../src/yox.utils.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.data/yox.data.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.thumbnails/yox.thumbnails.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.data/datasources/yox.data.element.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.data/datasources/yox.data.picasa.js"></script>
+    <script type="text/javascript" src="../src/yox.eventsHandler.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/yox.view.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/yox.view.cache.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/transitions/yox.view.transition.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/transitions/yox.view.transition.morph.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.scroll/yox.scroll.js"></script>
+    <script type="text/javascript" src="../src/themes/yox.theme.js"></script>
+    <script type="text/javascript" src="../src/themes/scroll/yox.theme.scroll.js"></script>
+    <!--
+    <script src="../build/yox.min.js"></script>
+    -->
     <script src="js/ga.js"></script>
 </head>
 <body>
-    <div id="loader"></div>
-    <div id="thumbnailsPanel">
-        <a href="#" id="thumbnailsLeft" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-left" data-yoxscroll-click="page-left"></a>
-        <a href="#" id="thumbnailsRight" class="thumbnailsBtn" data-yoxscroll-holdstart="scroll-right" data-yoxscroll-click="page-right"></a>
-        <div id="thumbnails" class="thumbnails yoxview"></div>
-    </div>
-    <div id="smallThumbnails"></div>
     <script>
-        var $thumbnailsContainer = $("#thumbnails"),
-            loader = document.getElementById("loader"),
-            dataSource = new yox.data({ source: {
+        $(document.body).yox({
+            theme: "scroll",
+            data: { source: {
                 type: "picasa",
                 url: "https://picasaweb.google.com/105098710956916751721/Nexus",
                 thumbsize: 48,
                 imgmax: 512,
                 cropThumbnails: false,
                 authkey: "Gv1sRgCM_q18qf-p7qBg"
-            }}),
-            scroll = new yox.thumbnails($thumbnailsContainer, {
-                data: dataSource,
-                useFullImages: true,
-                events: {
-                    create: function(){ $thumbnailsContainer.yoxscroll("update"); }
-                }
-            }),
-            thumbs = new yox.thumbnails($("#smallThumbnails"), {
-                data: dataSource,
-                events: {
-                    click: function(e){
-                        gotoImage(e.index)
-                    }
-                }
-            });
-
-        function gotoImage(imageIndex){
-            $thumbnailsContainer.yoxview("selectItem", imageIndex);
-            //$thumbnailsContainer.yoxscroll("scrollTo", scroll.thumbnails[imageIndex], { centerElement: true, time: .5 });
-        }
-
-        $(window).resize(function(){
-            $thumbnailsContainer.yoxscroll("update");
-        });
-
-        $thumbnailsContainer.yoxview({
-            delayOpen: true,
-            enableKeyboard: true,
-            events: {
-                beforeSelect: function(e, items, data){
-                    var index = items.newItem.id - 1;
-                    $thumbnailsContainer.yoxscroll("scrollTo", scroll.thumbnails[index], { centerElement: true, time: .5 });
-                    //gotoImage(index);
-                    thumbs.select(index);
-                },
-                close: function(){ info.innerHTML = "" },
-                cacheStart: function(e, item){ loader.style.display = "inline" },
-                cacheEnd: function(e, item){ loader.style.display = "none" },
-                init: function(){this.selectItem(0); },
-                loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
-                load: function(e, data){
-
-                    if (this.initialized)
-                        this.selectItem(data.items[0]);
-                }
-            },
-            handleThumbnailClick: false,
-            selectedThumbnailClass: "selectedThumbnail",
-            data: dataSource,
-            zoom: true,
-            transform: true,
-            transitionTime: 300
-        })
-        .yoxscroll({
-            events: {
-                click: function(e, originalEvent){ $thumbnailsContainer.yoxview("selectItem", originalEvent.target.parentNode, "yoxscroll"); }
-            },
-            elements: $(".thumbnailsBtn"),
-            pressedButtonClass: "enabledThumbnailsButton"
+            }}
         });
     </script>
 </body>
