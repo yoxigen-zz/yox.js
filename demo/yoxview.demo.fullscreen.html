@@ -3,221 +3,50 @@
 <head>
     <title>YoxView 3.0 fullscreen demo</title>
     <link rel="Stylesheet" type="text/css" href="css/demo.css" />
-    <link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="../yoxview/yox.js"></script>
-    <script type="text/javascript" src="../yoxview/yox.utils.js"></script>
-    <script type="text/javascript" src="../yoxview/yox.data.js"></script>
-    <script type="text/javascript" src="../yoxview/yox.thumbnails.js"></script>
-    <script type="text/javascript" src="../yoxview/datasources/yox.data.element.js"></script>
-    <script type="text/javascript" src="../yoxview/datasources/yox.data.picasa.js"></script>
-    <script type="text/javascript" src="../yoxview/yox.view.js"></script>
-    <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.js"></script>
-    <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.fade.js"></script>
+    <link rel="Stylesheet" type="text/css" href="../src/modules/yox.view/yoxview.css" />
+    <link rel="Stylesheet" type="text/css" href="../src/themes/inline/yox.theme.inline.css" />
     <style>
         html,body{ height: 100%; }
         body{ overflow: hidden; }
-
-        h2{
-            background: -moz-linear-gradient(center top , rgba(255, 255, 255, 0.3), transparent) repeat scroll 0 0 transparent;
-            font-size: 14pt;
-            font-weight: normal;
-            margin: 0;
-            padding: 5px 15px;
-            text-shadow: 1px 1px 0 Black;
-        }
-        #main{
-            background: none repeat scroll 0 0 #333333;
-            border-radius: 10px 10px 10px 10px;
+        .yox-theme-inline{
             margin: 50px auto;
             width: 800px;
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
-            color: White;
-            border: solid 1px #333;
-        }
-        #gallery{ position: relative; height: 400px; margin: 0 auto; background: #111; border-style: solid; border-color: Black; border-width: 1px 0; left: 0; top: 0; width: 100% }
-        #yoxviewContainer{ height: 100%; overflow: hidden; }
-        #thumbnails{
-            height: 85px; width: 100%;
-            position: absolute; z-index: 100;
-            bottom: 0; left: 0;
-            text-align: center;
-            background: rgba(0,0,0,.3);
-            border-top: 1px solid rgba(0, 0, 0, 0.3);
-            white-space: nowrap;
-            opacity: 1;
-            -webkit-transition: opacity 300ms ease-out;
-            -moz-transition: opacity 300ms ease-out;
-            -o-transition: opacity 300ms ease-out;
-        }
-        #thumbnails a{ display: inline-block; margin: 10px 4px 0; outline: none  }
-        #thumbnails img{ height: 63px; border: solid 1px #757575;box-shadow: -1px 2px 5px rgba(0,0,0,.3) }
-        #thumbnails a:hover img, #thumbnails a.selectedThumbnail img{ border: solid 1px White; }
-        #line{ position: absolute; width: 100%; height: 1px; left: 0; top: 0; background: rgba(255,255,255,.15) }
-
-        #description{
-            padding: 12px 15px 15px;
-            margin: 0;
-            background: -moz-linear-gradient(center top , transparent, rgba(0, 0, 0, 0.2)) repeat scroll 0 0 transparent;
-            box-shadow: 0 -1px 1px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(255, 255, 255, 0.1) inset;
-            border-radius: 0 0 10px 10px;
-        }
-        #loader{
-            background: url("img/ajax-loader.gif") no-repeat scroll center center White;
-            border-radius: 50% 50% 50% 50%;
-            box-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
-            height: 60px;
-            left: 50%;
-            margin-left: -30px;
-            margin-top: -30px;
-            opacity: .6;
-            position: absolute;
-            top: 50%;
-            width: 60px;
-            z-index: 20;
-            display: none;
         }
     </style>
     <script src="js/ga.js"></script>
 </head>
 <body>
-    <div id="main">
-        <h2>Some photos from the USA</h2>
-        <div id="gallery">
-            <div id="yoxviewContainer"></div>
-            <div id="thumbnails">
-                <div id="line"></div>
-            </div>
-            <div id="loader"></div>
-        </div>
-        <p id="description">
-            These are some photos we took while on a trip to California and Nevada, on September 2011.<br />
-            (Double-click on the gallery for full-screen)
-        </p>
-    </div>
+    <div class="yox"></div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<!--
+    <script type="text/javascript" src="../src/yox.js"></script>
+    <script type="text/javascript" src="../src/yox.utils.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.data/yox.data.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.thumbnails/yox.thumbnails.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.data/datasources/yox.data.element.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.data/datasources/yox.data.picasa.js"></script>
+    <script type="text/javascript" src="../src/yox.eventsHandler.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/yox.view.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/yox.view.cache.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/transitions/yox.view.transition.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/transitions/yox.view.transition.fade.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.scroll/yox.scroll.js"></script>
+    <script type="text/javascript" src="../src/themes/yox.theme.js"></script>
+    <script type="text/javascript" src="../src/themes/inline/yox.theme.inline.js"></script>
+-->
+    <script src="../build/yox.min.js"></script>
     <script>
-        var dataSource = new yox.data({ source: { url: "https://picasaweb.google.com/105098710956916751721/USA", thumbsize: 104, authkey: "Gv1sRgCNDmkbS8-aii7AE" }}),
-            $thumbnails = $("#thumbnails").yoxview({
-                enableKeyboard: true,
-                enlarge: true,
-                resizeMode: "fill",
-                transition: "fade",
-                margin: 0,
-                data: dataSource,
-                container: document.getElementById("yoxviewContainer"),
-                transitionTime: 300,
-                events: {
-                    beforeSelect: function(e, items, data){ thumbs.select(items.newItem.id - 1); },
-                    cacheStart: function(e, item){ loader.style.display = "inline" },
-                    cacheEnd: function(e, item){ loader.style.display = "none" },
-                    loadItem: function(e, item){ $(thumbs.thumbnails[item.id - 1]).addClass("loaded"); },
-                    init: function(){ this.selectItem(0); }
-                }
-            }),
-            thumbs = new yox.thumbnails($thumbnails, {
-                data: dataSource,
-                events: {
-                    click: function(e){
-                        $thumbnails.yoxview("selectItem", e.index);
-                    },
-                    create: function(){ this.select(0); }
-                }
-            }),
-            $gallery = $("#gallery"),
-            galleryOriginalHeight = $gallery.height(),
-            lastPos,
-            thumbnailsRect = $thumbnails[0].getClientRects()[0],
-            mousemoveTimeoutId,
-            isFullScreen,
-            isFullScreenApi,
-            loader = document.getElementById("loader");
-
-        function emptyFunction(){};
-
-        document.cancelFullScreen = document.cancelFullScreen || document.mozCancelFullScreen || document.webkitCancelFullScreen || emptyFunction;
-        HTMLElement.prototype.requestFullScreen = HTMLElement.prototype.requestFullScreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullScreen || emptyFunction;
-        isFullScreenApi = document.cancelFullScreen !== emptyFunction;
-
-        function onFullScreenChange(e){
-            if (isFullScreenApi)
-                isFullScreen = !isFullScreen;
-
-            if (isFullScreen){
-                mousemoveTimeoutId = setTimeout(function(){ $thumbnails.css({ opacity: 0 }); document.body.style.cursor = "none"; }, 3000);
-                $thumbnails.yoxview("option", "resizeMode", "fit");
-            }
-            else{
-                clearTimeout(mousemoveTimeoutId);
-                $thumbnails.css("opacity", "1");
-                $gallery[0].style.height = galleryOriginalHeight + "px";
-                document.body.style.cursor = "default";
-                $thumbnails.yoxview("option", "resizeMode", "fill");
-            }
-
-            //if (!isFullScreenApi)
-                onResize();
-
-            var $window = $(window),
-                windowEventCaller = isFullScreen ? $window.on : $window.off;
-
-            windowEventCaller.call($window, "mousemove", onMouseMove);
-            if (!isFullScreenApi)
-                windowEventCaller.call($(document), "keydown", onKeyDown);
-        }
-
-        if (isFullScreenApi)
-            document.addEventListener(document.mozCancelFullScreen ? "mozfullscreenchange" : "webkitfullscreenchange", onFullScreenChange, false);
-
-        function toggleFullScreen(){
-            if (isFullScreenApi){
-                if (isFullScreen)
-                    document.cancelFullScreen();
-                else{
-                    $gallery[0].style.height = "100%";
-                    $gallery[0].requestFullScreen();
+        $(".yox").yox({
+            theme: "inline",
+            title: "Some photos from the USA",
+            data: {
+                source: {
+                    url: "https://picasaweb.google.com/105098710956916751721/USA",
+                    thumbsize: 104,
+                    authkey: "Gv1sRgCNDmkbS8-aii7AE"
                 }
             }
-            else{
-                isFullScreen = !isFullScreen;
-                $gallery.css({
-                    position: isFullScreen ? "fixed" : "relative",
-                    height: isFullScreen ? "100%" : galleryOriginalHeight,
-                    border: isFullScreen ? "none" : "solid 1px Black",
-                    "zIndex": isFullScreen ? "100" : "1"
-                });
-                onFullScreenChange();
-            }
-        }
-
-        function onResize(){
-            $thumbnails.yoxview("update", true);
-            thumbnailsRect = $thumbnails[0].getClientRects()[0];
-        }
-
-        function onKeyDown(e){
-            if (e.keyCode === 27)
-                toggleFullScreen();
-        }
-
-        function onMouseMove(e){
-            if (!lastPos || e.pageX < lastPos.x - 4 || e.pageX > lastPos.x + 4 || e.pageY < lastPos.y - 4 || e.pageY > lastPos.y + 4){
-                clearTimeout(mousemoveTimeoutId);
-                $thumbnails.css("opacity", "1");
-                document.body.style.cursor = "default";
-
-                mousemoveTimeoutId = setTimeout(function(){
-                    if (e.pageY >= thumbnailsRect.top)
-                        return;
-
-                    $thumbnails.css({ opacity: 0 });
-                    document.body.style.cursor = "none";
-                }, 2000);
-            }
-            lastPos = { x: e.pageX, y: e.pageY };
-        }
-
-        $gallery.on("dblclick", toggleFullScreen);
-        $(window).on("resize", onResize);
+        });
     </script>
 </body>
 </html>
