@@ -21,23 +21,23 @@
     yox.scroll = function(container, opt){
         this.container = container;
         this.init(opt);
-    }
+    };
 
     yox.scroll.prototype = (function(){
         var defaults = {
                 centerContentsIfNotScrollable: true,
                 events: {
-                    buttonholdstart: function(e, btn){
+                    buttonholdstart: function(btn){
                         applyButtonMethod.call(this, btn, "holdstart");
                     },
-                    buttonholdend: function(e, btn){
+                    buttonholdend: function(btn){
                         this.stopScroll();
                     },
-                    buttonclick: function(e, btn){
+                    buttonclick: function(btn){
                         applyButtonMethod.call(this, btn, "click");
                     }
                 },
-                float: "left",
+                "float": "left",
                 isHorizontal: true,
                 scrollByTime: .5, // The time, in seconds, it takes the scroll to complete, when a page / scrollBy command is given
                 scrollToEasing: "ease-in-out",
@@ -345,20 +345,13 @@
         }
 
         return {
-            addEventListener: function(eventName, eventHandler){
-                var self = this;
-                if (!eventHandler || typeof(eventHandler) !== "function")
-                    throw new Error("Invalid event handler, must be a function.");
-
-                $(this.$eventsElement).on(eventName + ".yoxscroll", $.proxy(eventHandler, self));
-            },
             calculateSliderSize: function(){
                 this.elements.$slider[this.options.isHorizontal ? "width" : "height"](999999);
                 var $measurer = $("<span>").appendTo(this.elements.$slider),
                     width = $measurer.position().left;
 
                 if (!width){
-                    $measurer.css("float", this.options.float);
+                    $measurer.css("float", this.options["float"]);
                     width = $measurer.position().left;
                 }
                 $measurer.remove();
@@ -368,6 +361,9 @@
                 var options = $.extend({}, opt),
                     self = this;
 
+                var eventsHandler = options.eventsHandler || new yox.eventsHandler();
+                $.extend(this, eventsHandler);
+
                 // Merge the options events with the default ones:
                 var optionsEvents = $.extend({}, options.events),
                     dynamicEvents = {};
@@ -376,7 +372,7 @@
                 var viewOptions = $.extend(true, {}, defaults, options);
 
                 if (viewOptions.toggleButtons)
-                    viewOptions.events.changeStatus = function(e, ui){
+                    viewOptions.events.changeStatus = function(ui){
                         this.options.elements.toggle(ui.scrollEnabled);
                     };
 
@@ -397,8 +393,6 @@
 
                 this.options = options = viewOptions;
 
-                this.$eventsElement = $("<div>");
-
                 var elements = this.elements = {
                     $window: $(window),
                     $container: $(this.container),
@@ -407,7 +401,7 @@
 
                 if ($.browser.webkit) // Enable hardware acceleration in webkit:
                     elements.$slider[0].style.setProperty("-webkit-transform", "translateZ(0)", null);
-                
+
                 var $container = elements.$container;
 
                 if ($container.css("position") === "static")
@@ -513,9 +507,6 @@
 
                 time = time / 10;
                 move.call(this, time, distance, true);
-            },
-            triggerEvent: function(eventName, data){
-                $(this.$eventsElement).trigger(eventName + ".yoxscroll", data);
             },
             update: function(){
                 var self = this;
