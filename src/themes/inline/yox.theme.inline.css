@@ -1,0 +1,75 @@
+.yox-theme-inline{
+    background: none repeat scroll 0 0 #333333;
+    border-radius: 10px 10px 10px 10px;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+    color: White;
+    border: solid 1px #333;
+    padding: 0;
+}
+.yox-theme-inline-title{
+    background: -moz-linear-gradient(center top , rgba(255, 255, 255, 0.3), transparent) repeat scroll 0 0 transparent;
+    font-size: 14pt;
+    font-weight: normal;
+    margin: 0; padding: 0;
+    padding: 5px 15px;
+    text-shadow: 1px 1px 0 Black;
+}
+
+.yox-theme-inline-gallery{
+    position: relative;
+    height: 400px;
+    margin: 0 auto;
+    background: #111;
+    border-style: solid;
+    border-color: Black;
+    border-width: 1px 0;
+    left: 0;
+    top: 0;
+    width: 100%
+}
+
+.yox-theme-inline-viewer{ height: 100%; overflow: hidden; }
+.yox-theme-inline-thumbnails{
+    height: 85px; width: 100%;
+    position: absolute; z-index: 100;
+    bottom: 0; left: 0;
+    text-align: center;
+    background: rgba(0,0,0,.3);
+    border-top: 1px solid rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+    opacity: 1;
+    -webkit-transition: opacity 300ms ease-out;
+    -moz-transition: opacity 300ms ease-out;
+    -o-transition: opacity 300ms ease-out;
+}
+.yox-theme-inline-thumbnails a{ display: inline-block; margin: 10px 4px 0; outline: none  }
+.yox-theme-inline-thumbnails img{ height: 63px; border: solid 1px #757575;box-shadow: -1px 2px 5px rgba(0,0,0,.3) }
+.yox-theme-inline-thumbnails a:hover img, .yox-theme-inline-thumbnails a.selectedThumbnail img{ border: solid 1px White; }
+.yox-theme-inline-thumbnails a:active{
+    position: relative;
+    top: 1px;
+}
+/* #line{ position: absolute; width: 100%; height: 1px; left: 0; top: 0; background: rgba(255,255,255,.15) } */
+
+.yox-theme-inline-description{
+    padding: 12px 15px 15px;
+    margin: 0;
+    background: -moz-linear-gradient(center top , transparent, rgba(0, 0, 0, 0.2)) repeat scroll 0 0 transparent;
+    box-shadow: 0 -1px 1px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(255, 255, 255, 0.1) inset;
+    border-radius: 0 0 10px 10px;
+}
+.yox-theme-inline-loader{
+    background: url("ajax-loader.gif") no-repeat scroll center center White;
+    border-radius: 50% 50% 50% 50%;
+    box-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
+    height: 60px;
+    left: 50%;
+    margin-left: -30px;
+    margin-top: -30px;
+    opacity: .6;
+    position: absolute;
+    top: 50%;
+    width: 60px;
+    z-index: 20;
+    display: none;
+}
