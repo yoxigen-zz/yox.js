@@ -2,21 +2,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<title>YoxView 3.0 Demo - Picasa User</title>
-		<link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
+		<link rel="Stylesheet" type="text/css" href="../src/modules/yox.view/yoxview.css" />
         <link rel="Stylesheet" type="text/css" href="css/yoxview.demo.fit.css" />
         <link rel="Stylesheet" type="text/css" href="css/yoxview.demo.picasa.css" />
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-        <script type="text/javascript" src="../yoxview/yox.js"></script>
-        <script type="text/javascript" src="../yoxview/yox.utils.js"></script>
-        <script type="text/javascript" src="../yoxview/yox.data.js"></script>
-        <script type="text/javascript" src="../yoxview/yox.thumbnails.js"></script>
-        <script type="text/javascript" src="../yoxview/datasources/yox.data.element.js"></script>
-        <script type="text/javascript" src="../yoxview/datasources/yox.data.picasa.js"></script>
-		<script type="text/javascript" src="../yoxview/yox.view.js"></script>
-        <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.js"></script>
-        <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.morph.js"></script>
-        <script type="text/javascript" src="../yoxview/yox.scroll.js"></script>
-        <script type="text/javascript" src="js/jquery.tmpl.min.js"></script>
         <script src="js/ga.js"></script>
 	</head>
 	<body>
@@ -29,7 +17,7 @@
         </header>
         <div id="albums"></div>
         <div id="contents">
-            <div id="popupContainer">
+            <div id="viewer">
                 <a href="#" title="Previous" class="yoxviewControlBtn yoxviewControlBtn_prev" id="yoxviewPrev"></a>
                 <a href="#" title="Next" class="yoxviewControlBtn yoxviewControlBtn_next" id="yoxviewNext"></a>
                 <div id="loader"></div>
@@ -46,6 +34,9 @@
                 <div id="thumbnails" class="thumbnails yoxview"></div>
             </div>
         </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <script type="text/javascript" src="js/jquery.tmpl.min.js"></script>
+        <script src="../build/yox.min.js"></script>
 		<script src="js/yoxview.demo.picasa.js"></script>
         <script id="albumInfoTemplate" type="text/x-jquery-tmpl">
             <div class="albumInfo">

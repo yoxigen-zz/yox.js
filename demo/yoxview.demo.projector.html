@@ -2,16 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<title>YoxView 3.0 Demo</title>
-		<link rel="Stylesheet" type="text/css" href="../yoxview/yoxview.css" />
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-        <script type="text/javascript" src="../yoxview/yox.js"></script>
-        <script type="text/javascript" src="../yoxview/yox.utils.js"></script>
-        <script type="text/javascript" src="../yoxview/yox.data.js"></script>
-        <script type="text/javascript" src="../yoxview/yox.thumbnails.js"></script>
-        <script type="text/javascript" src="../yoxview/datasources/yox.data.picasa.js"></script>
-		<script type="text/javascript" src="../yoxview/yox.view.js"></script>
-        <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.js"></script>
-        <script type="text/javascript" src="../yoxview/transitions/yox.view.transition.morph.js"></script>
+		<link rel="Stylesheet" type="text/css" href="../src/modules/yox.view/yoxview.css" />
 		<style>
 			body{ padding: 0; margin: 0; font-family: Calibri, Arial, Sans-Serif; overflow: hidden;  }
 			h1{ font-size: 14pt; color: #666; margin: 0; padding: 0; display: inline; font-weight: normal }
@@ -31,7 +22,12 @@
                 -moz-transition: opacity 300ms ease-out;
                 -webkit-transition: opacity 300ms ease-out;
             }
-            #thumbnails{ z-index: 31; bottom: 20px; left: 50%; position: absolute;}
+            #thumbnails{
+                z-index: 31;
+                bottom: 20px;
+                left: 50%;
+                position: absolute;
+            }
 			#thumbnails a{
                 position: absolute;
                 width: 72px;
@@ -43,15 +39,20 @@
                 margin-left: -36px;
                 margin-top: -48px;
                 z-index: 31;
-                -moz-transition: all 500ms ease-out;
-                -webkit-transition: all 500ms ease-out;
+                -moz-transition: top 500ms ease-out, left 500ms ease-out, opacity 500ms ease-out, -moz-transform 200ms ease-out;
+                -webkit-transition: top 500ms ease-out, left 500ms ease-out, opacity 500ms ease-out, -webkit-transform 200ms ease-out;
                 border: solid 1px Black;
                 -webkit-box-shadow: 0 0 10px rgba(0,0,0,0.7);
                 opacity: 0;
                 -webkit-transform: translateZ(0);
             }
 			#thumbnails img{ height: 100%; width: 100%; -webkit-border-radius: 50% }
-            #thumbnails a.selectedThumbnail, #thumbnails a:hover { width: 82px; height: 82px; margin-left: -41px; margin-top: -53px; }
+            #thumbnails a.selectedThumbnail, #thumbnails a:hover {
+                -moz-transform: scaleX(1.1) scaleY(1.1);
+                -webkit-transform: scaleX(1.1) scaleY(1.1);
+                -o-transform: scaleX(1.1) scaleY(1.1);
+                -ms-transform: scaleX(1.1) scaleY(1.1);
+            }
 
             .thumbnailsBtn{
                 display: block;
@@ -71,7 +72,7 @@
             }
             .thumbnailsBtn:hover{ background: #ddd }
 
-			#popupContainer{
+			#viewer{
                 overflow: hidden;
             }
 			#info{
@@ -137,23 +138,25 @@
 	</head>
 	<body>
 		<header><h1>YoxView 3.0 Demo</h1></header>
-		<div id="popupContainer">
-            <a href="#" title="Previous" class="yoxviewControlBtn yoxviewControlBtn_prev" id="yoxviewPrev"></a>
-            <a href="#" title="Next" class="yoxviewControlBtn yoxviewControlBtn_next" id="yoxviewNext"></a>
-            <div id="loader"></div>
-            <div id="thumbnailsPanel">
-
+        <div id="main">
+            <div id="viewer">
+                <a href="#" title="Previous" class="yoxviewControlBtn yoxviewControlBtn_prev" id="yoxviewPrev"></a>
+                <a href="#" title="Next" class="yoxviewControlBtn yoxviewControlBtn_next" id="yoxviewNext"></a>
+                <div id="loader"></div>
             </div>
+            <div id="thumbnailsPanel"></div>
             <div id="thumbnails" class="thumbnails yoxview"></div>
             <a href="#" class="thumbnailsBtn" id="thumbsBtn">T</a>
-		</div>
-        <div id="info">
-            <h2 id="infoTitle"></h2>
-            <a href="#" id="slideshowBtn">Slideshow</a>
-            <span id="itemCounter"></span>
+            <div id="info">
+                <h2 id="infoTitle"></h2>
+                <a href="#" id="slideshowBtn">Slideshow</a>
+                <span id="itemCounter"></span>
+            </div>
         </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <script src="../build/yox.min.js"></script>
 		<script type="text/javascript">
-			var popupContainer =  document.getElementById("popupContainer"),
+			var viewer =  document.getElementById("viewer"),
                 $thumbnailsPanel = $("#thumbnailsPanel"),
                 $thumbnailsContainer = $("#thumbnails"),
                 $slideshowBtn = $("#slideshowBtn"),
@@ -165,30 +168,36 @@
                 isInit,
                 heightToSubtract = document.getElementsByTagName("header")[0].clientHeight,
                 title = document.title,
-                thumbnailsOpen = false,
-                dataSource = new yox.data({
+                thumbnailsOpen = false;
+
+            var modules = {
+                data: new yox.data({
+                    cache: true,
                     source: {
                         type: "picasa",
                         url: "https://picasaweb.google.com/105098710956916751721/Trips",
                         thumbsize: 104,
+                        imgmax: 1024,
                         cropThumbnails: false
                     }
-                }),
-                thumbs = new yox.thumbnails($thumbnailsContainer, {
-                    data: dataSource,
-                    events: {
-                        click: function(e){
-                            $thumbnailsContainer.yoxview("selectItem", e.index);
-                        },
-                        create: function(){ this.select(0); }
-                    }
-                });
-				
+                })
+            };
+
+            modules.thumbnails = new yox.thumbnails($thumbnailsContainer, {
+                data: modules.data,
+                events: {
+                    click: function(e){
+                        modules.view.selectItem(e.index);
+                    },
+                    create: function(){ this.select(0); }
+                }
+            });
+
 			function setContainerSize(){
                 var height = docElement.clientHeight - heightToSubtract;
-				popupContainer.style.height = height + "px";
+				viewer.style.height = height + "px";
                 if (isInit)
-                    $thumbnailsContainer.yoxview("update");
+                    modules.view.update();
 
                 if (thumbnailsOpen)
                     toggleThumbnails(true);
@@ -202,7 +211,7 @@
                     delay = 30,
                     $thumbs = $("a", $thumbnailsContainer),
                     nThumbs = $thumbs.length,
-                    topOffset = popupContainer.clientHeight / 2,
+                    topOffset = viewer.clientHeight / 2,
                     radius = topOffset - 100;
 
                 if (!thumbnailsOpen || (open === true && !thumbnailsOpen))
@@ -237,41 +246,41 @@
             });
 
             $slideshowBtn.on("click", function(e){
-                $thumbnailsContainer.yoxview("toggleSlideshow");
+                modules.view.toggleSlideshow()
             });
 
-			$thumbnailsContainer.yoxview({
-				delayOpen: true,
+            modules.view = new yox.view(viewer, {
                 enableKeyboard: true,
-				margin: { top: 20, right: 45, bottom: 80, left: 45 },
-                container: popupContainer,
+                margin: { top: 20, right: 45, bottom: 80, left: 45 },
                 controls: {
                     prev: $("#yoxviewPrev"),
                     next: $("#yoxviewNext")
                 },
-                data: dataSource,
+                data: modules.data,
                 //popupPadding: 20,
                 events: {
-                    beforeSelect: function(e, items, data){ thumbs.select(items.newItem.id - 1); },
+                    beforeSelect: function(items, data){ modules.thumbnails.select(items.newItem.id - 1); },
                     close: function(){ info.innerHTML = "" },
-                    select: function(e, item){
+                    select: function(item){
                         infoTitle.innerHTML = item.title || "";
                         itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
                         document.title = title + (item ? " - " + item.title : "");
 
                     },
-                    cacheStart: function(e, item){ loader.style.display = "inline" },
-                    cacheEnd: function(e, item){ loader.style.display = "none" },
+                    cacheStart: function(){ loader.style.display = "inline" },
+                    cacheEnd: function(){ loader.style.display = "none" },
                     init: function(){ this.selectItem(0); },
-                    loadItem: function(e, item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
+                    loadItem: function(item){ $(item.thumbnail.element).addClass("loadedThumbnail"); },
                     slideshowStop: function(){ $slideshowBtn.removeClass("slideshowBtn_on"); },
                     slideshowStart: function(){ $slideshowBtn.addClass("slideshowBtn_on"); }
                 },
-				selectedThumbnailClass: "selectedThumbnail",
+                selectedThumbnailClass: "selectedThumbnail",
                 zoom: true,
                 transform: true,
-                transitionTime: 300
-			});
+                transitionTime: 1000,
+                transition: "flip"
+            });
+
             isInit = true;
 		</script>
 	</body>
