@@ -29,6 +29,7 @@
 }
 .yoxviewFrame_fit .yoxviewImg{
     width: 100%;
+    height: 100%;
     /*
     -moz-transition: all 300ms ease-out;
     -webkit-transition: all 300ms ease-out;
@@ -36,4 +37,3 @@
 }
 
 .yoxviewFrame div#info{ background: rgba(0,0,0,0.5); color: White; height: 30px; bottom: 0; left: 0; width: 100%; line-height: 30px; padding-left: 10px;}
-.yoxviewBackground{ position: absolute; top: 0; left: 0; background: rgba(0,0,0,0.8); display: none; height: 110%; width: 100%; }
