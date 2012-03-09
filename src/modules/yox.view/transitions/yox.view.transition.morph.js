@@ -5,9 +5,9 @@ yox.view.transitions.morph = function(){
         defaultTransitionTime,
         currentTransitionTime;
 
-    this.create = function($container, onLoad){
+    this.create = function($container){
         var view = this;
-        $frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + this.options.resizeMode + " yoxviewFrame_" + $.yoxview.platform}).appendTo($container);
+        $frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + this.options.resizeMode + " yoxviewFrame_" + yox.utils.browser.getPlatform()}).appendTo($container);
         if (this.options.transitionTime){
             currentTransitionTime = defaultTransitionTime = this.options.transitionTime;
             $frame.css({
@@ -21,19 +21,19 @@ yox.view.transitions.morph = function(){
 
         panels = [];
         for(var i=0; i<2; i++){
-            var $img = $("<img>", { src: "", "class": "yoxviewImg" });
+            var $panel = $("<div>", { "class": "yoxviewImg" });
+            $panel.css("display", "inline");
             if (i > 0)
-                $img.css({opacity: "0"});
+                $panel.css({opacity: "0"});
 
-            $img.css({
+            $panel.css({
                 transition: ["all ", this.options.transitionTime, "ms ease-out"].join("")
             });
             if ($.browser.webkit)
-                $img[0].style.setProperty("-webkit-transform", "translateZ(0)");
+                $panel[0].style.setProperty("-webkit-transform", "translateZ(0)");
 
-            $img.attr("data-index", i);
-            $img.on("load", { view: view }, onLoad);
-            panels.push($img.appendTo($frame));
+            $panel.attr("data-index", i);
+            panels.push($panel.appendTo($frame));
         }
     };
 

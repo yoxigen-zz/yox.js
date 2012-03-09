@@ -15,7 +15,7 @@ yox.view.transitions.evaporate = function(){
         defaultTransition = yox.utils.browser.getCssPrefix() + "transform " + defaultTransitionTimeStr + " ease-out, opacity " + defaultTransitionTimeStr +" ease-out";
     }
 
-    this.create = function($container, onLoad){
+    this.create = function($container){
         var view = this;
         self.$container = $container;
         $container.css("perspective", "800px");
@@ -24,8 +24,8 @@ yox.view.transitions.evaporate = function(){
 
         panels = [];
         for(var i=0; i<2; i++){
-            var $img = $("<img>", { src: "", "class": "yoxviewImg" });
-            $img.css({
+            var $panel = $("<div>", { "class": "yoxviewImg" });
+            $panel.css({
                 position: "absolute",
                 top: "50%", left: "50%",
                 width: 0, height: 0,
@@ -33,9 +33,8 @@ yox.view.transitions.evaporate = function(){
                 transform: i ? "translateZ(-500px)" : "translateZ(0)" // The rotate(0) is for Firefox, which otherwise displays the backface (bug exists in Firefox 11)
             });
 
-            $img.attr("data-index", i);
-            $img.on("load", { view: view }, onLoad);
-            panels.push($img.appendTo($container));
+            $panel.attr("data-index", i);
+            panels.push($panel.appendTo($container));
         }
     };
 

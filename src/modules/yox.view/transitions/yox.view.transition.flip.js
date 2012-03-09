@@ -8,11 +8,11 @@ yox.view.transitions.flip = function(){
         currentItemIndex = 0,
         self = this;
 
-    this.create = function($container, onLoad){
+    this.create = function($container){
         var view = this;
         self.$container = $container;
         $container.css("perspective", "800px");
-        $frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + this.options.resizeMode + " yoxviewFrame_" + $.yoxview.platform + " yoxviewFrame_flip"}).appendTo($container);
+        $frame = $("<div>", { "class": "yoxviewFrame yoxviewFrame_" + this.options.resizeMode + " yoxviewFrame_" + yox.utils.browser.getPlatform() + " yoxviewFrame_flip"}).appendTo($container);
         if (this.options.transitionTime){
             currentTransitionTime = defaultTransitionTime = this.options.transitionTime;
             $frame.css({
@@ -28,8 +28,8 @@ yox.view.transitions.flip = function(){
 
         panels = [];
         for(var i=0; i<2; i++){
-            var $img = $("<img>", { src: "", "class": "yoxviewImg" });
-            $img.css({
+            var $panel = $("<div>", { "class": "yoxviewImg" });
+            $panel.css({
                 backfaceVisibility: "hidden",
                 background: "Black",
                 position: "absolute",
@@ -40,9 +40,9 @@ yox.view.transitions.flip = function(){
                 marginLeft: "-" + this.options.margin.left + "px"
             });
 
-            $img.attr("data-index", i);
-            $img.on("load", { view: view }, onLoad);
-            panels.push($img.appendTo($frame));
+            $panel.attr("data-index", i);
+            //$panel.on("load", { view: view }, onLoad);
+            panels.push($panel.appendTo($frame));
         }
     };
 

@@ -4,20 +4,19 @@ yox.view.transitions.fade = function(){
         defaultTransitionTime,
         currentTransitionTime;
 
-    this.create = function($container, onLoad){
+    this.create = function($container){
         var view = this;
         panels = [];
         for(var i=0; i<2; i++){
-            var $img = $("<img>", { src: "", "class": "yoxviewImg" });
+            var $panel = $("<div>", { src: "", "class": "yoxviewImg" });
             if (i > 0)
-                $img.css({opacity: "0"});
+                $panel.css({opacity: "0"});
 
-            $img.css({ transition: ["opacity ", this.options.transitionTime, "ms linear"].join("") });
+            $panel.css({ transition: ["opacity ", this.options.transitionTime, "ms linear"].join("") });
             if ($.browser.webkit)
-                $img[0].style.setProperty("-webkit-transform", "translateZ(0)");
+                $panel[0].style.setProperty("-webkit-transform", "translateZ(0)");
 
-            $img.on("load", { view: view }, onLoad);
-            panels.push($img.appendTo($container));
+            panels.push($panel.appendTo($container));
         }
     };
 
