@@ -1,0 +1,50 @@
+/* Style for the 'scroll' theme */
+.yox-theme-scroll-scroller{
+    height: 512px;
+    position: absolute;
+    top: 50%;
+    margin-top: -286px;
+    left: 0;
+    width: 100%;
+    border-width: 1px 0 1px;
+    border-style: solid;
+    border-color: #ddd;
+    background: #eee;
+    overflow: hidden;
+    cursor: move;
+}
+.yox-theme-scroll-scroller img{
+    height: 512px;
+    vertical-align: top;
+    border: none;
+    cursor: move;
+}
+.yox-theme-scroll-scroller a:last-child img{ border-width: 0 }
+.yox-theme-scroll-thumbnails{
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    margin-top: 233px;
+    width: 100%;
+}
+.yox-theme-scroll-thumbnails a{
+    -moz-transition: opacity 200ms ease-out 0s;
+    border-radius: 5px 5px 5px 5px;
+    display: inline-block;
+    height: 48px;
+    padding: 3px;
+    width: 48px;
+    border: solid 1px Transparent;
+    opacity: .6;
+    -moz-transition: opacity 200ms ease-out;
+    -webkit-transition: opacity 200ms ease-out;
+    outline: none;
+}
+.yox-theme-scroll-thumbnails a:hover, .yox-theme-scroll-thumbnails a.selectedThumbnail{ opacity: 1 }
+.yox-theme-scroll-thumbnails a.selectedThumbnail{ box-shadow: 1px 1px 5px rgba(0,0,0,.8) }
+.yox-theme-scroll-thumbnails img{
+    height: 48px;
+    width: 48px;
+    border: none;
+}
+.yox-theme-scroll-wrapper .yoxviewFrame{ display: none }
