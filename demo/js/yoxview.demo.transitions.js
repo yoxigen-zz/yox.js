@@ -12,16 +12,18 @@ var viewer =  document.getElementById("viewer"),
     title = document.title,
     transitionSelect = document.getElementById("transitionSelect");
 
+var dataSource = document.location.href.match(/yoxview\.demo\.transitions\.html/) ? {
+    type: "picasa",
+    url: "https://picasaweb.google.com/112402114851229244394/Collages",
+    thumbsize: 104,
+    cropThumbnails: false,
+    imgmax: 1024
+} : undefined;
+
 var modules = {
     data: new yox.data({
         cache: true,
-        source: {
-            type: "picasa",
-            url: "https://picasaweb.google.com/112402114851229244394/Collages",
-            thumbsize: 104,
-            cropThumbnails: false,
-            imgmax: 1024
-        }
+        source: dataSource
     })
 };
 
@@ -104,7 +106,7 @@ $(window).resize(function(){
 });
 
 $slideshowBtn.on("click", function(e){
-    modules.view.toggleSlideshow;
+    modules.view.toggleSlideshow();
 });
 
 
