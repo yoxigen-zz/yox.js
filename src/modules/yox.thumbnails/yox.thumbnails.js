@@ -41,8 +41,10 @@
 
 
             dataSource.addEventListener("loadSources", function(sources){
-                self.clear();
-                this.itemCount = 0;
+                if (!self.options.allowAppend){
+                    self.clear();
+                    this.itemCount = 0;
+                }
                 renderSources(sources);
             });
 
@@ -118,6 +120,7 @@
             this.triggerEvent("create", { thumbnails: thumbnailElements, items: source.items });
         },
         defaults: {
+            allowAppend: true, // If true, new data sources cause thumbnails to be added rather than replace the existing thumbnails.
             renderThumbnailsTitle: true,
             selectedThumbnailClass: "selectedThumbnail",
             thumbnailClass: "yoxthumbnail"
