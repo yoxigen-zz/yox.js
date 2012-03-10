@@ -1,12 +1,12 @@
 ﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
-		<title>YoxView 3.0 Demo - Transitions</title>
+		<title>YoxView 3.0 Demo - Drag and drop</title>
 		<link rel="Stylesheet" type="text/css" href="../src/modules/yox.view/yoxview.css" />
         <link rel="Stylesheet" type="text/css" href="css/yoxview.demo.fit.css" />
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 
-<!--
+        <!--
         <script type="text/javascript" src="../src/yox.js"></script>
         <script type="text/javascript" src="../src/yox.utils.js"></script>
         <script type="text/javascript" src="../src/modules/yox.data/yox.data.js"></script>
@@ -22,14 +22,53 @@
 		<script type="text/javascript" src="../src/modules/yox.view/transitions/yox.view.transition.evaporate.js"></script>
 		<script type="text/javascript" src="../src/modules/yox.view/transitions/yox.view.transition.flip.js"></script>
         <script type="text/javascript" src="../src/modules/yox.scroll/yox.scroll.js"></script>
--->
+        -->
+
         <script src="../build/yox.min.js"></script>
+        <style>
+
+            #dropzone{
+                background: none repeat scroll 0 0 rgba(255, 255, 255, 0.3);
+                border: 3px dashed White;
+                border-radius: 15px 15px 15px 15px;
+                color: White;
+                font-size: 24pt;
+                height: 180px;
+                left: 50%;
+                line-height: 177px;
+                margin-left: -300px;
+                margin-top: -120px;
+                position: absolute;
+                text-align: center;
+                top: 50%;
+                width: 600px;
+                z-index: 999;
+                -moz-transition: all 200ms ease-out;
+                -webkit-transition: all 200ms ease-out;
+                text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7);
+                opacity: 1;
+            }
+            #dropzone.dragover{
+                -moz-transform: scaleX(1.1) scaleY(1.1);
+                -webkit-transform: scaleX(1.1) scaleY(1.1);
+                background-color: rgba(0, 255, 0, .3);
+            }
+            #dropzone.notSupported{
+                border-style: solid;
+                border-color: Red;
+                font-size: 13pt;
+                font-weight: bold;
+            }
+            #dropzone a{
+                color: White;
+            }
+        </style>
         <script src="js/ga.js"></script>
 	</head>
 	<body>
         <img src="http://yoxigen.com/images/yox.gif" style="display: none" alt="Image for Facebook" />
 		<header>
-            <h1>YoxView 3.0 Demo - Transitions</h1>
+            <h1>YoxView 3.0 Demo - Drag and drop</h1>
             <div style="float: right; padding-right: 15px;">
                 <label for="transitionSelect">Transition type:</label>
                 <select id="transitionSelect"></select>
@@ -44,6 +83,9 @@
             <a href="#" title="Next" class="yoxviewControlBtn yoxviewControlBtn_next" id="yoxviewNext"></a>
             <div id="loader"></div>
 		</div>
+        <div id="dropzone">
+            Drop image files here
+        </div>
         <div id="info">
             <h2 id="infoTitle"></h2>
             <a href="#" id="slideshowBtn">Slideshow</a>
@@ -55,5 +97,6 @@
             <div id="thumbnails" class="thumbnails yoxview"></div>
         </div>
 		<script src="js/yoxview.demo.transitions.js"></script>
+		<script src="js/yox.demo.dragndrop.js"></script>
 	</body>
 </html>
