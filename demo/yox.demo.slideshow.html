@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YoxView 3.0 Demo - Slideshow</title>
+    <link rel="Stylesheet" type="text/css" href="../src/modules/yox.view/yoxview.css" />
+    <link rel="Stylesheet" type="text/css" href="../src/themes/slideshow/yox.theme.slideshow.css" />
+    <style>
+        body{ font-family: Arial, Sans-Serif; font-size: 10pt; }
+        .yox-theme-slideshow{ width: 800px; height: 600px; margin: 40px auto }
+        .slide{ overflow: hidden; height: 100%;}
+        .slide-2{ background: Blue; color: White }
+        .slide-3{ color: Red }
+    </style>
+    <script src="js/ga.js"></script>
+</head>
+<body>
+    <div id="main" class="yox"></div>
+    <div id="slides" style="display:none">
+        <div class="slide slide-1">
+            <p> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi et elit ante. Aenean nec arcu a erat pretium accumsan. Aliquam a dolor et urna eleifend sagittis. Curabitur auctor, est nec ultricies lobortis, lectus quam blandit lacus, posuere suscipit quam lorem a neque. Donec quis nisi sed tortor vehicula vulputate in non turpis. Nulla porta eleifend sapien, ut adipiscing nisi placerat in. Praesent non ipsum sapien, vel laoreet eros. </p>
+            <p> Quisque eget urna nulla, posuere volutpat mi. Aliquam adipiscing, enim ut vulputate egestas, est quam blandit erat, et hendrerit lorem arcu sit amet nibh. Quisque diam turpis, cursus eget consequat at, fermentum eu tellus. Mauris quis leo mi. Maecenas eget libero nec ipsum condimentum sodales. Cras porta, leo in viverra lobortis, mi quam sodales sem, sit amet ullamcorper mauris mauris id tellus. Nunc vulputate nibh sed ante rutrum consectetur. Praesent a nulla sapien. Nunc convallis, nunc id consequat lacinia, dui sem adipiscing metus, ac tincidunt nisi metus eget augue. Integer iaculis ligula a diam convallis bibendum ac quis ligula. Pellentesque rutrum congue tellus eget molestie. Nunc accumsan sagittis quam, ut accumsan diam auctor sed. In convallis dignissim sapien eget elementum. Cras in massa lectus, viverra molestie mi. </p>
+        </div>
+        <div class="slide slide-2">
+            <h1>The third slide!</h1>
+            <label for="slideSelect">This demo is:</label>
+                <select id="slideSelect">
+                    <option>Awesome</option>
+                    <option>Amazing</option>
+                    <option>Ugly</option>
+                </select>
+            <p> Aliquam purus turpis, porta sit amet sodales non, sollicitudin nec felis. Mauris imperdiet luctus nulla, et congue nisi lacinia ut. Morbi quis nulla vel erat vehicula sagittis. Aenean a enim id metus gravida porta. Aenean arcu tellus, lacinia non egestas ac, consequat in urna. Quisque nec arcu tortor, quis laoreet sapien. Aenean tempus, est et tempor sollicitudin, erat justo accumsan ligula, nec adipiscing enim risus ac massa. Aliquam congue ornare lorem, et egestas velit malesuada in. Nunc commodo sollicitudin viverra. Mauris tempor, odio eget ultricies consequat, erat risus consectetur nulla, eget convallis quam leo in ligula. Etiam vel augue ut risus convallis accumsan. </p>
+        </div>
+        <div class="slide slide-3">
+            <h2>The third slide!</h2>
+            <p> Aliquam purus turpis, porta sit amet sodales non, sollicitudin nec felis. Mauris imperdiet luctus nulla, et congue nisi lacinia ut. Morbi quis nulla vel erat vehicula sagittis. Aenean a enim id metus gravida porta. Aenean arcu tellus, lacinia non egestas ac, consequat in urna. Quisque nec arcu tortor, quis laoreet sapien. Aenean tempus, est et tempor sollicitudin, erat justo accumsan ligula, nec adipiscing enim risus ac massa. Aliquam congue ornare lorem, et egestas velit malesuada in. Nunc commodo sollicitudin viverra. Mauris tempor, odio eget ultricies consequat, erat risus consectetur nulla, eget convallis quam leo in ligula. Etiam vel augue ut risus convallis accumsan. </p>
+            <p> Pellentesque velit sapien, interdum non auctor ullamcorper, pellentesque vel nisi. Pellentesque in mauris dolor. Aenean quis sem quam. Aliquam erat volutpat. Maecenas venenatis, lectus in hendrerit accumsan, nunc lorem egestas sapien, vitae consequat justo sem quis justo. In fringilla, mi et ullamcorper varius, ante elit egestas tellus, nec tristique nisi metus vel mauris. Cras varius, odio at fringilla auctor, ligula dui lobortis nibh, non eleifend tortor nulla quis eros. Praesent placerat viverra arcu nec egestas. Vivamus id convallis libero. Sed id leo purus. Vivamus luctus, risus nec hendrerit fermentum, nisi ligula vulputate sem, sit amet ultrices nisl justo vitae purus. Duis quis aliquet neque. Donec hendrerit felis sit amet sapien malesuada dapibus rhoncus ante egestas. Sed justo sem, pulvinar at condimentum nec, dignissim aliquet lorem. Fusce tincidunt elit vel ante porttitor ac congue est interdum. </p>
+            <p> Pellentesque auctor suscipit magna sit amet dignissim. Vestibulum vitae leo quam, ut gravida velit. Suspendisse interdum molestie lectus, nec iaculis turpis tincidunt ut. Fusce arcu felis, malesuada eget condimentum nec, facilisis a tortor. Phasellus non sem nec lectus mattis convallis. Nulla facilisi. Nulla dapibus sodales varius. </p>
+            <p> Aliquam purus turpis, porta sit amet sodales non, sollicitudin nec felis. Mauris imperdiet luctus nulla, et congue nisi lacinia ut. Morbi quis nulla vel erat vehicula sagittis. Aenean a enim id metus gravida porta. Aenean arcu tellus, lacinia non egestas ac, consequat in urna. Quisque nec arcu tortor, quis laoreet sapien. Aenean tempus, est et tempor sollicitudin, erat justo accumsan ligula, nec adipiscing enim risus ac massa. Aliquam congue ornare lorem, et egestas velit malesuada in. Nunc commodo sollicitudin viverra. Mauris tempor, odio eget ultricies consequat, erat risus consectetur nulla, eget convallis quam leo in ligula. Etiam vel augue ut risus convallis accumsan. </p>
+                        <p> Pellentesque velit sapien, interdum non auctor ullamcorper, pellentesque vel nisi. Pellentesque in mauris dolor. Aenean quis sem quam. Aliquam erat volutpat. Maecenas venenatis, lectus in hendrerit accumsan, nunc lorem egestas sapien, vitae consequat justo sem quis justo. In fringilla, mi et ullamcorper varius, ante elit egestas tellus, nec tristique nisi metus vel mauris. Cras varius, odio at fringilla auctor, ligula dui lobortis nibh, non eleifend tortor nulla quis eros. Praesent placerat viverra arcu nec egestas. Vivamus id convallis libero. Sed id leo purus. Vivamus luctus, risus nec hendrerit fermentum, nisi ligula vulputate sem, sit amet ultrices nisl justo vitae purus. Duis quis aliquet neque. Donec hendrerit felis sit amet sapien malesuada dapibus rhoncus ante egestas. Sed justo sem, pulvinar at condimentum nec, dignissim aliquet lorem. Fusce tincidunt elit vel ante porttitor ac congue est interdum. </p>
+                        <p> Pellentesque auctor suscipit magna sit amet dignissim. Vestibulum vitae leo quam, ut gravida velit. Suspendisse interdum molestie lectus, nec iaculis turpis tincidunt ut. Fusce arcu felis, malesuada eget condimentum nec, facilisis a tortor. Phasellus non sem nec lectus mattis convallis. Nulla facilisi. Nulla dapibus sodales varius. </p>
+        </div>
+        <div class="slide">
+            <iframe style="width: 100%; height: 100%; border: none; margin: 0;" src="http://xkcd.com" frameborder="0" allowfullscreen></iframe>
+        </div>
+        <div class="slide">
+            <object width="100%" height="100%"><param name="movie" value="http://www.youtube.com/v/JqwJNEwhUVE?version=3&amp;hl=en_US"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/JqwJNEwhUVE?version=3&amp;hl=en_US" type="application/x-shockwave-flash" width="100%" height="100%" allowscriptaccess="always" allowfullscreen="true" wmode="transparent"></embed></object>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="../src/yox.js"></script>
+    <script type="text/javascript" src="../src/yox.utils.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.data/yox.data.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.thumbnails/yox.thumbnails.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.data/sources/yox.data.source.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.data/sources/yox.data.source.html.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.data/sources/yox.data.source.files.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.data/sources/yox.data.source.picasa.js"></script>
+    <script type="text/javascript" src="../src/yox.eventsHandler.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/yox.view.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/yox.view.cache.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/transitions/yox.view.transition.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/transitions/yox.view.transition.morph.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/transitions/yox.view.transition.fade.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/transitions/yox.view.transition.evaporate.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.view/transitions/yox.view.transition.flip.js"></script>
+    <script type="text/javascript" src="../src/modules/yox.scroll/yox.scroll.js"></script>
+    <script type="text/javascript" src="../src/themes/yox.theme.js"></script>
+    <script type="text/javascript" src="../src/themes/slideshow/yox.theme.slideshow.js"></script>
+    <!--
+                <script src="../build/yox.min.js"></script>  -->
+    <script>
+        $(".yox").yox({
+            theme: "slideshow",
+            data: {
+                type: "html",
+                source: {
+                    element: document.getElementById("slides"),
+                    selector: ".slide"
+                }
+            }
+        });
+    </script>
+</body>
+</html>
