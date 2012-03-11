@@ -1,4 +1,4 @@
-yox.data.prototype.addDataSource((function(){
+yox.data.sources.picasa = (function(){
 	var dataSourceName = "picasa",
         picasaRegex = /^https?:\/\/picasaweb\.google\./,
         picasaMatchRegex = /https?:\/\/picasaweb\.google\.\w+\/([^\/#\?]+)\/?([^\/#\?]+)?(\?([^#]*))?/,
@@ -145,4 +145,4 @@ yox.data.prototype.addDataSource((function(){
             });
 	    }
     };
-})());
+})();

@@ -1,4 +1,4 @@
-yox.data.prototype.addDataSource((function(){
+yox.data.sources.files = (function(){
     var dataSourceName = "files",
         createObjectURL;
 
@@ -18,6 +18,9 @@ yox.data.prototype.addDataSource((function(){
             return false;
         },
         load: function(source, callback){
+            if (!callback)
+                return false;
+
             var items = [];
             for(var i=0, file; file = source.files[i]; i++){
                 if (/^image\//.test(file.type)){
@@ -40,8 +43,7 @@ yox.data.prototype.addDataSource((function(){
                 createThumbnails: true
             };
 
-            if (callback)
-                callback(data);
+            callback(data);
         }
     };
-})());
+})();

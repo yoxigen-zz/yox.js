@@ -1,12 +1,12 @@
-yox.data.prototype.addDataSource(function(){
+yox.data.sources.element = (function(){
 	var dataSourceName = "element";
 
-    var isElement = typeof(HTMLElement) === "object"
+    var isElement = Object(HTMLElement) === HTMLElement
         ? function(el){ return el instanceof HTMLElement; }
-        : typeof(Element) === "object"
+        : Object(Element) === Element
             ? function(el){ return el instanceof Element; }
             : function(e){
-                return typeof(el) === "object" && el.nodeType === 1 && typeof(el.nodeName) === "string";
+                return Object(el) === el && el.nodeType === 1 && typeof(el.nodeName) === "string";
             };
 
 	return {
