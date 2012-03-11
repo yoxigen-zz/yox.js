@@ -97,6 +97,15 @@ yox.utils = {
             return supportedProp;
         }
     },
+    dom: {
+        isElement: Object(HTMLElement) === HTMLElement
+            ? function(el){ return el instanceof HTMLElement; }
+            : Object(Element) === Element
+                ? function(el){ return el instanceof Element; }
+                : function(e){
+                    return Object(el) === el && el.nodeType === 1 && typeof(el.nodeName) === "string";
+                }
+    },
     dimensions: {
         // Distributes an object or number into the following structure:
         // { top: 10, left: 10, bottom: 15, right: 13, horizontal: 23, vertical: 25 }
