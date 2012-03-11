@@ -154,6 +154,15 @@ yox.utils = {
             return supportedProp;
         }
     },
+    dom: {
+        isElement: Object(HTMLElement) === HTMLElement
+            ? function(el){ return el instanceof HTMLElement; }
+            : Object(Element) === Element
+                ? function(el){ return el instanceof Element; }
+                : function(e){
+                    return Object(el) === el && el.nodeType === 1 && typeof(el.nodeName) === "string";
+                }
+    },
     dimensions: {
         // Distributes an object or number into the following structure:
         // { top: 10, left: 10, bottom: 15, right: 13, horizontal: 23, vertical: 25 }
@@ -312,15 +321,8 @@ yox.data = function(options){
 }
 
 yox.data.prototype = {
-    dataSources: {},
     defaults: {
         cache: false // Set this to true to enable caching on localStorage. Cache is used only for external sources - it saves the data retrieved from the source (what's return from the source's load() method).
-    },
-    addDataSource: function(dataSource){
-        if (this.dataSources[dataSource.name])
-            return false;
-
-        this.dataSources[dataSource.name] = dataSource;
     },
     addSources: function(sourceArr){
         var deferredPromises = [],
@@ -348,8 +350,8 @@ yox.data.prototype = {
         data = [];
     },
     findDataSource: function(sourceData){
-        for(var dataSourceName in this.dataSources){
-            var dataSource = this.dataSources[dataSourceName];
+        for(var dataSourceName in yox.data.sources){
+            var dataSource = yox.data.sources[dataSourceName];
 
             if (dataSource.match(sourceData))
                 return dataSource;
@@ -357,7 +359,7 @@ yox.data.prototype = {
     },
     getData: function(){ return this.data; },
     getDataSource: function(dataSourceName){
-        return this.dataSources[dataSourceName];
+        return yox.data.sources[dataSourceName];
     },
     loadSource: function(source){
         var dataSource = source.type ? this.getDataSource(source.type) : this.findDataSource(source),
@@ -410,15 +412,22 @@ yox.data.prototype = {
         window.localStorage.setItem(keyName, JSON.stringify(data));
     }
 };
-yox.data.prototype.addDataSource(function(){
+yox.data.source = function(){};
+yox.data.sources = {}; // Will hold the transition types
+
+yox.data.source.prototype = {
+    load: function(source, callback){ throw new Error("'load' function isn't implemented for this data source."); },
+    match: function(source){ throw new Error("'match' function isn't implemented for this data source."); }
+};
+yox.data.sources.element = (function(){
 	var dataSourceName = "element";
 
-    var isElement = typeof(HTMLElement) === "object"
+    var isElement = Object(HTMLElement) === HTMLElement
         ? function(el){ return el instanceof HTMLElement; }
-        : typeof(Element) === "object"
+        : Object(Element) === Element
             ? function(el){ return el instanceof Element; }
             : function(e){
-                return typeof(el) === "object" && el.nodeType === 1 && typeof(el.nodeName) === "string";
+                return Object(el) === el && el.nodeType === 1 && typeof(el.nodeName) === "string";
             };
 
 	return {
@@ -459,7 +468,7 @@ yox.data.prototype.addDataSource(function(){
 		}
 	};
 }());
-yox.data.prototype.addDataSource((function(){
+yox.data.sources.files = (function(){
     var dataSourceName = "files",
         createObjectURL;
 
@@ -479,6 +488,9 @@ yox.data.prototype.addDataSource((function(){
             return false;
         },
         load: function(source, callback){
+            if (!callback)
+                return false;
+
             var items = [];
             for(var i=0, file; file = source.files[i]; i++){
                 if (/^image\//.test(file.type)){
@@ -501,12 +513,51 @@ yox.data.prototype.addDataSource((function(){
                 createThumbnails: true
             };
 
-            if (callback)
-                callback(data);
+            callback(data);
         }
     };
-})());
-yox.data.prototype.addDataSource((function(){
+})();
+yox.data.sources.html = (function(){
+    var dataSourceName = "html";
+
+    return {
+        name: dataSourceName,
+        match: function(source){
+            return yox.utils.dom.isElement(source) || source instanceof jQuery || (source.element && yox.utils.dom.isElement(source.element) || source.element instanceof jQuery);
+        },
+        load: function(source, callback){
+            var items = [];
+
+            if (source.selector && source.element){
+                var elements = source.element.querySelectorAll(source.selector);
+                for(var i=0, count=elements.length; i < count; i++){
+                    var el = elements[i];
+                    items.push({
+                        element: el,
+                        type: "html",
+                        title: el.title || el.getAttribute("data-title"),
+                        width: el.clientWidth,
+                        height: el.clientHeight,
+                        thumbnail: {
+                            src: el.getAttribute("data-thumbnail"),
+                            className: source.thumbnailsClass || "yox-thumbnail"
+                        }
+                    });
+                    el.parentNode.removeChild(el);
+                }
+            }
+            var data = {
+                items: items,
+                source: source,
+                sourceType: dataSourceName,
+                createThumbnails: true
+            };
+
+            callback(data);
+        }
+    };
+})();
+yox.data.sources.picasa = (function(){
 	var dataSourceName = "picasa",
         picasaRegex = /^https?:\/\/picasaweb\.google\./,
         picasaMatchRegex = /https?:\/\/picasaweb\.google\.\w+\/([^\/#\?]+)\/?([^\/#\?]+)?(\?([^#]*))?/,
@@ -653,7 +704,7 @@ yox.data.prototype.addDataSource((function(){
             });
 	    }
     };
-})());
+})();
 (function($){
     $.fn.yoxscroll = function(options)
     {
@@ -1477,8 +1528,8 @@ yox.data.prototype.addDataSource((function(){
                     else
                         element.innerHTML = item.html;
 
-                    item.width || (item.width = this.options.panelDimensions.width);
-                    item.height || (item.height = this.options.panelDimensions.height);
+                    item.width || (item.width = this.containerDimensions.width);
+                    item.height || (item.height = this.containerDimensions.height);
                     item.ratio = item.height / item.width;
 
                     var position = this.getPosition(item, this.containerDimensions, this.options);
@@ -1637,7 +1688,6 @@ yox.data.prototype.addDataSource((function(){
                 }
 
                 this.options.data && this.addDataSources(this.options.data);
-
                 createViewer(this);
 
                 if (this.options.enableKeyboard)
@@ -1655,7 +1705,9 @@ yox.data.prototype.addDataSource((function(){
                         }
                     }
                 }
+
                 this.update();
+                this.triggerEvent("create");
             },
             last: function(){
 				if (!this.currentItem)
@@ -1975,6 +2027,14 @@ yox.view.cache = (function(){
         }
 
         item = item || view.items[0];
+
+        if (item.type !== "image"){
+            if (onCache)
+                onCache.call(view, item);
+
+            //advanceCache(view);
+            return true;
+        }
 
         // Check whether the specified item is already being cached:
         for(var i = 0; i < concurrentCachedImagesCount; i++){
@@ -2321,7 +2381,10 @@ yox.view.transitions.flip = function(){
             });
         }
         else {
-            currentDeg += options.index > currentItemIndex ? 180 : -180;
+            var isBackwards = (options.index < currentItemIndex && !(currentItemIndex === this.items.length - 1 && options.index === 0 )) ||
+                options.index === this.items.length - 1 && !currentItemIndex;
+
+            currentDeg += isBackwards ? -180 : 180;
             currentItemIndex = options.index;
             $frame.css("transform", "rotateY(" + currentDeg + "deg)");
         }
@@ -2752,3 +2815,70 @@ yox.themes.scroll = function(data, options){
 };
 
 yox.themes.scroll.prototype = new yox.theme();
+yox.themes.slideshow = function(data, options){
+    var elements = {},
+        self = this;
+
+
+    this.name = "slideshow";
+    this.config = {
+        view: {
+            enableKeyboard: true,
+            transition: "flip",
+            margin: 10,
+            transitionTime: 600,
+            events: {
+                beforeSelect: function(e){
+                    var index = e.newItem.id;
+                    elements.position.innerHTML = index + " / " + this.items.length;
+                },
+                create: function(){this.selectItem(0); }
+            }
+        }
+    };
+    this.create = function(container){
+        elements.container = container;
+        $(container).addClass(this.getThemeClass());
+
+        function createButton(method, title){
+            var button = document.createElement("a");
+            button.className = self.getThemeClass("button") + " " + self.getThemeClass("button-" + method);
+            button.setAttribute("data-method", method);
+            button.setAttribute("href", "#");
+            button.textContent = title;
+            return button;
+        }
+
+        elements.viewer = document.createElement("div");
+        elements.viewer.className = this.getThemeClass("viewer") + " yoxview";
+        container.appendChild(elements.viewer);
+
+        elements.controls = document.createElement("div");
+        elements.controls.className = this.getThemeClass("controls");
+        container.appendChild(elements.controls);
+        elements.controls.appendChild(createButton("first", "First"));
+        elements.controls.appendChild(createButton("prev", "Previous"));
+
+        var position = document.createElement("span");
+        position.className = this.getThemeClass("position");
+        elements.position = position;
+
+        elements.controls.appendChild(position);
+
+        elements.controls.appendChild(createButton("next", "Next"));
+        elements.controls.appendChild(createButton("last", "Last"));
+
+        $(elements.controls).on("click", "a", function(e){
+            e.preventDefault();
+            self.modules.view[this.getAttribute("data-method")]();
+        });
+    };
+
+    this.destroy = function(){
+        elements.container.removeChild(elements.controls);
+        elements.container.removeChild(elements.viewer);
+        $(elements.container).removeClass(this.getThemeClass());
+    };
+};
+
+yox.themes.slideshow.prototype = new yox.theme();
