@@ -9,7 +9,8 @@
 		<concat destfile="yox.js" fixlastline="yes" encoding="UTF-8">
 			<filelist id="baseScripts" dir="../src" files="yox.js, yox.utils.js, yox.eventsHandler.js"/>
 			<filelist id="data" dir="../src/modules/yox.data" files="yox.data.js" />
-			<fileset dir="../src/modules/yox.data/datasources" includes="**/*.js" />
+			<filelist dir="../src/modules/yox.data/sources" files="yox.data.source.js" />
+			<fileset dir="../src/modules/yox.data/sources" includes="**/yox.data.source.*.js" />
 			<fileset id="data" dir="../src/modules/yox.scroll" includes="**/*.js" />
 			<fileset id="data" dir="../src/modules/yox.thumbnails" includes="**/*.js" />
 			<filelist id="view" dir="../src/modules/yox.view" files="yox.view.js, yox.view.cache.js" />
