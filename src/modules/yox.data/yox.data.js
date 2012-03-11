@@ -14,15 +14,8 @@ yox.data = function(options){
 }
 
 yox.data.prototype = {
-    dataSources: {},
     defaults: {
         cache: false // Set this to true to enable caching on localStorage. Cache is used only for external sources - it saves the data retrieved from the source (what's return from the source's load() method).
-    },
-    addDataSource: function(dataSource){
-        if (this.dataSources[dataSource.name])
-            return false;
-
-        this.dataSources[dataSource.name] = dataSource;
     },
     addSources: function(sourceArr){
         var deferredPromises = [],
@@ -50,8 +43,8 @@ yox.data.prototype = {
         data = [];
     },
     findDataSource: function(sourceData){
-        for(var dataSourceName in this.dataSources){
-            var dataSource = this.dataSources[dataSourceName];
+        for(var dataSourceName in yox.data.sources){
+            var dataSource = yox.data.sources[dataSourceName];
 
             if (dataSource.match(sourceData))
                 return dataSource;
@@ -59,7 +52,7 @@ yox.data.prototype = {
     },
     getData: function(){ return this.data; },
     getDataSource: function(dataSourceName){
-        return this.dataSources[dataSourceName];
+        return yox.data.sources[dataSourceName];
     },
     loadSource: function(source){
         var dataSource = source.type ? this.getDataSource(source.type) : this.findDataSource(source),
