@@ -145,8 +145,8 @@
                     else
                         element.innerHTML = item.html;
 
-                    item.width || (item.width = this.options.panelDimensions.width);
-                    item.height || (item.height = this.options.panelDimensions.height);
+                    item.width || (item.width = this.containerDimensions.width);
+                    item.height || (item.height = this.containerDimensions.height);
                     item.ratio = item.height / item.width;
 
                     var position = this.getPosition(item, this.containerDimensions, this.options);
@@ -305,7 +305,6 @@
                 }
 
                 this.options.data && this.addDataSources(this.options.data);
-
                 createViewer(this);
 
                 if (this.options.enableKeyboard)
@@ -323,7 +322,9 @@
                         }
                     }
                 }
+
                 this.update();
+                this.triggerEvent("create");
             },
             last: function(){
 				if (!this.currentItem)
