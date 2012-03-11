@@ -1,0 +1,31 @@
+.yox-theme-slideshow-viewer{
+    height: 90%;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+.yox-theme-slideshow-controls{
+    height: 10%;
+    text-align: center;
+}
+
+.yox-theme-slideshow .yoxviewFrame{
+    border: none;
+}
+.yox-theme-slideshow .yoxviewImg{ background: none !important; }
+
+.yox-theme-slideshow-button{
+    display: inline-block;
+    padding: 2px 5px;
+    background: #333;
+    color: White;
+    border-radius: 4px;
+    margin: 0 5px;
+    text-decoration: none;
+}
+.yox-theme-slideshow-position{
+    display: inline-block;
+    border: solid 1px #666;
+    padding: 2px 5px;
+    margin: 0 5px;
+}
