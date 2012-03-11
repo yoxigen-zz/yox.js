@@ -97,6 +97,14 @@ yox.view.cache = (function(){
 
         item = item || view.items[0];
 
+        if (item.type !== "image"){
+            if (onCache)
+                onCache.call(view, item);
+
+            //advanceCache(view);
+            return true;
+        }
+
         // Check whether the specified item is already being cached:
         for(var i = 0; i < concurrentCachedImagesCount; i++){
             var cacheImage = cacheImages[i];
