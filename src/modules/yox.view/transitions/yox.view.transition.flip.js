@@ -69,7 +69,10 @@ yox.view.transitions.flip = function(){
             });
         }
         else {
-            currentDeg += options.index > currentItemIndex ? 180 : -180;
+            var isBackwards = (options.index < currentItemIndex && !(currentItemIndex === this.items.length - 1 && options.index === 0 )) ||
+                options.index === this.items.length - 1 && !currentItemIndex;
+
+            currentDeg += isBackwards ? -180 : 180;
             currentItemIndex = options.index;
             $frame.css("transform", "rotateY(" + currentDeg + "deg)");
         }
