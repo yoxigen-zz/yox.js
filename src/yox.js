@@ -24,7 +24,7 @@ Yox.prototype = {
 
             theme.init(this.container, data, this.options);
             $.extend(this, {
-                destroy: theme.destroy,
+                destroy: theme.destroy.bind(theme),
                 modules: theme.modules
             });
         }
