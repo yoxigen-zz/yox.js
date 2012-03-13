@@ -81,7 +81,7 @@ yox.themes.scroll = function(data, options){
 
         var loader = document.createElement("div");
         loader.className = this.getThemeClass("loader") + " yoxloader";
-        container.appendChild(loader);
+        wrapper.appendChild(loader);
 
         $(window).on("resize", function(){ self.triggerEvent("resize"); });
     };
