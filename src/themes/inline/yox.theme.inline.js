@@ -150,7 +150,7 @@ yox.themes.inline = function(data, options){
         elements.gallery.className = this.getThemeClass("gallery");
         elements.thumbnails.className = this.getThemeClass("thumbnails") + " yoxthumbnails";
         elements.loader.className = this.getThemeClass("loader") + " yoxloader";
-        elements.description = this.getThemeClass("description");
+        elements.description.className = this.getThemeClass("description");
 
         if (options.title)
             elements.title.innerHTML = options.title;
@@ -164,9 +164,9 @@ yox.themes.inline = function(data, options){
 
     this.destroy = function(){
         $(elements.container).removeClass(this.getThemeClass());
-        elements.removeChild(elements.title);
-        elements.removeChild(elements.gallery);
-        elements.removeChild(elements.description);
+        elements.container.removeChild(elements.title);
+        elements.container.removeChild(elements.gallery);
+        elements.container.removeChild(elements.description);
         elements = null;
 
         $(window).off("resize", onResize);
