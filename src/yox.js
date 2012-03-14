@@ -12,7 +12,10 @@ Yox.prototype = {
                 data;
 
             if (this.options.data){
-                data = new yox.data(this.options.data);
+                if (this.options.data instanceof yox.data)
+                    data = this.options.data;
+                else
+                    data = new yox.data(this.options.data);
             }
 
             if (!themeConstructor)
