@@ -40,7 +40,7 @@ yox.data.prototype = {
     clear: function(){
         this.triggerEvent("removeSources", this.data);
         this.triggerEvent("clear");
-        data = [];
+        this.data = [];
     },
     findDataSource: function(sourceData){
         for(var dataSourceName in yox.data.sources){
