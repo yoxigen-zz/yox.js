@@ -37,8 +37,9 @@ yox.theme.prototype = {
             return new moduleConstructor(container, moduleOptions);
         }
 
-        for(var moduleName in this.config){
-            var moduleOptions = this.config[moduleName],
+        var modulesConfig = $.extend(true, {}, this.config, options.modules);
+        for(var moduleName in modulesConfig){
+            var moduleOptions = modulesConfig[moduleName],
                 moduleConstructor = yox[moduleName];
 
             if (!moduleConstructor)
