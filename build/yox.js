@@ -1384,7 +1384,7 @@ yox.data.sources.picasa = (function(){
 
     window.yox.thumbnails = yox.thumbnails;
 })(jQuery);
-﻿(function($){
+(function($){
     yox.utils.css.addJqueryCssHooks(["transition", "transitionDuration", "transform", "transformStyle", "backfaceVisibility", "perspective"]);
 
 	yox.view = function(container, options, cache){
@@ -2596,7 +2596,6 @@ yox.themes.inline2 = function(data, options){
                 },
                 resize: function(){ this.update() }
             },
-            elements: $("." + this.getThemeClass("thumbnailsPanel"), elements.thumbnailsPanel),
             pressedButtonClass: "enabledThumbnailsButton"
         }
     };
@@ -2707,6 +2706,7 @@ yox.themes.inline2 = function(data, options){
             '<a href="#" class="' + thumbnailsBtnClass + ' ' + thumbnailsBtnClass + '_right" data-yoxscroll-holdstart="scroll-right" data-yoxscroll-click="page-right"></a>';
         elements.thumbnailsPanel.appendChild(elements.thumbnails);
 
+        this.config.scroll.elements = $("a", elements.thumbnailsPanel);
         container.appendChild(elements.gallery);
         elements.gallery.appendChild(elements.viewer);
         elements.gallery.appendChild(elements.description);
