@@ -304,8 +304,8 @@
                         self.addEventListener(eventName, eventHandlers);
                 }
 
-                this.options.data && this.addDataSources(this.options.data);
                 createViewer(this);
+                this.options.data && this.addDataSources(this.options.data);
 
                 if (this.options.enableKeyboard)
                     this.enableKeyboard();
