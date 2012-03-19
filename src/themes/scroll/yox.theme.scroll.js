@@ -38,7 +38,7 @@ yox.themes.scroll = function(data, options){
                 "select.thumbnails": function(e){
                     this.scrollTo(e, { centerElement: true, time: .5 });
                 },
-                resize: function(){ this.update() }
+                resize: function(){ this.updateSize() }
             },
             toggleButtons: false
         },
@@ -58,6 +58,10 @@ yox.themes.scroll = function(data, options){
     };
 
     var wrapper;
+
+    function onResize(){
+        self.triggerEvent("resize");
+    }
 
     this.create = function(container){
         if ($(container).css("position") === "static" && container !== document.body)
@@ -83,12 +87,13 @@ yox.themes.scroll = function(data, options){
         loader.className = this.getThemeClass("loader") + " yoxloader";
         wrapper.appendChild(loader);
 
-        $(window).on("resize", function(){ self.triggerEvent("resize"); });
+        $(window).on("resize", onResize);
     };
 
     this.destroy = function(){
         wrapper.parentNode.removeChild(wrapper);
         wrapper = null;
+        $(window).off("resize", onResize);
     }
 };
 
