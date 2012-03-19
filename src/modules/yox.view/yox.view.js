@@ -274,6 +274,10 @@
                 });
             },
             cacheCount: 0,
+            destroy: function(){
+                this.disableKeyboard();
+                this.transition.destroy();
+            },
             disableKeyboard: function(){ $(document).off("keydown.modules", keyboard.onKeyDown); },
             enableKeyboard: function(){	$(document).on("keydown.modules", { view: this }, keyboard.onKeyDown); },
             first: function(){
