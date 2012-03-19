@@ -96,4 +96,4 @@ yox.view.transitions.evaporate = function(){
     };
 };
 
-yox.view.transitions.evaporate.prototype = new yox.view.transition();
+yox.view.transitions.evaporate.prototype = new yox.view.transition("evaporate");

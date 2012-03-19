@@ -53,8 +53,9 @@ yox.view.transitions.fade = function(){
     };
 
     this.update = function(updateData){
-        if (updateData.resizeMode && updateData.resizeMode !== this.options.resizeMode && this.options.enlarge && updateData.resizeMode === "fill")
-            panels[0].css({ opacity: 1 });
+        if (updateData.resizeMode && updateData.resizeMode !== this.options.resizeMode){
+            panels[currentPanelIndex].css(this.getPosition(this.currentItem, this.containerDimensions, this.options));
+        }
 
         if (updateData.transitionTime !== undefined)
             for(var i=panels.length; i--;)
@@ -62,4 +63,4 @@ yox.view.transitions.fade = function(){
     };
 };
 
-yox.view.transitions.fade.prototype = new yox.view.transition();
+yox.view.transitions.fade.prototype = new yox.view.transition("fade");

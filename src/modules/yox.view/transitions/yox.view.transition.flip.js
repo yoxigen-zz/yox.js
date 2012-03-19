@@ -84,4 +84,4 @@ yox.view.transitions.flip = function(){
     };
 };
 
-yox.view.transitions.flip.prototype = new yox.view.transition();
+yox.view.transitions.flip.prototype = new yox.view.transition("flip");

@@ -82,4 +82,4 @@ yox.view.transitions.morph = function(){
     };
 };
 
-yox.view.transitions.morph.prototype = new yox.view.transition();
+yox.view.transitions.morph.prototype = new yox.view.transition("morph");
