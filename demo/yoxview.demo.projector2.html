@@ -29,11 +29,16 @@
 
             #thumbnails{
                 z-index: 31;
-                bottom: 20px;
+                top: 50%;
                 left: 50%;
                 position: absolute;
+                opacity: 0;
+                -moz-transform: rotateZ(90deg); -webkit-transform: rotateZ(90deg);
+                -moz-transition: all .5s ease-out; -webkit-transition: all .5s ease-out;
             }
             #thumbnails.thumbnailsOpen {
+                opacity: 1;
+                -moz-transform: rotateZ(0); -webkit-transform: rotateZ(0);
             }
 
 			#thumbnails a{
@@ -47,8 +52,8 @@
                 margin-left: -36px;
                 margin-top: -48px;
                 z-index: 31;
-                -moz-transition: top 1000ms linear, left 500ms ease-out, opacity 500ms ease-out, -moz-transform 200ms ease-out;
-                -webkit-transition: top 500ms ease-out, left 500ms ease-out, opacity 500ms ease-out, -webkit-transform 200ms ease-out;
+                -moz-transition: -moz-transform 200ms ease-out;
+                -webkit-transition: -webkit-transform 200ms ease-out;
                 border: solid 1px Black;
                 -webkit-box-shadow: 0 0 10px rgba(0,0,0,0.7);
                 opacity: 0;
@@ -72,9 +77,10 @@
                 text-align: center;
                 line-height: 40px;
                 position: absolute;
-                bottom: 20px;
+                top: 50%;
                 left: 50%;
                 margin-left: -20px;
+                margin-top: -20px;
                 z-index: 32;
                 text-decoration: none;
             }
@@ -176,7 +182,8 @@
                 isInit,
                 heightToSubtract = document.getElementsByTagName("header")[0].clientHeight,
                 title = document.title,
-                thumbnailsOpen = false;
+                thumbnailsOpen = false,
+                thumbsInit;
 
             var modules = {
                 data: new yox.data({
@@ -215,36 +222,20 @@
             $thumbnailsPanel.on("click", function(){ toggleThumbnails(false); });
 
             function toggleThumbnails(open){
-                var time = 0,
-                    delay = 30,
-                    $thumbs = $("a", $thumbnailsContainer),
-                    nThumbs = $thumbs.length,
-                    topOffset = viewer.clientHeight / 2,
-                    radius = topOffset - 100;
+                if (!thumbsInit){
+                    var $thumbs = $("a", $thumbnailsContainer),
+                        nThumbs = $thumbs.length,
+                        topOffset = viewer.clientHeight / 2,
+                        radius = topOffset - 100;
 
-                if (!thumbnailsOpen || (open === true && !thumbnailsOpen))
-                    $thumbnailsPanel.addClass("thumbnailsOpen");
-
-                if (open === undefined)
-                    open = !thumbnailsOpen;
-
-                $thumbs.each(function(i, thumbnail){
-                    //setTimeout(function(){
-                        var pos = open
-                            ? { left: Math.cos(Math.PI * 2 * i / nThumbs) * radius, top: (Math.sin(Math.PI * 2 * i / nThumbs + Math.PI) * radius) - topOffset, opacity: 1 }
-                            : { left: 0, top: 0, opacity: 0 };
-
-
+                    $thumbs.each(function(i, thumbnail){
+                        var pos = { left: Math.cos(Math.PI * 2 * i / nThumbs) * radius, top: (Math.sin(Math.PI * 2 * i / nThumbs + Math.PI) * radius), opacity: 1 };
                         $(thumbnail).css(pos);
+                    });
+                }
 
-                        if (i === nThumbs - 1){
-                            thumbnailsOpen = open;
-                        }
-                    //}, delay * i);
-                });
-
-                $thumbnailsPanel.toggleClass("thumbnailsOpen", open);
-                $thumbnailsContainer.toggleClass("thumbnailsOpen", open);
+                $thumbnailsPanel.toggleClass("thumbnailsOpen");
+                $thumbnailsContainer.toggleClass("thumbnailsOpen");
             }
 
 			setContainerSize();
