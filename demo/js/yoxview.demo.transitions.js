@@ -102,7 +102,7 @@ setContainerSize();
 modules.view = new yox.view(viewer, yoxviewOptions);
 $(window).resize(function(){
     setContainerSize();
-    $thumbnailsContainer.yoxscroll("update");
+    $thumbnailsContainer.yoxscroll("updateSize");
 });
 
 $slideshowBtn.on("click", function(e){
