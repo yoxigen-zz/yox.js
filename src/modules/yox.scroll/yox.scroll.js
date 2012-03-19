@@ -357,6 +357,9 @@
                 $measurer.remove();
                 return width;
             },
+            destroy: function(){
+
+            },
             init: function(opt){
                 var options = $.extend({}, opt),
                     self = this;
@@ -509,29 +512,27 @@
                 move.call(this, time, distance, true);
             },
             update: function(){
-                var self = this;
                 this.elements.$container.children(":not(.yoxscrollSlider)").appendTo(this.elements.$slider);
-                function onLoadImage(){
-                    var sliderWidth = self.calculateSliderSize();
-                    self.elements.$slider.width(sliderWidth);
-                    self.containerSize = self.elements.$container.width();
-                    self.minPosition = self.containerSize - sliderWidth;
+                loadImages(this.elements.$container[0], undefined, this.updateSize.bind(this));
+            },
+            updateSize: function(){
+                var sliderWidth = this.calculateSliderSize();
+                this.elements.$slider.width(sliderWidth);
+                this.containerSize = this.elements.$container.width();
+                this.minPosition = this.containerSize - sliderWidth;
 
-                    var enableDrag = self.minPosition < 0;
-                    if (enableDrag !== self.enableDrag){
-                        self.enableDrag = enableDrag;
-                        if ((!enableDrag && !self.options.centerContentsIfNotScrollable) || (parseInt(enableDrag && self.elements.$slider.css("left"), 10) > 0)){
-                            self.elements.$slider.css({ transition: "none", "left": 0 });
-                        }
-                        self.triggerEvent("changeStatus", { scrollEnabled: enableDrag });
+                var enableDrag = this.minPosition < 0;
+                if (enableDrag !== this.enableDrag){
+                    this.enableDrag = enableDrag;
+                    if ((!enableDrag && !this.options.centerContentsIfNotScrollable) || (parseInt(enableDrag && this.elements.$slider.css("left"), 10) > 0)){
+                        this.elements.$slider.css({ transition: "none", "left": 0 });
                     }
-
-                    if (self.options.centerContentsIfNotScrollable && !enableDrag){
-                        self.elements.$slider.css({ transition: "none", left: self.minPosition / 2 });
-                    }
+                    this.triggerEvent("changeStatus", { scrollEnabled: enableDrag });
                 }
 
-                loadImages(this.elements.$container[0], undefined, onLoadImage);
+                if (this.options.centerContentsIfNotScrollable && !enableDrag){
+                    this.elements.$slider.css({ transition: "none", left: this.minPosition / 2 });
+                }
             }
         };
     })();
