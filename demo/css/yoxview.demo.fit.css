@@ -24,6 +24,7 @@ header a:hover{ color: White }
     color: #aaa;
     position: absolute;
     z-index: 1;
+    overflow: hidden;
 }
 #thumbnailsLeft{ left: 0; background-position: 0 -100px; }
 #thumbnailsLeft:hover{ background-position: -27px -100px; }
