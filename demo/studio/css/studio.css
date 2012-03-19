@@ -1,0 +1,147 @@
+html, body{ height: 100% }
+body{
+    font-family: Arial, Sans-Serif;
+    font-size: 10pt;
+    overflow: hidden;
+    background: url(../img/background.gif);
+    padding: 0;
+    margin: 0;
+}
+h1,h2,h3,h4, ul, ol{
+    margin: 0; padding: 0;
+}
+a{ text-decoration: none }
+
+.autoWidth{ width: auto !important; }
+.sprite{ background-image: url(../img/sprites.png); background-repeat: no-repeat; }
+
+.cf:before,
+.cf:after {
+    content:"";
+    display:table;
+}
+
+.cf:after {
+    clear:both;
+}
+
+#main{
+
+}
+
+#options{
+    position: absolute;
+    top: 0;
+    left: 0;
+    -moz-transition: left 300ms ease-out;
+    -webkit-transition: left 300ms ease-out;
+    z-index: 200;
+    height: 100%;
+    color: White;
+    width: 213px;
+}
+#options.optionsClosed{
+    left: -213px;
+}
+    #optionsBar{
+        background: #222;
+        background: rgba(0,0,0,.85);
+        box-shadow: 1px 2px 5px rgba(0,0,0,.5);
+        z-index: 2;
+        height: 100%;
+        position: relative;
+        padding-top: 40px;
+    }
+        #optionsBar h3{
+            background: rgba(255,255,255,.2);
+            font-size: 12pt;
+            text-align: center;
+            text-shadow: 1px 1px 1px rgba(0,0,0,.75);
+            font-weight: normal;
+            border-style: solid;
+            border-width: 1px 0;
+            border-color: rgba(255,255,255, .3);
+        }
+        #optionsBar .sectionContents{
+            padding: 12px 12px 20px;
+        }
+        #optionsBar select, #optionsBar input[type=text], input[type=range]{
+            margin-bottom: 1em;
+        }
+        #optionsBar input[type=text]{
+            width: 97%;
+        }
+        #options_data_sources_list{
+            list-style: none;
+        }
+        #options_container{
+            list-style: none;
+        }
+        #options_container li{
+            float: left;
+            margin-left: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+            cursor: pointer;
+            opacity: .6;
+        }
+        #options_container li:hover, #options_container li.selected{ opacity: 1 }
+        #options_container li:nth-child(2n - 1){ margin-left: 0 }
+
+        #options_container li .sprite{
+            background-color: #0f0f0f;
+            border: solid 1px #727272;
+            width: 87px; height: 58px;
+            margin-bottom: 2px;
+        }
+        #options_container li .container_body{ background-position: 0 0 }
+        #options_container li .container_main{ background-position: -87px 0 }
+        #options_container li .container_box{ background-position: -174px 0 }
+        #options_container li .container_long{ background-position: -261px 0 }
+
+    #optionsTab{
+        position: absolute;
+        right: -41px;
+        top: 80px;
+        width: 41px;
+        height: 171px;
+        z-index: 1;
+        background: url(../img/tab.png) no-repeat top left;
+        cursor: pointer;
+    }
+        #optionsTab img{
+            height: 25px;
+            margin: 76px 0 0 5px;
+            width: 25px;
+            -moz-transition: all 1s ease-out;
+            -webkit-transition: all 1s ease-out;
+            -o-transition: all 1s ease-out;
+            -ms-transition: all 1s ease-out;
+        }
+        #optionsTab:hover img{
+            -moz-transform: rotate(360deg);
+            -webkit-transform: rotate(360deg);
+            -o-transform: rotate(360deg);
+            -ms-transform: rotate(360deg);
+        }
+
+#contents{
+    position: absolute;
+    top: 0;
+    left: 213px;
+    right: 0;
+    height: 100%;
+    z-index: 1;
+}
+    #contents_box{
+        position: absolute;
+        width: 700px; height: 500px;
+        top: 50%; left: 50%;
+        margin-top: -250px; margin-left: -350px;
+    }
+    #contents_long{
+        position: absolute;
+        width: 100%; height: 500px;
+        top: 50%; left: 0;
+        margin-top: -250px;
+    }

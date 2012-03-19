@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Yox studio</title>
+    <link rel="Stylesheet" type="text/css" href="css/studio.css" />
+    <link rel="Stylesheet" type="text/css" href="../../src/modules/yox.view/yoxview.css" />
+    <link rel="Stylesheet" type="text/css" href="../../src/themes/inline/yox.theme.inline.css" />
+    <link rel="Stylesheet" type="text/css" href="../../src/themes/inline2/yox.theme.inline2.css" />
+    <link rel="Stylesheet" type="text/css" href="../../src/themes/scroll/yox.theme.scroll.css" />
+    <link rel="Stylesheet" type="text/css" href="../../src/themes/slideshow/yox.theme.slideshow.css" />
+</head>
+<body>
+    <div id="main">
+        <div id="options">
+            <div id="optionsBar">
+                <section>
+                    <h3>Container</h3>
+                    <div class="sectionContents" data-section="container">
+                        <ul class="cf clickList" id="options_container" data-value="#contents">
+                            <li data-value="#contents" class="selected"><div class="sprite container_main"></div>#contents</li>
+                            <li data-value="#contents_box"><div  class="sprite container_box"></div>#contents_box</li>
+                            <li data-value="body"><div class="sprite container_body"></div>body</li>
+                            <li data-value="#contents_long"><div class="sprite container_long"></div>#contents_long</li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h3>Theme</h3>
+                    <div class="sectionContents">
+                        <select id="options_theme"></select>
+                    </div>
+                </section>
+                <section data-section="data">
+                    <h3>Data</h3>
+                    <div class="sectionContents">
+                        <label for="options_data_source">Source type:</label>
+                        <select id="options_data_source"></select>
+                        <ul id="options_data_sources_list">
+                            <li id="options_data_sources_list_picasa">
+                                <label for="options_data_sources_list_picasa_url">Picasa URL:</label>
+                                <input type="text" id="options_data_sources_list_picasa_url" value="https://picasaweb.google.com/114231305708772868829/PhotographyPortfolio" />
+
+                                <label for="options_data_sources_list_picasa_authkey">Auth Key:</label>
+                                <input type="text" id="options_data_sources_list_picasa_authkey" />
+
+                                <label for="options_data_sources_list_picasa_imgmax">Image max size:</label>
+                                <select id="options_data_sources_list_picasa_imgmax" class="autoWidth">
+                                    <option>32</option><option>48</option><option>64</option><option>72</option><option>94</option><option>104</option><option>110</option><option>128</option><option>144</option><option>150</option><option>160</option><option>200</option><option>220</option><option>288</option><option>320</option><option>400</option><option>512</option><option>576</option><option>640</option><option>720</option><option selected="selected">800</option><option>912</option><option>1024</option><option>1152</option><option>1280</option><option>1440</option><option>1600</option>
+                                </select>
+                                <label for="options_data_sources_list_picasa_thumbsize">Thumbnail size:</label>
+                                <select id="options_data_sources_list_picasa_thumbsize" class="autoWidth">
+                                    <option>32</option><option>48</option><option>64</option><option>72</option><option selected="selected">104</option><option>144</option><option>150</option><option>160</option>
+                                </select>
+                                <div>
+                                    <input type="checkbox" id="options_data_sources_list_picasa_cropThumbnails" />
+                                    <label for="options_data_sources_list_picasa_cropThumbnails">Crop thumbnails</label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+                <section data-section="view">
+                    <h3>View</h3>
+                    <div class="sectionContents">
+                        <label for="options_transition">Transition:</label>
+                        <select id="options_transition" data-option="transition"></select>
+
+                        <label for="options_transition_time">Transition time:</label>
+                        <input type="range" id="options_transition_time" data-option="transitionTime" min="0" max="5000" step="50" />
+                        <span class="rangeUnits" id="options_transition_time_units" data-input="options_transition_time"></span> ms
+
+                        <label for="options_view_resizeMode">Resize mode:</label>
+                        <select id="options_view_resizeMode" data-option="resizeMode">
+                            <option>fill</option>
+                            <option>fit</option>
+                        </select>
+                    </div>
+                </section>
+            </div>
+            <div id="optionsTab">
+                <img src="img/settings_white.png" />
+            </div>
+        </div>
+        <div id="contents" class="yox">
+            <div id="contents_box"></div>
+            <div id="contents_long"></div>
+        </div>
+    </div>
+    <script src="../js/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="../../src/yox.js"></script>
+    <script type="text/javascript" src="../../src/yox.utils.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.data/yox.data.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.thumbnails/yox.thumbnails.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.data/sources/yox.data.source.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.data/sources/yox.data.source.picasa.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.data/sources/yox.data.source.files.js"></script>
+    <script type="text/javascript" src="../../src/yox.eventsHandler.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.view/yox.view.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.view/yox.view.cache.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.view/transitions/yox.view.transition.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.view/transitions/yox.view.transition.morph.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.view/transitions/yox.view.transition.fade.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.view/transitions/yox.view.transition.evaporate.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.view/transitions/yox.view.transition.flip.js"></script>
+    <script type="text/javascript" src="../../src/modules/yox.scroll/yox.scroll.js"></script>
+    <script type="text/javascript" src="../../src/themes/yox.theme.js"></script>
+    <script type="text/javascript" src="../../src/themes/inline/yox.theme.inline.js"></script>
+    <script type="text/javascript" src="../../src/themes/inline2/yox.theme.inline2.js"></script>
+    <script type="text/javascript" src="../../src/themes/scroll/yox.theme.scroll.js"></script>
+    <script type="text/javascript" src="../../src/themes/slideshow/yox.theme.slideshow.js"></script>
+    <!--<script src="../../build/yox.min.js"></script>-->
+    <script src="js/studio.js"></script>
+</body>
+</html>
