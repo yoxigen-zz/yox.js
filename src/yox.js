@@ -21,14 +21,25 @@ Yox.prototype = {
             if (!themeConstructor)
                 throw new Error("Invalid theme, '" + this.options.theme + "' does not exist.");
 
-            var theme = new themeConstructor(data, this.options);
+            var theme = new themeConstructor(data, $.extend({}, themeConstructor.defaults, this.options));
             if (!(theme instanceof yox.theme))
                 throw new Error("Invalid theme, '" + this.options.theme + "' is not an instance of yox.theme.");
 
             theme.init(this.container, data, this.options);
+
             $.extend(this, {
-                destroy: theme.destroy.bind(theme),
-                modules: theme.modules
+                addEventListener: theme.addEventListener,
+                destroy: function(){
+                    for(var moduleName in this.modules){
+                        var module = this.modules[moduleName],
+                            moduleDestroy = module.destroy;
+
+                        moduleDestroy && moduleDestroy.call(module);
+                    }
+                    theme.destroy.call(theme);
+                },
+                modules: theme.modules,
+                triggerEvent: theme.triggerEvent
             });
         }
 
