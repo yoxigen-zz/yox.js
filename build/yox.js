@@ -21,14 +21,25 @@ Yox.prototype = {
             if (!themeConstructor)
                 throw new Error("Invalid theme, '" + this.options.theme + "' does not exist.");
 
-            var theme = new themeConstructor(data, this.options);
+            var theme = new themeConstructor(data, $.extend({}, themeConstructor.defaults, this.options));
             if (!(theme instanceof yox.theme))
                 throw new Error("Invalid theme, '" + this.options.theme + "' is not an instance of yox.theme.");
 
             theme.init(this.container, data, this.options);
+
             $.extend(this, {
-                destroy: theme.destroy.bind(theme),
-                modules: theme.modules
+                addEventListener: theme.addEventListener,
+                destroy: function(){
+                    for(var moduleName in this.modules){
+                        var module = this.modules[moduleName],
+                            moduleDestroy = module.destroy;
+
+                        moduleDestroy && moduleDestroy.call(module);
+                    }
+                    theme.destroy.call(theme);
+                },
+                modules: theme.modules,
+                triggerEvent: theme.triggerEvent
             });
         }
 
@@ -1067,6 +1078,9 @@ yox.data.sources.picasa = (function(){
                 $measurer.remove();
                 return width;
             },
+            destroy: function(){
+
+            },
             init: function(opt){
                 var options = $.extend({}, opt),
                     self = this;
@@ -1219,29 +1233,27 @@ yox.data.sources.picasa = (function(){
                 move.call(this, time, distance, true);
             },
             update: function(){
-                var self = this;
                 this.elements.$container.children(":not(.yoxscrollSlider)").appendTo(this.elements.$slider);
-                function onLoadImage(){
-                    var sliderWidth = self.calculateSliderSize();
-                    self.elements.$slider.width(sliderWidth);
-                    self.containerSize = self.elements.$container.width();
-                    self.minPosition = self.containerSize - sliderWidth;
+                loadImages(this.elements.$container[0], undefined, this.updateSize.bind(this));
+            },
+            updateSize: function(){
+                var sliderWidth = this.calculateSliderSize();
+                this.elements.$slider.width(sliderWidth);
+                this.containerSize = this.elements.$container.width();
+                this.minPosition = this.containerSize - sliderWidth;
 
-                    var enableDrag = self.minPosition < 0;
-                    if (enableDrag !== self.enableDrag){
-                        self.enableDrag = enableDrag;
-                        if ((!enableDrag && !self.options.centerContentsIfNotScrollable) || (parseInt(enableDrag && self.elements.$slider.css("left"), 10) > 0)){
-                            self.elements.$slider.css({ transition: "none", "left": 0 });
-                        }
-                        self.triggerEvent("changeStatus", { scrollEnabled: enableDrag });
+                var enableDrag = this.minPosition < 0;
+                if (enableDrag !== this.enableDrag){
+                    this.enableDrag = enableDrag;
+                    if ((!enableDrag && !this.options.centerContentsIfNotScrollable) || (parseInt(enableDrag && this.elements.$slider.css("left"), 10) > 0)){
+                        this.elements.$slider.css({ transition: "none", "left": 0 });
                     }
-
-                    if (self.options.centerContentsIfNotScrollable && !enableDrag){
-                        self.elements.$slider.css({ transition: "none", left: self.minPosition / 2 });
-                    }
+                    this.triggerEvent("changeStatus", { scrollEnabled: enableDrag });
                 }
 
-                loadImages(this.elements.$container[0], undefined, onLoadImage);
+                if (this.options.centerContentsIfNotScrollable && !enableDrag){
+                    this.elements.$slider.css({ transition: "none", left: this.minPosition / 2 });
+                }
             }
         };
     })();
@@ -1384,7 +1396,7 @@ yox.data.sources.picasa = (function(){
 
     window.yox.thumbnails = yox.thumbnails;
 })(jQuery);
-(function($){
+﻿(function($){
     yox.utils.css.addJqueryCssHooks(["transition", "transitionDuration", "transform", "transformStyle", "backfaceVisibility", "perspective"]);
 
 	yox.view = function(container, options, cache){
@@ -1660,6 +1672,10 @@ yox.data.sources.picasa = (function(){
                 });
             },
             cacheCount: 0,
+            destroy: function(){
+                this.disableKeyboard();
+                this.transition.destroy();
+            },
             disableKeyboard: function(){ $(document).off("keydown.modules", keyboard.onKeyDown); },
             enableKeyboard: function(){	$(document).on("keydown.modules", { view: this }, keyboard.onKeyDown); },
             first: function(){
@@ -2121,7 +2137,7 @@ yox.view.cache = (function(){
 })();
 // Prototype for all transition classes
 
-yox.view.transition = function(){};
+yox.view.transition = function(name){ this.name = name; };
 yox.view.transitions = {}; // Will hold the transition types
 
 yox.view.transition.prototype = {
@@ -2247,7 +2263,7 @@ yox.view.transitions.evaporate = function(){
     };
 };
 
-yox.view.transitions.evaporate.prototype = new yox.view.transition();
+yox.view.transitions.evaporate.prototype = new yox.view.transition("evaporate");
 yox.view.transitions.fade = function(){
     var panels,
         currentPanelIndex = 1,
@@ -2303,8 +2319,9 @@ yox.view.transitions.fade = function(){
     };
 
     this.update = function(updateData){
-        if (updateData.resizeMode && updateData.resizeMode !== this.options.resizeMode && this.options.enlarge && updateData.resizeMode === "fill")
-            panels[0].css({ opacity: 1 });
+        if (updateData.resizeMode && updateData.resizeMode !== this.options.resizeMode){
+            panels[currentPanelIndex].css(this.getPosition(this.currentItem, this.containerDimensions, this.options));
+        }
 
         if (updateData.transitionTime !== undefined)
             for(var i=panels.length; i--;)
@@ -2312,7 +2329,7 @@ yox.view.transitions.fade = function(){
     };
 };
 
-yox.view.transitions.fade.prototype = new yox.view.transition();
+yox.view.transitions.fade.prototype = new yox.view.transition("fade");
 yox.view.transitions.flip = function(){
     var $frame,
         panels,
@@ -2399,7 +2416,7 @@ yox.view.transitions.flip = function(){
     };
 };
 
-yox.view.transitions.flip.prototype = new yox.view.transition();
+yox.view.transitions.flip.prototype = new yox.view.transition("flip");
 yox.view.transitions.morph = function(){
     var $frame,
         panels,
@@ -2484,7 +2501,7 @@ yox.view.transitions.morph = function(){
     };
 };
 
-yox.view.transitions.morph.prototype = new yox.view.transition();
+yox.view.transitions.morph.prototype = new yox.view.transition("morph");
 yox.theme = function(data, options){};
 yox.themes = {}; // Will hold the theme types
 
@@ -2554,9 +2571,27 @@ yox.themes.inline2 = function(data, options){
         mousemoveTimeoutId,
         isFullScreen,
         isFullScreenApi,
+        isFullScreenResize,
         galleryOriginalHeight,
-        thumbnailsRect,
-        lastPos;
+        controlsPanelRect,
+        lastPos,
+        isInfo = true,
+        isThumbnails = true;
+
+    var actions = {
+        fullscreen: toggleFullScreen,
+        info: function(){
+            isInfo = !isInfo;
+            elements.infoPanel.style.opacity = isInfo ? "1" : "0";
+        },
+        slideshow: function(){
+            self.modules.view.toggleSlideshow();
+        },
+        thumbnails: function(){
+            isThumbnails = !isThumbnails;
+            elements.gallery.style.height = (elements.gallery.clientHeight + options.thumbnailsHeight * (isThumbnails ? -1 : 1)) + "px";
+        }
+    };
 
     this.name = "inline2";
     this.config = {
@@ -2564,14 +2599,15 @@ yox.themes.inline2 = function(data, options){
             enableKeyboard: true,
             enlarge: true,
             resizeMode: "fill",
-            transition: "fade",
+            transition: yox.view.transitions.fade,
             transitionTime: 300,
+            margin: 0,
             events: {
                 cacheStart: function(e, item){ elements.loader.style.display = "inline" },
                 cacheEnd: function(e, item){ elements.loader.style.display = "none" },
                 "click.thumbnails": function(e){ this.selectItem(e.index); },
                 "init.view": function(){
-                    this.selectItem(0);
+                    this.selectItem(this.options.firstItem || 0);
                 }
             }
         },
@@ -2594,17 +2630,26 @@ yox.themes.inline2 = function(data, options){
                 "select.thumbnails": function(e){
                     this.scrollTo(e, { centerElement: true, time: .5 });
                 },
-                resize: function(){ this.update() }
+                resize: function(){ if (!isFullScreen) this.updateSize(); },
+                beforeSelect: function(e){
+                    var thumbnailIndex = e.newItem.id - 1;
+                    if (self.modules.thumbnails.thumbnails)
+                        this.scrollTo(self.modules.thumbnails.thumbnails[thumbnailIndex], { centerElement: !e.data });
+
+                    elements.info.innerHTML = e.newItem.title || "";
+                }
             },
             pressedButtonClass: "enabledThumbnailsButton"
         }
     };
 
     function emptyFunction(){};
-    document.cancelFullScreen = document.cancelFullScreen || document.mozCancelFullScreen || document.webkitCancelFullScreen || emptyFunction;
-    HTMLElement.prototype.requestFullScreen = HTMLElement.prototype.requestFullScreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullScreen || emptyFunction;
-    isFullScreenApi = document.cancelFullScreen !== emptyFunction;
 
+    if (options.enableFullScreen !== false){
+        document.cancelFullScreen = document.cancelFullScreen || document.mozCancelFullScreen || document.webkitCancelFullScreen || emptyFunction;
+        HTMLElement.prototype.requestFullScreen = HTMLElement.prototype.requestFullScreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullScreen || emptyFunction;
+        isFullScreenApi = document.cancelFullScreen !== emptyFunction;
+    }
     function onFullScreenChange(e){
         if (isFullScreenApi)
             isFullScreen = !isFullScreen;
@@ -2633,15 +2678,21 @@ yox.themes.inline2 = function(data, options){
         windowEventCaller.call($window, "mousemove", onMouseMove);
         if (!isFullScreenApi)
             windowEventCaller.call($(document), "keydown", onKeyDown);
+
+        isFullScreenResize = false;
+        onResize();
     }
 
-    if (isFullScreenApi)
+    if (options.enableFullScreen !== false && isFullScreenApi)
         document.addEventListener(document.mozCancelFullScreen ? "mozfullscreenchange" : "webkitfullscreenchange", onFullScreenChange, false);
 
     function toggleFullScreen(){
+        isFullScreenResize = true;
+
         if (isFullScreenApi){
-            if (isFullScreen)
+            if (isFullScreen){
                 document.cancelFullScreen();
+            }
             else{
                 elements.gallery.style.height = "100%";
                 elements.gallery.requestFullScreen();
@@ -2658,8 +2709,15 @@ yox.themes.inline2 = function(data, options){
     }
 
     function onResize(){
+        controlsPanelRect = elements.controlsPanel.getClientRects()[0];
+        if (isFullScreenResize)
+            return false;
+
+        if (!isFullScreen)
+            setSize();
+
         self.modules.view.update(true);
-        thumbnailsRect = elements.thumbnails.getClientRects()[0];
+        controlsPanelRect = elements.thumbnails.getClientRects()[0];
     }
 
     function onKeyDown(e){
@@ -2670,18 +2728,35 @@ yox.themes.inline2 = function(data, options){
     function onMouseMove(e){
         if (!lastPos || e.pageX < lastPos.x - 4 || e.pageX > lastPos.x + 4 || e.pageY < lastPos.y - 4 || e.pageY > lastPos.y + 4){
             clearTimeout(mousemoveTimeoutId);
-            elements.$thumbnails.css("opacity", "1");
-            document.body.style.cursor = "default";
+            elements.controlsPanel.style.opacity = "1";
+            //document.body.style.cursor = "default";
 
             mousemoveTimeoutId = setTimeout(function(){
-                if (e.pageY >= thumbnailsRect.top)
+                if (e.pageY >= controlsPanelRect.top && e.pageY <= controlsPanelRect.bottom && e.pageX >= controlsPanelRect.left && e.pageX <= controlsPanelRect.right)
                     return;
 
-                elements.$thumbnails.css({ opacity: 0 });
-                document.body.style.cursor = "none";
-            }, 2000);
+                elements.controlsPanel.style.opacity = "0";
+                //document.body.style.cursor = "none";
+            }, 1000);
         }
         lastPos = { x: e.pageX, y: e.pageY };
+    }
+
+    function setSize(){
+        elements.gallery.style.height = (elements.container.clientHeight - options.thumbnailsHeight) + "px";
+    }
+
+    function resizeEventHandler(e){
+        onResize();
+        self.triggerEvent("resize");
+    }
+
+    function createButton(data){
+        var button = document.createElement("a");
+        button.innerHTML = data.title;
+        button.className = self.getThemeClass("button") + " " + self.getThemeClass("button-" + data.action);
+        button.setAttribute("data-action", data.action);
+        return button;
     }
 
     this.create = function(container){
@@ -2694,8 +2769,11 @@ yox.themes.inline2 = function(data, options){
             thumbnails: document.createElement("div"),
             thumbnailsPanel: document.createElement("div"),
             loader: document.createElement("loader"),
-            description: document.createElement("p")
-
+            description: document.createElement("p"),
+            controlsPanel: document.createElement("div"),
+            controls: [],
+            infoPanel: document.createElement("div"),
+            info: document.createElement("div")
         };
 
         elements.$thumbnails = $(elements.thumbnails);
@@ -2716,14 +2794,43 @@ yox.themes.inline2 = function(data, options){
         elements.viewer.className = this.getThemeClass("viewer") + " yoxview";
         elements.gallery.className = this.getThemeClass("gallery");
         elements.thumbnails.className = this.getThemeClass("thumbnails") + " yoxthumbnails yoxscroll";
+        elements.thumbnails.style.height = options.thumbnailsHeight + "px";
         elements.loader.className = this.getThemeClass("loader") + " yoxloader";
         elements.description.className = this.getThemeClass("description");
 
-        galleryOriginalHeight = elements.gallery.clientHeight;
-        thumbnailsRect = elements.thumbnails.getClientRects()[0];
+        elements.controlsPanel.className = this.getThemeClass("controls");
+        var controls = [
+            { title: "Fullscreen", action: "fullscreen" },
+            { title: "Slideshow", action: "slideshow" },
+            { title: "Info", action: "info" },
+            { title: "Thumbnails", action: "thumbnails" }
+        ];
 
-        $(elements.gallery).on("dblclick", toggleFullScreen);
-        $(window).on("resize", onResize);
+        for(var i=0; i<controls.length; i++){
+            elements.controlsPanel.appendChild(createButton(controls[i]));
+        }
+        $(elements.controlsPanel).on("click", "a", function(e){
+            e.preventDefault();
+            actions[this.getAttribute("data-action")]();
+        });
+
+        elements.gallery.appendChild(elements.controlsPanel);
+
+        elements.infoPanel.appendChild(elements.info);
+        elements.gallery.appendChild(elements.infoPanel);
+
+        elements.infoPanel.className = this.getThemeClass("infoPanel");
+        elements.info.className = this.getThemeClass("info");
+
+        galleryOriginalHeight = elements.gallery.clientHeight;
+
+        controlsPanelRect = elements.controlsPanel.getClientRects()[0];
+        setSize();
+        //if (options.enableFullScreen !== false)
+          //  $(elements.gallery).on("dblclick", toggleFullScreen);
+
+        $(elements.gallery).on("mousemove", onMouseMove);
+        $(window).on("resize", resizeEventHandler);
     };
 
     this.destroy = function(){
@@ -2732,9 +2839,13 @@ yox.themes.inline2 = function(data, options){
         elements.container.removeChild(elements.thumbnailsPanel);
         elements = null;
 
-        $(window).off("resize", onResize);
+        $(window).off("resize", resizeEventHandler);
     };
 }
+
+yox.themes.inline2.defaults = {
+    thumbnailsHeight: 61
+};
 
 yox.themes.inline2.prototype = new yox.theme();
 yox.themes.inline = function(data, options){
@@ -2953,7 +3064,7 @@ yox.themes.scroll = function(data, options){
                 "select.thumbnails": function(e){
                     this.scrollTo(e, { centerElement: true, time: .5 });
                 },
-                resize: function(){ this.update() }
+                resize: function(){ this.updateSize() }
             },
             toggleButtons: false
         },
@@ -2973,6 +3084,10 @@ yox.themes.scroll = function(data, options){
     };
 
     var wrapper;
+
+    function onResize(){
+        self.triggerEvent("resize");
+    }
 
     this.create = function(container){
         if ($(container).css("position") === "static" && container !== document.body)
@@ -2998,12 +3113,13 @@ yox.themes.scroll = function(data, options){
         loader.className = this.getThemeClass("loader") + " yoxloader";
         wrapper.appendChild(loader);
 
-        $(window).on("resize", function(){ self.triggerEvent("resize"); });
+        $(window).on("resize", onResize);
     };
 
     this.destroy = function(){
         wrapper.parentNode.removeChild(wrapper);
         wrapper = null;
+        $(window).off("resize", onResize);
     }
 };
 
