@@ -259,8 +259,6 @@ yox.themes.inline2 = function(data, options){
 
         controlsPanelRect = elements.controlsPanel.getClientRects()[0];
         setSize();
-        //if (options.enableFullScreen !== false)
-          //  $(elements.gallery).on("dblclick", toggleFullScreen);
 
         $(elements.gallery).on("mousemove", onMouseMove);
         $(window).on("resize", resizeEventHandler);
