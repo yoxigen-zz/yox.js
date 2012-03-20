@@ -171,6 +171,23 @@ yox.utils = {
                 };
             }
         }
+    },
+    url: {
+        queryToJson: function(query)
+        {
+            if (!query)
+                return null;
+
+            var queryParams = query.split("&"),
+                json = {};
+
+            for(var i=queryParams.length; i--;)
+            {
+                var paramData = queryParams[i].split('=');
+                json[paramData[0]] = paramData.length == 2 ? paramData[1] : true;
+            }
+            return json;
+        }
     }
 };
 
