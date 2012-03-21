@@ -79,12 +79,6 @@ yox.data.prototype = {
         }
         return dfd;
     },
-    removeEventListener: function(eventName, eventHandler){
-        if (eventHandler && typeof(eventHandler) !== "function")
-            throw new Error("Invalid event handler, must be a function or undefined.");
-
-        this.$eventsElement.off(eventName + "." + this.namespace, eventHandler);
-    },
     source: function(sources){
         this.clear();
         this.addSources.apply(this, arguments);
