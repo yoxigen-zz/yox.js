@@ -3,6 +3,10 @@
     color: White;
     border: solid 1px #333;
     padding: 0;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+    user-select: none;
 }
 .yox-theme-inline2-title{
     background: -moz-linear-gradient(center top , rgba(255, 255, 255, 0.3), transparent) repeat scroll 0 0 transparent;
@@ -55,7 +59,7 @@
         color: White;
         line-height: 118px;
         font-size: 12px;
-        background-image: url(buttons.png);
+        background-image: url(sprites.png);
         background-repeat: no-repeat;
         border-radius: 5px;
         -moz-transition: opacity 200ms ease-out;
@@ -88,12 +92,40 @@
         -webkit-transition: opacity 300ms ease;
         -o-transition: opacity 300ms ease;
         -ms-transition: opacity 300ms ease;
+        opacity: 0;
     }
         .yox-theme-inline2-info{
             padding: 7px 14px;
             border-top: solid 1px rgba(255,255,255,.1);
             font-size: 11pt;
         }
+    .yox-theme-inline2-controlBtn{
+        position: absolute;
+        z-index: 1000;
+        width: 33%;
+        height: 100%;
+        top: 0;
+        opacity: 0;
+        -moz-transition: opacity 600ms ease-out;
+        -webkit-transition: opacity 600ms ease-out;
+        -o-transition: opacity 600ms ease-out;
+        cursor: pointer;
+    }
+        .yox-theme-inline2-controlBtn:hover{ opacity: .5 }
+        .yox-theme-inline2-controlBtn:active{ opacity: 1 }
+        .yox-theme-inline2-controlBtn-prev{ left: 0 }
+        .yox-theme-inline2-controlBtn-next{ right: 0 }
+
+    .yox-theme-inline2-controlBtn div{
+        background-image: url(sprites.png);
+        background-repeat: no-repeat;
+        width: 33px;
+        height: 49px;
+        position: absolute;
+        top: 50%; margin-top: -25px;
+    }
+        .yox-theme-inline2-controlBtn-prev div{ left: 30px; background-position: -194px -84px; }
+        .yox-theme-inline2-controlBtn-next div{ right: 30px; background-position: -287px -84px; }
 
 .yox-theme-inline2-viewer{ height: 100%; overflow: hidden; }
 .yox-theme-inline2-thumbnailsPanel{
@@ -101,10 +133,11 @@
     height: 60px; background: #000; white-space: nowrap;
     position: relative;
 }
+
 .yox-theme-inline2-thumbnailsBtn{
     width: 27px;
     height: 100%;
-    background-image: url(controls.png);
+    background-image: url(sprites.png);
     background-repeat: no-repeat;
     text-decoration: none;
     line-height: 60px;
@@ -112,14 +145,14 @@
     text-align: center;
     color: #aaa;
     position: absolute;
-    z-index: 1;
+    z-index: 101;
 }
-.yox-theme-inline2-thumbnailsBtn_left{ left: 0; background-position: 0 -100px; }
-.yox-theme-inline2-thumbnailsBtn_left:hover{ background-position: -27px -100px; }
-.yox-theme-inline2-thumbnailsBtn_left:active, .yox-theme-inline2-thumbnailsBtn_left.enabledThumbnailsButton{ background-position: -54px -100px }
-.yox-theme-inline2-thumbnailsBtn_right{ right: 0; background-position: 0 -160px; }
-.yox-theme-inline2-thumbnailsBtn_right:hover{ background-position: -27px -160px; }
-.yox-theme-inline2-thumbnailsBtn_right:active, .yox-theme-inline2-thumbnailsBtn_right.enabledThumbnailsButton{ background-position: -54px -160px }
+.yox-theme-inline2-thumbnailsBtn_left{ left: 0; background-position: 0 -84px; }
+.yox-theme-inline2-thumbnailsBtn_left:hover{ background-position: -27px -84px; }
+.yox-theme-inline2-thumbnailsBtn_left:active, .yox-theme-inline2-thumbnailsBtn_left.enabledThumbnailsButton{ background-position: -54px -84px }
+.yox-theme-inline2-thumbnailsBtn_right{ right: 0; background-position: -86px -84px; }
+.yox-theme-inline2-thumbnailsBtn_right:hover{ background-position: -113px -84px; }
+.yox-theme-inline2-thumbnailsBtn_right:active, .yox-theme-inline2-thumbnailsBtn_right.enabledThumbnailsButton{ background-position: -140px -84px }
 
 
 .yox-theme-inline2-thumbnails{

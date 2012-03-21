@@ -1,3 +1,5 @@
+var inline2id = 0;
+
 yox.themes.inline2 = function(data, options){
     var self = this,
         elements,
@@ -10,6 +12,7 @@ yox.themes.inline2 = function(data, options){
         lastPos,
         isInfo = true,
         isThumbnails = true;
+this.id = inline2id++;
 
     var actions = {
         fullscreen: toggleFullScreen,
@@ -23,6 +26,7 @@ yox.themes.inline2 = function(data, options){
         thumbnails: function(){
             isThumbnails = !isThumbnails;
             elements.gallery.style.height = (elements.gallery.clientHeight + options.thumbnailsHeight * (isThumbnails ? -1 : 1)) + "px";
+            self.modules.view.update();
         }
     };
 
@@ -31,7 +35,7 @@ yox.themes.inline2 = function(data, options){
         view: {
             enableKeyboard: true,
             enlarge: true,
-            resizeMode: "fill",
+            resizeMode: "fit",
             transition: yox.view.transitions.fade,
             transitionTime: 300,
             margin: 0,
@@ -41,6 +45,7 @@ yox.themes.inline2 = function(data, options){
                 "click.thumbnails": function(e){ this.selectItem(e.index); },
                 "init.view": function(){
                     this.selectItem(this.options.firstItem || 0);
+                    elements.infoPanel.style.opacity = "1";
                 }
             }
         },
@@ -88,19 +93,14 @@ yox.themes.inline2 = function(data, options){
             isFullScreen = !isFullScreen;
 
         if (isFullScreen){
-            mousemoveTimeoutId = setTimeout(function(){
-                elements.$thumbnails.css({ opacity: 0 });
-                document.body.style.cursor = "none"; }
-            , 3000);
-
             self.modules.view.option("resizeMode", "fit");
         }
         else{
-            clearTimeout(mousemoveTimeoutId);
-            elements.$thumbnails.css("opacity", "1");
+            //clearTimeout(mousemoveTimeoutId);
+            //elements.$thumbnails.css("opacity", "1");
             elements.gallery.style.height = galleryOriginalHeight + "px";
-            document.body.style.cursor = "default";
-            self.modules.view.option("resizeMode", "fill");
+            //document.body.style.cursor = "default";
+            //self.modules.view.option("resizeMode", "fill");
         }
 
         onResize();
@@ -150,7 +150,6 @@ yox.themes.inline2 = function(data, options){
             setSize();
 
         self.modules.view.update(true);
-        controlsPanelRect = elements.thumbnails.getClientRects()[0];
     }
 
     function onKeyDown(e){
@@ -192,9 +191,19 @@ yox.themes.inline2 = function(data, options){
         return button;
     }
 
+    function createControlButton(method){
+        var button = document.createElement("a"),
+            className = self.getThemeClass("controlBtn");
+
+        button.setAttribute("data-method", method);
+        button.className = className + " " + className + "-" + method;
+
+        button.innerHTML = "<div></div>";
+        return button;
+    }
+
     this.create = function(container){
         $(container).addClass(this.getThemeClass());
-
         elements = {
             container: container,
             gallery: document.createElement("div"),
@@ -255,12 +264,19 @@ yox.themes.inline2 = function(data, options){
         elements.infoPanel.className = this.getThemeClass("infoPanel");
         elements.info.className = this.getThemeClass("info");
 
+        elements.gallery.appendChild(createControlButton("prev"));
+        elements.gallery.appendChild(createControlButton("next"));
+
         galleryOriginalHeight = elements.gallery.clientHeight;
 
         controlsPanelRect = elements.controlsPanel.getClientRects()[0];
         setSize();
 
-        $(elements.gallery).on("mousemove", onMouseMove);
+        $(elements.gallery)
+            .on("mousemove", onMouseMove)
+            .on("click", "." + this.getThemeClass("controlBtn"), function(e){
+                self.modules.view[this.getAttribute("data-method")]();
+            });
         $(window).on("resize", resizeEventHandler);
     };
 
@@ -269,7 +285,7 @@ yox.themes.inline2 = function(data, options){
         elements.container.removeChild(elements.gallery);
         elements.container.removeChild(elements.thumbnailsPanel);
         elements = null;
-
+        clearTimeout(mousemoveTimeoutId);
         $(window).off("resize", resizeEventHandler);
     };
 }
