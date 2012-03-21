@@ -242,6 +242,23 @@ yox.utils = {
                 };
             }
         }
+    },
+    url: {
+        queryToJson: function(query)
+        {
+            if (!query)
+                return null;
+
+            var queryParams = query.split("&"),
+                json = {};
+
+            for(var i=queryParams.length; i--;)
+            {
+                var paramData = queryParams[i].split('=');
+                json[paramData[0]] = paramData.length == 2 ? paramData[1] : true;
+            }
+            return json;
+        }
     }
 };
 
@@ -317,6 +334,34 @@ yox.eventsHandler = function(){
             event = namespace[eventType] = [];
 
         event.push(eventHandler);
+    };
+
+    this.removeEventListener = function(eventName, eventHandler){
+        var eventNameParts = eventName.split("."),
+            eventType = eventNameParts[0],
+            namespaceName = eventNameParts[1],
+            namespace,
+            foundHandler = false;
+
+        if (namespaceName){
+            namespace = namespaces[namespaceName];
+            if (!namespace)
+                namespace = namespaces[namespaceName] = { };
+        }
+        else
+            namespace = namespaces._default;
+
+        var event = namespace[eventType];
+        if (event && event.length){
+            for(var i=event.length; i--;){
+                if (event[i] === eventHandler){
+                    event.splice(i, 1);
+                    foundHandler = true;
+                }
+            }
+        }
+
+        return foundHandler;
     }
 };
 yox.data = function(options){
@@ -399,12 +444,6 @@ yox.data.prototype = {
             )
         }
         return dfd;
-    },
-    removeEventListener: function(eventName, eventHandler){
-        if (eventHandler && typeof(eventHandler) !== "function")
-            throw new Error("Invalid event handler, must be a function or undefined.");
-
-        this.$eventsElement.off(eventName + "." + this.namespace, eventHandler);
     },
     source: function(sources){
         this.clear();
@@ -531,6 +570,270 @@ yox.data.sources.files = (function(){
         }
     };
 })();
+yox.data.sources.flickr = (function($){
+    var dataSourceName = "flickr",
+        flickrUrl = "http://www.flickr.com/",
+        flickrApiUrl = "http://api.flickr.com/services/rest/",
+        apiKey = "af2780245ce7add695f16a91fb7d3afc",
+        flickrUserIdRegex = /\d+@N\d+/,
+        flickrUrlRegex = /^http:\/\/(?:www\.)?flickr\.com\/(\w+)\/(?:([^\/]+)\/(?:(\w+)\/?(?:([^\/]+)\/?)?)?)?(?:\?(.*))?/,
+        self = this,
+        fixedOptions = {
+            api_key: apiKey,
+            format: 'json'
+        },
+        defaults = {
+            imageSize: "medium", // medium/large/original, for large, your images in Flickr must be 1280 in width or more. For original, you must allow originals to be downloaded
+            thumbsize: "thumbnail", // smallSquare (75x75) / thumbnail (100) / small (240) / largeSquare (150x150) / medium (500) / large (1024) / original
+            setThumbnail: true,
+            setSinglePhotosetThumbnails: true,
+            setTitle: true,
+            method: 'flickr.photosets.getList',
+            extras: 'description'
+        };
+
+    var dataTypes = {
+        sets: function(source, id){
+            return {
+                method: id || source.photoset_id ? "flickr.photosets.getPhotos" : "flickr.photosets.getList",
+                photoset_id: id
+            };
+        },
+        galleries: function(source, id){
+            return {
+                method: id ? "flickr.galleries.getPhotos" : "flickr.galleries.getList",
+                gallery_id: id
+            };
+        },
+        collections: function(source, id){
+            return {
+                method: "flickr.collections.getTree",
+                collection_id: id
+            };
+        },
+        "default": function(){
+            return {
+                method: "flickr.photos.search"
+            };
+        }
+    };
+
+    var flickrImageSizes = {
+            smallSquare : "_s", // 75x75
+            thumbnail : "_t", // 100px
+            small : "_m", // 240px
+            medium : "", // 500px
+            large : "_b", // 1024px
+            original : "_o"
+        };
+    function getImageUrl(photoData, size){
+        return "http://farm" + photoData.farm + ".static.flickr.com/" + photoData.server + "/" + (photoData.primary || photoData.id) + "_" + photoData.secret + size + ".jpg";
+    }
+
+    function getPhotosetUrl(userid, photosetId){
+         return prepareUrl(flickrUrl + "photos/" + userid + "/sets/" + photosetId + "/");
+    }
+
+    // makes sure a string can be used as a Flickr url
+    function prepareUrl(url){
+        return url.replace(/\s/g, "_");
+    }
+
+    function getImagesDataFromJson(data, datasourceOptions){
+        var isPhotos = data.photoset || data.photos,
+            photos,
+            imagesData = [],
+            inSet = data.photoset ? "/in/set-" + data.photoset.id : "";
+
+        if (isPhotos)
+            photos = data.photoset ? data.photoset.photo : data.photos.photo;
+        else if (data.photosets)
+            photos = data.photosets.photoset;
+        else if (data.collections)
+            photos = data.collections.collection[0].set;
+
+        // Photos:
+        if (photos)
+        {
+            var thumbSuffix = flickrImageSizes[datasourceOptions.thumbsize],
+                imageSuffix = flickrImageSizes[datasourceOptions.imageSize];
+
+            $.each(photos, function(i, photo){
+                var imageData = {
+                    thumbnail: {
+                        src : getImageUrl(photo, thumbSuffix)
+                    },
+                    link: prepareUrl(flickrUrl + "photos/" + (photo.owner || datasourceOptions.user_id) + "/" + photo.id + inSet),
+                    url: getImageUrl(photo, imageSuffix),
+                    title: isPhotos ? photo.title : photo.title._content,
+                    type: "image",
+                    description: photo.description ? photo.description._content : undefined
+                };
+
+                if (!isPhotos)
+                    imageData.data = { photoset_id: photo.id };
+
+                imagesData.push(imageData);
+            });
+        }
+
+        return imagesData;
+    }
+
+    return {
+        name: dataSourceName,
+        defaults: defaults,
+        match: function(source){
+            return source.url && flickrUrlRegex.test(source.url);
+        },
+        load: function(source, callback){
+            var requireLookup = true,
+                urlMatch = source.url && source.url.match(flickrUrlRegex),
+                queryData,
+                fromDataUrl = {},
+                lookupData = {
+                    method: "flickr.urls.lookupUser",
+                    onData: function(data)
+                    {
+                        return {
+                            user_id: data.user.id,
+                            username: data.user.username._content
+                        };
+                    }
+                };
+
+            function getData(){
+                $.ajax({
+                    url: flickrApiUrl,
+                    dataType: 'jsonp',
+                    data: datasourceOptions,
+                    jsonpCallback: "jsonFlickrApi",
+                    success: function(data)
+                    {
+                        var returnData = {
+                            source: source,
+                            sourceType: dataSourceName,
+                            createThumbnails: true
+                        };
+
+                        returnData.items = getImagesDataFromJson(data, datasourceOptions);
+
+                        if (data.photosets || data.collections)
+                            $.extend(returnData, {
+                                createGroups: true
+                            });
+
+                        if (returnData.items.length > 0 && ((datasourceOptions.setThumbnail && !datasourceOptions.setSinglePhotosetThumbnails) || source.isSingleLink))
+                        {
+                            $.extend(returnData, {
+                                isGroup: true,
+                                link: getPhotosetUrl(data.photoset.owner, data.photoset.id),
+                                thumbnailSrc: source.isSingleLink ? undefined : getImageUrl(data.photoset.photo[0], flickrImageSizes[datasourceOptions.thumbsize]),
+                                title: "None"
+                            });
+                        }
+
+                        if (callback)
+                            callback(returnData);
+                    },
+                    error : function(xOptions, textStatus){
+                        if (options.onLoadError)
+                            options.onLoadError("Flickr plugin encountered an error while retrieving data");
+                    }
+                });
+            }
+
+            if (source.url && !urlMatch)
+                return false;
+
+            if (urlMatch){
+                var urlData = {
+                    inputType: urlMatch[1],
+                    user: urlMatch[2],
+                    dataType: urlMatch[3],
+                    id: urlMatch[4],
+                    query: urlMatch[5]
+
+                };
+
+                if (urlData.query)
+                {
+                    queryData = yox.utils.url.queryToJson(urlData.query);
+                    $.extend(fromDataUrl, queryData);
+                }
+
+                if (urlData.inputType == "search"){
+                    fromDataUrl.method = "flickr.photos.search";
+                    fromDataUrl.text = queryData.q;
+                    if (queryData.w)
+                    {
+                        queryData.w = queryData.w.replace("%40", "@");
+                        if (queryData.w.match(flickrUserIdRegex))
+                            fromDataUrl.user_id = queryData.w;
+                    }
+                    if (!queryData || !queryData.sort)
+                        fromDataUrl.sort = "relevance";
+
+                    requireLookup = false;
+                }
+                else{
+                    if (urlData.dataType){
+                        $.extend(fromDataUrl, dataTypes[urlData.dataType || "default"](source, urlData.id));
+
+                        if (urlData.dataType === "galleries"){
+                            if (urlData.id){
+                                requireLookup = true;
+                                lookupData = {
+                                    method: "flickr.urls.lookupGallery",
+                                    onData: function(data)
+                                    {
+                                        return {
+                                            gallery_id: data.gallery.id,
+                                            title: data.gallery.title
+                                        };
+                                    }
+                                };
+                            }
+                        }
+                    }
+                    else
+                        fromDataUrl.method = "flickr.people.getPublicPhotos";
+
+                    fromDataUrl.username = urlData.user;
+                    fromDataUrl.type = urlData.dataType;
+                }
+            }
+
+            var datasourceOptions = jQuery.extend({}, defaults, fromDataUrl,source, fixedOptions);
+
+            datasourceOptions.media = "photos";
+            if (datasourceOptions.user && datasourceOptions.photoset_id)
+                datasourceOptions.method = "flickr.photosets.getPhotos";
+
+            var screenSize = screen.width > screen.height ? screen.width : screen.height;
+
+            // Save resources for smaller screens:
+            if (!datasourceOptions.imageSize || (screenSize.width <= 800 && datasourceOptions.imageSize != "medium"))
+                datasourceOptions.imageSize = "medium";
+
+            if (requireLookup){
+                $.ajax({
+                    url: flickrApiUrl,
+                    dataType: 'jsonp',
+                    data: $.extend({ url: source.url, method: lookupData.method }, fixedOptions),
+                    jsonpCallback: "jsonFlickrApi",
+                    success: function(data)
+                    {
+                        $.extend(datasourceOptions, lookupData.onData(data));
+                        getData();
+                    }
+                });
+            }
+            else
+                getData();
+        }
+    };
+})(jQuery);
 yox.data.sources.html = (function(){
     var dataSourceName = "html";
 
@@ -1277,11 +1580,15 @@ yox.data.sources.picasa = (function(){
         this.options.data && this.addDataSources(this.options.data);
 
         if (this.options.handleClick !== false){
-            $(this.container).on("click", "." + self.options.thumbnailClass, function(e){
+            function onClick(e){
                 var index = this.getAttribute("data-yoxthumbIndex");
                 e.preventDefault();
                 self.triggerEvent("click", { originalEvent: e, index: index, target: this });
                 self.select(index);
+            }
+            $(this.container).on("click", "." + self.options.thumbnailClass, onClick);
+            this.addEventListener("beforeDestroy", function(){
+                $(this.container).off("click", "." + self.options.thumbnailClass, onClick);
             });
         }
     }
@@ -1300,13 +1607,17 @@ yox.data.sources.picasa = (function(){
             if (dataSources && dataSources.length)
                 renderSources(dataSources);
 
-
-            dataSource.addEventListener("loadSources", function(sources){
+            function onLoadSources(sources){
                 if (!self.options.allowAppend){
                     self.clear();
                     this.itemCount = 0;
                 }
                 renderSources(sources);
+            }
+
+            dataSource.addEventListener("loadSources", onLoadSources);
+            this.addEventListener("beforeDestroy", function(){
+                dataSource.removeEventListener("loadSources", onLoadSources);
             });
 
             dataSource.addEventListener("clear", function(){
@@ -1385,6 +1696,9 @@ yox.data.sources.picasa = (function(){
             renderThumbnailsTitle: true,
             selectedThumbnailClass: "selectedThumbnail",
             thumbnailClass: "yoxthumbnail"
+        },
+        destroy: function(){
+            this.triggerEvent("beforeDestroy");
         },
         select: function(itemIndex){
             this.currentSelectedThumbnail && this.currentSelectedThumbnail.removeClass(this.options.selectedThumbnailClass);
@@ -1610,6 +1924,29 @@ yox.data.sources.picasa = (function(){
             return element;
         }
 
+        function loadSources(sources){
+            var createItems = [],
+                view = this,
+                originalNumberOfItems = view.items.length;
+
+            for(var i=0; i < sources.length; i++){
+                var sourceData = sources[i];
+                view.items = view.items.concat(sourceData.items);
+                createItems = createItems.concat(sourceData.items);
+            }
+
+            for(var i=originalNumberOfItems, count=view.items.length; i < count; i++){
+                view.items[i].id = i + 1;
+            }
+
+            view.triggerEvent("load", { items: createItems, sources: sources });
+
+            if (!view.initialized){
+                view.initialized = true;
+                view.triggerEvent("init");
+            }
+        }
+
         function setItem(item){
             if (item !== this.currentItem)
                 return false;
@@ -1650,21 +1987,23 @@ yox.data.sources.picasa = (function(){
                 if (!(items instanceof Array))
                     items = [items];
 
-                this.triggerEvent("loadSources", { items: items });
+                loadSources.call(this, { items: items });
             },
             addDataSources: function(dataSource){
                 var self = this,
                     dataSources = dataSource.getData();
 
                 if (dataSources && dataSources.length){
-                    self.triggerEvent("loadSources", dataSources);
+                    loadSources.call(self, dataSources);
                 }
 
-                dataSource.addEventListener("loadSources", function(sources){
+                function onLoadSources(sources){
+                    loadSources.call(self, sources);
+                }
 
-
-                    // Should probably remove the following and do it ONLY with YoxData:
-                    self.triggerEvent("loadSources", sources);
+                dataSource.addEventListener("loadSources", onLoadSources);
+                this.addEventListener("beforeDestroy", function(){
+                    dataSource.removeEventListener("loadSources", onLoadSources);
                 });
 
                 dataSource.addEventListener("clear", function(){
@@ -1673,6 +2012,7 @@ yox.data.sources.picasa = (function(){
             },
             cacheCount: 0,
             destroy: function(){
+                this.triggerEvent("beforeDestroy");
                 this.disableKeyboard();
                 this.transition.destroy();
             },
@@ -1881,28 +2221,6 @@ yox.data.sources.picasa = (function(){
 
                     // Need to trigger init only once per view:
                     this.removeEventListener("init");
-                },
-                loadSources: function(sources){
-                    var createItems = [],
-                        view = this,
-                        originalNumberOfItems = view.items.length;
-
-                    for(var i=0; i < sources.length; i++){
-                        var sourceData = sources[i];
-                        view.items = view.items.concat(sourceData.items);
-                        createItems = createItems.concat(sourceData.items);
-                    }
-
-                    for(var i=originalNumberOfItems, count=view.items.length; i < count; i++){
-                        view.items[i].id = i + 1;
-                    }
-
-                    view.triggerEvent("load", { items: createItems, sources: sources });
-
-                    if (!view.initialized){
-                        view.initialized = true;
-                        view.triggerEvent("init");
-                    }
                 },
                 select: function(item){
                     var view = this;
@@ -2565,6 +2883,8 @@ yox.theme.prototype = {
     config: {},
     modules: {}
 }
+var inline2id = 0;
+
 yox.themes.inline2 = function(data, options){
     var self = this,
         elements,
@@ -2577,6 +2897,7 @@ yox.themes.inline2 = function(data, options){
         lastPos,
         isInfo = true,
         isThumbnails = true;
+this.id = inline2id++;
 
     var actions = {
         fullscreen: toggleFullScreen,
@@ -2590,6 +2911,7 @@ yox.themes.inline2 = function(data, options){
         thumbnails: function(){
             isThumbnails = !isThumbnails;
             elements.gallery.style.height = (elements.gallery.clientHeight + options.thumbnailsHeight * (isThumbnails ? -1 : 1)) + "px";
+            self.modules.view.update();
         }
     };
 
@@ -2598,7 +2920,7 @@ yox.themes.inline2 = function(data, options){
         view: {
             enableKeyboard: true,
             enlarge: true,
-            resizeMode: "fill",
+            resizeMode: "fit",
             transition: yox.view.transitions.fade,
             transitionTime: 300,
             margin: 0,
@@ -2608,6 +2930,7 @@ yox.themes.inline2 = function(data, options){
                 "click.thumbnails": function(e){ this.selectItem(e.index); },
                 "init.view": function(){
                     this.selectItem(this.options.firstItem || 0);
+                    elements.infoPanel.style.opacity = "1";
                 }
             }
         },
@@ -2655,19 +2978,14 @@ yox.themes.inline2 = function(data, options){
             isFullScreen = !isFullScreen;
 
         if (isFullScreen){
-            mousemoveTimeoutId = setTimeout(function(){
-                elements.$thumbnails.css({ opacity: 0 });
-                document.body.style.cursor = "none"; }
-            , 3000);
-
             self.modules.view.option("resizeMode", "fit");
         }
         else{
-            clearTimeout(mousemoveTimeoutId);
-            elements.$thumbnails.css("opacity", "1");
+            //clearTimeout(mousemoveTimeoutId);
+            //elements.$thumbnails.css("opacity", "1");
             elements.gallery.style.height = galleryOriginalHeight + "px";
-            document.body.style.cursor = "default";
-            self.modules.view.option("resizeMode", "fill");
+            //document.body.style.cursor = "default";
+            //self.modules.view.option("resizeMode", "fill");
         }
 
         onResize();
@@ -2717,7 +3035,6 @@ yox.themes.inline2 = function(data, options){
             setSize();
 
         self.modules.view.update(true);
-        controlsPanelRect = elements.thumbnails.getClientRects()[0];
     }
 
     function onKeyDown(e){
@@ -2759,9 +3076,19 @@ yox.themes.inline2 = function(data, options){
         return button;
     }
 
+    function createControlButton(method){
+        var button = document.createElement("a"),
+            className = self.getThemeClass("controlBtn");
+
+        button.setAttribute("data-method", method);
+        button.className = className + " " + className + "-" + method;
+
+        button.innerHTML = "<div></div>";
+        return button;
+    }
+
     this.create = function(container){
         $(container).addClass(this.getThemeClass());
-
         elements = {
             container: container,
             gallery: document.createElement("div"),
@@ -2822,14 +3149,19 @@ yox.themes.inline2 = function(data, options){
         elements.infoPanel.className = this.getThemeClass("infoPanel");
         elements.info.className = this.getThemeClass("info");
 
+        elements.gallery.appendChild(createControlButton("prev"));
+        elements.gallery.appendChild(createControlButton("next"));
+
         galleryOriginalHeight = elements.gallery.clientHeight;
 
         controlsPanelRect = elements.controlsPanel.getClientRects()[0];
         setSize();
-        //if (options.enableFullScreen !== false)
-          //  $(elements.gallery).on("dblclick", toggleFullScreen);
 
-        $(elements.gallery).on("mousemove", onMouseMove);
+        $(elements.gallery)
+            .on("mousemove", onMouseMove)
+            .on("click", "." + this.getThemeClass("controlBtn"), function(e){
+                self.modules.view[this.getAttribute("data-method")]();
+            });
         $(window).on("resize", resizeEventHandler);
     };
 
@@ -2838,7 +3170,7 @@ yox.themes.inline2 = function(data, options){
         elements.container.removeChild(elements.gallery);
         elements.container.removeChild(elements.thumbnailsPanel);
         elements = null;
-
+        clearTimeout(mousemoveTimeoutId);
         $(window).off("resize", resizeEventHandler);
     };
 }
