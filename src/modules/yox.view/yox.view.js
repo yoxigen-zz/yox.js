@@ -212,6 +212,29 @@
             return element;
         }
 
+        function loadSources(sources){
+            var createItems = [],
+                view = this,
+                originalNumberOfItems = view.items.length;
+
+            for(var i=0; i < sources.length; i++){
+                var sourceData = sources[i];
+                view.items = view.items.concat(sourceData.items);
+                createItems = createItems.concat(sourceData.items);
+            }
+
+            for(var i=originalNumberOfItems, count=view.items.length; i < count; i++){
+                view.items[i].id = i + 1;
+            }
+
+            view.triggerEvent("load", { items: createItems, sources: sources });
+
+            if (!view.initialized){
+                view.initialized = true;
+                view.triggerEvent("init");
+            }
+        }
+
         function setItem(item){
             if (item !== this.currentItem)
                 return false;
@@ -252,21 +275,23 @@
                 if (!(items instanceof Array))
                     items = [items];
 
-                this.triggerEvent("loadSources", { items: items });
+                loadSources.call(this, { items: items });
             },
             addDataSources: function(dataSource){
                 var self = this,
                     dataSources = dataSource.getData();
 
                 if (dataSources && dataSources.length){
-                    self.triggerEvent("loadSources", dataSources);
+                    loadSources.call(self, dataSources);
                 }
 
-                dataSource.addEventListener("loadSources", function(sources){
+                function onLoadSources(sources){
+                    loadSources.call(self, sources);
+                }
 
-
-                    // Should probably remove the following and do it ONLY with YoxData:
-                    self.triggerEvent("loadSources", sources);
+                dataSource.addEventListener("loadSources", onLoadSources);
+                this.addEventListener("beforeDestroy", function(){
+                    dataSource.removeEventListener("loadSources", onLoadSources);
                 });
 
                 dataSource.addEventListener("clear", function(){
@@ -275,6 +300,7 @@
             },
             cacheCount: 0,
             destroy: function(){
+                this.triggerEvent("beforeDestroy");
                 this.disableKeyboard();
                 this.transition.destroy();
             },
@@ -483,28 +509,6 @@
 
                     // Need to trigger init only once per view:
                     this.removeEventListener("init");
-                },
-                loadSources: function(sources){
-                    var createItems = [],
-                        view = this,
-                        originalNumberOfItems = view.items.length;
-
-                    for(var i=0; i < sources.length; i++){
-                        var sourceData = sources[i];
-                        view.items = view.items.concat(sourceData.items);
-                        createItems = createItems.concat(sourceData.items);
-                    }
-
-                    for(var i=originalNumberOfItems, count=view.items.length; i < count; i++){
-                        view.items[i].id = i + 1;
-                    }
-
-                    view.triggerEvent("load", { items: createItems, sources: sources });
-
-                    if (!view.initialized){
-                        view.initialized = true;
-                        view.triggerEvent("init");
-                    }
                 },
                 select: function(item){
                     var view = this;
