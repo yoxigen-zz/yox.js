@@ -12,17 +12,25 @@ var viewer =  document.getElementById("viewer"),
     title = document.title,
     transitionSelect = document.getElementById("transitionSelect");
 
-var dataSource = document.location.href.match(/yoxview\.demo\.transitions\.html/) ? {
-    type: "picasa",
-    url: "https://picasaweb.google.com/112402114851229244394/Collages",
-    thumbsize: 104,
-    cropThumbnails: false,
-    imgmax: 1024
-} : undefined;
+var dataSources = {
+    picasa: {
+        type: "picasa",
+        url: "https://picasaweb.google.com/112402114851229244394/Collages",
+        thumbsize: 104,
+        cropThumbnails: false,
+        imgmax: 1024
+    },
+    flickr: {
+        type: "flickr",
+        url: "http://www.flickr.com/search/?q=kittens",
+        imageSize: "large"
+    }
+};
+
+var dataSource = document.location.href.match(/yoxview\.demo\.transitions\.html/) ? dataSources.flickr : undefined;
 
 var modules = {
     data: new yox.data({
-        cache: true,
         source: dataSource
     })
 };
