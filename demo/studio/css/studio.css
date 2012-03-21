@@ -26,7 +26,10 @@ a{ text-decoration: none }
 }
 
 #main{
-
+    z-index: 10000;
+    position: absolute;
+    height: 100%;
+    width: 100%;
 }
 
 #options{
@@ -35,13 +38,13 @@ a{ text-decoration: none }
     left: 0;
     -moz-transition: left 300ms ease-out;
     -webkit-transition: left 300ms ease-out;
-    z-index: 200;
+    z-index: 12000;
     height: 100%;
     color: White;
     width: 213px;
 }
 #options.optionsClosed{
-    left: -213px;
+    left: -214px;
 }
     #optionsBar{
         background: #222;
