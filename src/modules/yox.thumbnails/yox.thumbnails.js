@@ -16,11 +16,15 @@
         this.options.data && this.addDataSources(this.options.data);
 
         if (this.options.handleClick !== false){
-            $(this.container).on("click", "." + self.options.thumbnailClass, function(e){
+            function onClick(e){
                 var index = this.getAttribute("data-yoxthumbIndex");
                 e.preventDefault();
                 self.triggerEvent("click", { originalEvent: e, index: index, target: this });
                 self.select(index);
+            }
+            $(this.container).on("click", "." + self.options.thumbnailClass, onClick);
+            this.addEventListener("beforeDestroy", function(){
+                $(this.container).off("click", "." + self.options.thumbnailClass, onClick);
             });
         }
     }
@@ -39,13 +43,17 @@
             if (dataSources && dataSources.length)
                 renderSources(dataSources);
 
-
-            dataSource.addEventListener("loadSources", function(sources){
+            function onLoadSources(sources){
                 if (!self.options.allowAppend){
                     self.clear();
                     this.itemCount = 0;
                 }
                 renderSources(sources);
+            }
+
+            dataSource.addEventListener("loadSources", onLoadSources);
+            this.addEventListener("beforeDestroy", function(){
+                dataSource.removeEventListener("loadSources", onLoadSources);
             });
 
             dataSource.addEventListener("clear", function(){
@@ -124,6 +132,9 @@
             renderThumbnailsTitle: true,
             selectedThumbnailClass: "selectedThumbnail",
             thumbnailClass: "yoxthumbnail"
+        },
+        destroy: function(){
+            this.triggerEvent("beforeDestroy");
         },
         select: function(itemIndex){
             this.currentSelectedThumbnail && this.currentSelectedThumbnail.removeClass(this.options.selectedThumbnailClass);
