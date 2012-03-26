@@ -1,6 +1,4 @@
-var inline2id = 0;
-
-yox.themes.inline2 = function(data, options){
+yox.themes.classic = function(data, options){
     var self = this,
         elements,
         mousemoveTimeoutId,
@@ -12,7 +10,6 @@ yox.themes.inline2 = function(data, options){
         lastPos,
         isInfo = true,
         isThumbnails = true;
-this.id = inline2id++;
 
     var actions = {
         fullscreen: toggleFullScreen,
@@ -30,7 +27,7 @@ this.id = inline2id++;
         }
     };
 
-    this.name = "inline2";
+    this.name = "classic";
     this.config = {
         view: {
             enableKeyboard: true,
@@ -42,7 +39,7 @@ this.id = inline2id++;
             events: {
                 cacheStart: function(e, item){ elements.loader.style.display = "inline" },
                 cacheEnd: function(e, item){ elements.loader.style.display = "none" },
-                "click.thumbnails": function(e){ this.selectItem(e.index); },
+                "click.thumbnails": function(e){ this.selectItem(e.index, "scroll"); },
                 "init.view": function(){
                     this.selectItem(this.options.firstItem || 0);
                     elements.infoPanel.style.opacity = "1";
@@ -221,6 +218,7 @@ this.id = inline2id++;
         elements.$thumbnails = $(elements.thumbnails);
         var thumbnailsBtnClass = this.getThemeClass("thumbnailsBtn");
         elements.thumbnailsPanel.className = this.getThemeClass("thumbnailsPanel");
+        elements.thumbnailsPanel.style.height = (options.thumbnailsHeight - 1) + "px";
         elements.thumbnailsPanel.innerHTML =
             '<a href="#" class="' + thumbnailsBtnClass + ' ' + thumbnailsBtnClass + '_left" data-yoxscroll-holdstart="scroll-left" data-yoxscroll-click="page-left"></a>' +
             '<a href="#" class="' + thumbnailsBtnClass + ' ' + thumbnailsBtnClass + '_right" data-yoxscroll-holdstart="scroll-right" data-yoxscroll-click="page-right"></a>';
@@ -254,6 +252,7 @@ this.id = inline2id++;
         $(elements.controlsPanel).on("click", "a", function(e){
             e.preventDefault();
             actions[this.getAttribute("data-action")]();
+            $(this).toggleClass("yox-theme-classic-button-on");
         });
 
         elements.gallery.appendChild(elements.controlsPanel);
@@ -290,8 +289,8 @@ this.id = inline2id++;
     };
 }
 
-yox.themes.inline2.defaults = {
+yox.themes.classic.defaults = {
     thumbnailsHeight: 61
 };
 
-yox.themes.inline2.prototype = new yox.theme();
+yox.themes.classic.prototype = new yox.theme();
