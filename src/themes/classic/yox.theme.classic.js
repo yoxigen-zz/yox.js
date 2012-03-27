@@ -9,21 +9,24 @@ yox.themes.classic = function(data, options){
         controlsPanelRect,
         lastPos,
         isInfo = true,
-        isThumbnails = true;
+        isThumbnails = true,
+        buttons = {};
 
     var actions = {
         fullscreen: toggleFullScreen,
-        info: function(){
+        info: function(button){
             isInfo = !isInfo;
             elements.infoPanel.style.opacity = isInfo ? "1" : "0";
+            toggleButton(button);
         },
         slideshow: function(){
             self.modules.view.toggleSlideshow();
         },
-        thumbnails: function(){
+        thumbnails: function(button){
             isThumbnails = !isThumbnails;
             elements.gallery.style.height = (elements.gallery.clientHeight + options.thumbnailsHeight * (isThumbnails ? -1 : 1)) + "px";
             self.modules.view.update();
+            toggleButton(button);
         }
     };
 
@@ -43,6 +46,12 @@ yox.themes.classic = function(data, options){
                 "init.view": function(){
                     this.selectItem(this.options.firstItem || 0);
                     elements.infoPanel.style.opacity = "1";
+                },
+                "slideshowStart": function(){
+                    toggleButton(buttons.slideshow);
+                },
+                slideshowStop: function(){
+                    toggleButton(buttons.slideshow);
                 }
             }
         },
@@ -79,7 +88,9 @@ yox.themes.classic = function(data, options){
     };
 
     function emptyFunction(){};
-
+    function toggleButton(button){
+        $(button).toggleClass("yox-theme-classic-button-on");
+    }
     if (options.enableFullScreen !== false){
         document.cancelFullScreen = document.cancelFullScreen || document.mozCancelFullScreen || document.webkitCancelFullScreen || emptyFunction;
         HTMLElement.prototype.requestFullScreen = HTMLElement.prototype.requestFullScreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullScreen || emptyFunction;
@@ -111,6 +122,7 @@ yox.themes.classic = function(data, options){
 
         isFullScreenResize = false;
         onResize();
+        toggleButton(buttons.fullscreen);
     }
 
     if (options.enableFullScreen !== false && isFullScreenApi)
@@ -246,13 +258,12 @@ yox.themes.classic = function(data, options){
             { title: "Thumbnails", action: "thumbnails" }
         ];
 
-        for(var i=0; i<controls.length; i++){
-            elements.controlsPanel.appendChild(createButton(controls[i]));
+        for(var i=0, control; control = controls[i]; i++){
+            elements.controlsPanel.appendChild(buttons[control.action] = createButton(control));
         }
         $(elements.controlsPanel).on("click", "a", function(e){
             e.preventDefault();
-            actions[this.getAttribute("data-action")]();
-            $(this).toggleClass("yox-theme-classic-button-on");
+            actions[this.getAttribute("data-action")](this);
         });
 
         elements.gallery.appendChild(elements.controlsPanel);
