@@ -23,7 +23,7 @@ yox.theme.prototype = {
         this.create(container);
 
         function createModule(container, moduleName, moduleOptions){
-            moduleOptions.data = data instanceof yox.data ? data : new yox.data(data);
+            moduleOptions.data = data;
 
             moduleOptions.eventsHandler = {
                 addEventListener: function(eventName, eventHandler){

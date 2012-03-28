@@ -39,7 +39,8 @@ Yox.prototype = {
                     theme.destroy.call(theme);
                 },
                 modules: theme.modules,
-                triggerEvent: theme.triggerEvent
+                triggerEvent: theme.triggerEvent,
+                data: data
             });
         }
 
