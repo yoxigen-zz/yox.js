@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>yox.js - Themes - Classic</title>
+    <link href='http://fonts.googleapis.com/css?family=Pontano+Sans|Quicksand:400,700' rel='stylesheet' type='text/css'>
+    <link rel="Stylesheet" type="text/css" href="../css/demo.css" />
+    <link rel="Stylesheet" type="text/css" href="../../src/modules/yox.view/yoxview.css" />
+    <link rel="Stylesheet" type="text/css" href="../../src/themes/classic/css/yox.theme.classic.css" />
+    <script src="../js/ga.js"></script>
+</head>
+<body>
+    <header id="demoHeader">
+        <h1>yox.js</h1>
+    </header>
+    <div id="contents">
+        <div id="codePanel">
+            <h2><span class='themeName'>Classic</span> Theme</h2>
+            <p>This is the first official yox.js theme. It introduces some core modules: data, view, thumbnails and scroll.</p>
+            <h3>Features</h3>
+            <ul>
+                <li>Fullscreen support</li>
+                <li>Thumbnails with scrolling, gestures and paging.</li>
+                <li>Viewer fits </li>
+            </ul>
+            <h3>Source Code</h3>
+            <pre><code>
+var yoxApi = new Yox(document.getElementById("yox"), {
+    theme: "classic",
+    data: {
+        type: "picasa",
+        source: {
+            url: "https://picasaweb.google.com/114231305708772868829/PhotographyPortfolio",
+            cropThumbnails: true
+        }
+    }
+});
+            </code></pre>
+        </div>
+        <div id="yox"></div>
+    </div>
+    <footer id="demoFooter">
+        <small>2012 &copy; Yossi Kolesnicov</small>
+        <div id="footerLinks">
+            <a href="http://github.com/yoxigen/yoxjs">yox.js on github</a>
+        </div>
+    </footer>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="../../build/yox.min.js"></script>
+    <script src="../js/demo.js"></script>
+</body>
+</html>
