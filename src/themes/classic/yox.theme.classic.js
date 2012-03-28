@@ -6,11 +6,11 @@ yox.themes.classic = function(data, options){
         isFullScreenApi,
         isFullScreenResize,
         galleryOriginalHeight,
-        controlsPanelRect,
         lastPos,
-        isInfo = true,
-        isThumbnails = true,
-        buttons = {};
+        isInfo = options.showInfo,
+        isThumbnails = options.showThumbnails,
+        buttons = {},
+        itemsCount = data.countItems();
 
     var actions = {
         fullscreen: toggleFullScreen,
@@ -59,6 +59,7 @@ yox.themes.classic = function(data, options){
             events: {
                 beforeSelect: function(e){
                     this.select(e.newItem.id - 1);
+                    elements.infoPosition.innerHTML = e.newItem.id;
                 },
                 loadItem: function(item){
                     $(this.thumbnails[item.id - 1]).addClass("loaded");
@@ -80,12 +81,20 @@ yox.themes.classic = function(data, options){
                     if (self.modules.thumbnails.thumbnails)
                         this.scrollTo(self.modules.thumbnails.thumbnails[thumbnailIndex], { centerElement: !e.data });
 
-                    elements.info.innerHTML = e.newItem.title || "";
+                    elements.infoText.innerHTML = e.newItem.title || "";
                 }
             },
             pressedButtonClass: "enabledThumbnailsButton"
         }
     };
+
+    data.addEventListener("loadSources", function(source){
+        elements.infoItemsCount.innerHTML = data.countItems();
+        $(elements.container).removeClass(self.getThemeClass("loading"));
+    });
+    data.addEventListener("loadSourcesStart", function(){
+        $(elements.container).addClass(self.getThemeClass("loading"));
+    });
 
     function emptyFunction(){};
     function toggleButton(button){
@@ -102,12 +111,13 @@ yox.themes.classic = function(data, options){
 
         if (isFullScreen){
             self.modules.view.option("resizeMode", "fit");
+            elements.gallery.style.cursor = "none";
         }
         else{
             //clearTimeout(mousemoveTimeoutId);
             //elements.$thumbnails.css("opacity", "1");
             elements.gallery.style.height = galleryOriginalHeight + "px";
-            //document.body.style.cursor = "default";
+            elements.gallery.style.cursor = "default";
             //self.modules.view.option("resizeMode", "fill");
         }
 
@@ -151,7 +161,6 @@ yox.themes.classic = function(data, options){
     }
 
     function onResize(){
-        controlsPanelRect = elements.controlsPanel.getClientRects()[0];
         if (isFullScreenResize)
             return false;
 
@@ -167,24 +176,25 @@ yox.themes.classic = function(data, options){
     }
 
     function onMouseMove(e){
-        if (!lastPos || e.pageX < lastPos.x - 4 || e.pageX > lastPos.x + 4 || e.pageY < lastPos.y - 4 || e.pageY > lastPos.y + 4){
+        if (!lastPos || e.pageX < lastPos.x - 3 || e.pageX > lastPos.x + 3 || e.pageY < lastPos.y - 3 || e.pageY > lastPos.y + 3){
             clearTimeout(mousemoveTimeoutId);
             elements.controlsPanel.style.opacity = "1";
-            //document.body.style.cursor = "default";
+            elements.gallery.style.cursor = "default";
 
             mousemoveTimeoutId = setTimeout(function(){
+                var controlsPanelRect = elements.controlsPanel.getClientRects()[0];
                 if (e.pageY >= controlsPanelRect.top && e.pageY <= controlsPanelRect.bottom && e.pageX >= controlsPanelRect.left && e.pageX <= controlsPanelRect.right)
                     return;
 
                 elements.controlsPanel.style.opacity = "0";
-                //document.body.style.cursor = "none";
+                elements.gallery.style.cursor = "none";
             }, 1000);
         }
         lastPos = { x: e.pageX, y: e.pageY };
     }
 
     function setSize(){
-        elements.gallery.style.height = (elements.container.clientHeight - options.thumbnailsHeight) + "px";
+        elements.gallery.style.height = (elements.container.clientHeight - (isThumbnails ? options.thumbnailsHeight : 0)) + "px";
     }
 
     function resizeEventHandler(e){
@@ -211,20 +221,24 @@ yox.themes.classic = function(data, options){
         return button;
     }
 
-    this.create = function(container){
-        $(container).addClass(this.getThemeClass());
+    this.create = function(container){console.log("DATA: ", data.isLoading);
+        $(container).addClass(this.getThemeClass() + (data.isLoading ? " " + this.getThemeClass("loading") : ""));
+
         elements = {
             container: container,
             gallery: document.createElement("div"),
             viewer: document.createElement("div"),
             thumbnails: document.createElement("div"),
             thumbnailsPanel: document.createElement("div"),
-            loader: document.createElement("loader"),
+            loader: document.createElement("div"),
             description: document.createElement("p"),
             controlsPanel: document.createElement("div"),
             controls: [],
             infoPanel: document.createElement("div"),
-            info: document.createElement("div")
+            info: document.createElement("div"),
+            infoText: document.createElement("div"),
+            infoPosition: document.createElement("span"),
+            infoItemsCount: document.createElement("span")
         };
 
         elements.$thumbnails = $(elements.thumbnails);
@@ -247,6 +261,7 @@ yox.themes.classic = function(data, options){
         elements.gallery.className = this.getThemeClass("gallery");
         elements.thumbnails.className = this.getThemeClass("thumbnails") + " yoxthumbnails yoxscroll";
         elements.thumbnails.style.height = options.thumbnailsHeight + "px";
+
         elements.loader.className = this.getThemeClass("loader") + " yoxloader";
         elements.description.className = this.getThemeClass("description");
 
@@ -268,6 +283,24 @@ yox.themes.classic = function(data, options){
 
         elements.gallery.appendChild(elements.controlsPanel);
 
+        if (!options.showInfo)
+            elements.infoPanel.style.opacity = "0";
+        else
+            toggleButton(buttons.info);
+
+        if (options.showThumbnails)
+            toggleButton(buttons.thumbnails);
+
+        var position = document.createElement("div");
+        position.className = this.getThemeClass("info-position");
+        position.appendChild(elements.infoPosition);
+        position.appendChild(document.createTextNode(" / "));
+        elements.infoItemsCount.innerHTML = itemsCount;
+        elements.infoPosition.innerHTML = "0";
+        position.appendChild(elements.infoItemsCount);
+        elements.info.appendChild(position);
+        elements.infoText.className = this.getThemeClass("info-text");
+        elements.info.appendChild(elements.infoText);
         elements.infoPanel.appendChild(elements.info);
         elements.gallery.appendChild(elements.infoPanel);
 
@@ -279,7 +312,6 @@ yox.themes.classic = function(data, options){
 
         galleryOriginalHeight = elements.gallery.clientHeight;
 
-        controlsPanelRect = elements.controlsPanel.getClientRects()[0];
         setSize();
 
         $(elements.gallery)
@@ -301,6 +333,8 @@ yox.themes.classic = function(data, options){
 }
 
 yox.themes.classic.defaults = {
+    showInfo: true,
+    showThumbnails: true,
     thumbnailsHeight: 61
 };
 
