@@ -23,6 +23,7 @@ yox.data.prototype = {
             self = this;
 
         this.triggerEvent("loadSourcesStart", sources);
+        this.isLoading = true;
 
         for(var i=0; i < sources.length; i++){
             var promise = this.loadSource(sources[i]);
@@ -34,6 +35,7 @@ yox.data.prototype = {
             for(var i=0; i < arguments.length; i++)
                 self.data.push(arguments[i]);
 
+            this.isLoading = false;
             self.triggerEvent("loadSources", Array.prototype.slice.call(arguments, 0));
         });
     },
@@ -41,6 +43,14 @@ yox.data.prototype = {
         this.triggerEvent("removeSources", this.data);
         this.triggerEvent("clear");
         this.data = [];
+    },
+    countItems: function(){
+        var totalItemsCount = 0;
+        for(var i=this.data.length; i--;){
+            totalItemsCount += this.data[i].items.length;
+        }
+
+        return totalItemsCount;
     },
     findDataSource: function(sourceData){
         for(var dataSourceName in yox.data.sources){
