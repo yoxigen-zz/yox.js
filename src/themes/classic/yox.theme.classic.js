@@ -221,7 +221,7 @@ yox.themes.classic = function(data, options){
         return button;
     }
 
-    this.create = function(container){console.log("DATA: ", data.isLoading);
+    this.create = function(container){
         $(container).addClass(this.getThemeClass() + (data.isLoading ? " " + this.getThemeClass("loading") : ""));
 
         elements = {
