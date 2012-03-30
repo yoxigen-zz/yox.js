@@ -443,7 +443,16 @@
                     
                     item = this.items[item];
                 }
-                else{
+                if (String(item) === item){
+                    for(var i=0, tempItem; tempItem = this.items[i]; i++){
+                        if (tempItem.name && tempItem.name === item){
+                            item = tempItem;
+                            break;
+                        }
+                    }
+                    tempItem = null;
+                }
+                else {
                     if (item instanceof HTMLElement)
                         item = $(item);
 
@@ -468,6 +477,8 @@
                 this.cache.withItem(item, this, function(loadedItem){
                     setItem.call(view, loadedItem);
                 });
+
+                return true;
             },
             unload: function(){
                 // SOON
