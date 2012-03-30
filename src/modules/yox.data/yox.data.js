@@ -35,7 +35,7 @@ yox.data.prototype = {
             for(var i=0; i < arguments.length; i++)
                 self.data.push(arguments[i]);
 
-            this.isLoading = false;
+            self.isLoading = false;
             self.triggerEvent("loadSources", Array.prototype.slice.call(arguments, 0));
         });
     },
