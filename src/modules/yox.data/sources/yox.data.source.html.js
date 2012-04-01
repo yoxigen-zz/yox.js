@@ -15,6 +15,7 @@ yox.data.sources.html = (function(){
                     var el = elements[i];
                     items.push({
                         element: el,
+                        name: el.id,
                         type: "html",
                         title: el.title || el.getAttribute("data-title"),
                         width: el.clientWidth,
@@ -27,6 +28,13 @@ yox.data.sources.html = (function(){
                     el.parentNode.removeChild(el);
                 }
             }
+            else if (source.items){
+                items = Array.prototype.slice.call(source.items, 0);
+                for(var i=0, count = items.length; i < count; i++){
+                    items[i].type = "html";
+                }
+            }
+
             var data = {
                 items: items,
                 source: source,
