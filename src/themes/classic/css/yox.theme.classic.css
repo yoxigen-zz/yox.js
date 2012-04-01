@@ -18,6 +18,13 @@
     text-shadow: 1px 1px 0 Black;
 }
 
+.yox-theme-classic-contents{
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    top: 0;
+    left: 0;
+}
 .yox-theme-classic-gallery{
     position: relative;
     height: 400px;
@@ -39,6 +46,7 @@
         -webkit-transition: opacity 600ms ease;
         -o-transition: opacity 600ms ease;
         text-align: center;
+        white-space: nowrap;
     }
     .yox-theme-classic-controls-on{
         opacity: 1;
@@ -114,6 +122,15 @@
                 display: inline-block;
                 padding: 7px 10px;
             }
+        .yox-theme-classic-copyright{
+            float: right;
+            line-height: 34px;
+            padding-right: 10px;
+            font-size: 9pt;
+            color: #aaa;
+        }
+        .yox-theme-classic-copyright:hover{ color: White }
+
     .yox-theme-classic-controlBtn{
         position: absolute;
         z-index: 1000;
@@ -129,7 +146,7 @@
         .yox-theme-classic-controlBtn:hover{ opacity: .5 }
         .yox-theme-classic-controlBtn:active{ opacity: 1 }
         .yox-theme-classic-controlBtn-prev{ left: 0 }
-        .yox-theme-classic-controlBtn-next{ right: 0 }
+        .yox-theme-classic-controlBtn-next{ right: 0; width: 66%; }
 
     .yox-theme-classic-controlBtn div{
         background-image: url(../img/sprites.png);
@@ -215,3 +232,5 @@
     z-index: 20;
     display: none;
 }
+
+.yoxscroll_scrollEnabled a{ cursor: move }

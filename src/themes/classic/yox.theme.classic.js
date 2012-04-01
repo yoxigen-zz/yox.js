@@ -52,6 +52,18 @@ yox.themes.classic = function(data, options){
                 },
                 slideshowStop: function(){
                     toggleButton(buttons.slideshow);
+                },
+                beforeSelect: function(e){
+                    elements.infoText.innerHTML = e.newItem.title || "";
+                    elements.infoPosition.innerHTML = e.newItem.id;
+                    if (options.showCopyright){
+                        if (e.newItem.author){
+                            elements.copyright.href = e.newItem.link;
+                            elements.copyright.innerHTML = "&copy; " + e.newItem.author;
+                        }
+                        else
+                            elements.copyright.innerHTML = "";
+                    }
                 }
             }
         },
@@ -59,12 +71,14 @@ yox.themes.classic = function(data, options){
             events: {
                 beforeSelect: function(e){
                     this.select(e.newItem.id - 1);
-                    elements.infoPosition.innerHTML = e.newItem.id;
+
                 },
                 loadItem: function(item){
                     $(this.thumbnails[item.id - 1]).addClass("loaded");
                 },
-                "create.thumbnails": function(){ this.select(0); }
+                "create.thumbnails": function(){
+                    this.select(0);
+                }
             }
         },
         scroll: {
@@ -75,13 +89,11 @@ yox.themes.classic = function(data, options){
                 "select.thumbnails": function(e){
                     this.scrollTo(e, { centerElement: true, time: .5 });
                 },
-                resize: function(){ if (!isFullScreen) this.updateSize(); },
+                resize: function(){ this.updateSize(); },
                 beforeSelect: function(e){
                     var thumbnailIndex = e.newItem.id - 1;
                     if (self.modules.thumbnails.thumbnails)
                         this.scrollTo(self.modules.thumbnails.thumbnails[thumbnailIndex], { centerElement: !e.data });
-
-                    elements.infoText.innerHTML = e.newItem.title || "";
                 }
             },
             pressedButtonClass: "enabledThumbnailsButton"
@@ -112,16 +124,12 @@ yox.themes.classic = function(data, options){
         if (isFullScreen){
             self.modules.view.option("resizeMode", "fit");
             elements.gallery.style.cursor = "none";
+            elements.gallery.style.height = (document.documentElement.clientHeight - (isThumbnails ? options.thumbnailsHeight : 0)) + "px";
         }
         else{
-            //clearTimeout(mousemoveTimeoutId);
-            //elements.$thumbnails.css("opacity", "1");
             elements.gallery.style.height = galleryOriginalHeight + "px";
             elements.gallery.style.cursor = "default";
-            //self.modules.view.option("resizeMode", "fill");
         }
-
-        onResize();
 
         var $window = $(window),
             windowEventCaller = isFullScreen ? $window.on : $window.off;
@@ -146,17 +154,18 @@ yox.themes.classic = function(data, options){
                 document.cancelFullScreen();
             }
             else{
-                elements.gallery.style.height = "100%";
-                elements.gallery.requestFullScreen();
+                elements.themeContents.style.height = "100%";
+                elements.themeContents.requestFullScreen();
             }
         }
         else{
             isFullScreen = !isFullScreen;
-            elements.gallery.style.position = isFullScreen ? "fixed" : "relative";
-            elements.gallery.style.height = isFullScreen ? "100%" : galleryOriginalHeight;
-            elements.gallery.style.border = isFullScreen ? "none" : "solid 1px Black";
-            elements.gallery.style.zIndex = isFullScreen ? "100" : "1";
+            elements.themeContents.style.position = isFullScreen ? "fixed" : "relative";
+            elements.themeContents.style.height = isFullScreen ? "100%" : galleryOriginalHeight;
+            elements.themeContents.style.border = isFullScreen ? "none" : "solid 1px Black";
+            elements.themeContents.style.zIndex = isFullScreen ? "100" : "1";
             onFullScreenChange();
+            self.modules.scroll.updateSize();
         }
     }
 
@@ -164,7 +173,7 @@ yox.themes.classic = function(data, options){
         if (isFullScreenResize)
             return false;
 
-        if (!isFullScreen)
+        //if (!isFullScreen)
             setSize();
 
         self.modules.view.update(true);
@@ -194,7 +203,10 @@ yox.themes.classic = function(data, options){
     }
 
     function setSize(){
-        elements.gallery.style.height = (elements.container.clientHeight - (isThumbnails ? options.thumbnailsHeight : 0)) + "px";
+        var newHeight = isFullScreen ? document.documentElement.clientHeight : elements.container.clientHeight;
+        if (isThumbnails)
+            newHeight -= options.thumbnailsHeight;
+        elements.gallery.style.height = newHeight + "px";
     }
 
     function resizeEventHandler(e){
@@ -226,6 +238,7 @@ yox.themes.classic = function(data, options){
 
         elements = {
             container: container,
+            themeContents: document.createElement("div"),
             gallery: document.createElement("div"),
             viewer: document.createElement("div"),
             thumbnails: document.createElement("div"),
@@ -251,10 +264,12 @@ yox.themes.classic = function(data, options){
         elements.thumbnailsPanel.appendChild(elements.thumbnails);
 
         this.config.scroll.elements = $("a", elements.thumbnailsPanel);
-        container.appendChild(elements.gallery);
+        elements.themeContents.appendChild(elements.gallery);
+        elements.themeContents.className = this.getThemeClass("contents");
+        container.appendChild(elements.themeContents);
         elements.gallery.appendChild(elements.viewer);
         elements.gallery.appendChild(elements.description);
-        container.appendChild(elements.thumbnailsPanel);
+        elements.themeContents.appendChild(elements.thumbnailsPanel);
         elements.gallery.appendChild(elements.loader);
 
         elements.viewer.className = this.getThemeClass("viewer") + " yoxview";
@@ -301,6 +316,14 @@ yox.themes.classic = function(data, options){
         elements.info.appendChild(position);
         elements.infoText.className = this.getThemeClass("info-text");
         elements.info.appendChild(elements.infoText);
+
+        if (options.showCopyright){
+            elements.copyright = document.createElement("a");
+            elements.copyright.target = "_blank";
+            elements.copyright.className = this.getThemeClass("copyright");
+            elements.info.appendChild(elements.copyright);
+        }
+
         elements.infoPanel.appendChild(elements.info);
         elements.gallery.appendChild(elements.infoPanel);
 
@@ -324,8 +347,7 @@ yox.themes.classic = function(data, options){
 
     this.destroy = function(){
         $(elements.container).removeClass(this.getThemeClass());
-        elements.container.removeChild(elements.gallery);
-        elements.container.removeChild(elements.thumbnailsPanel);
+        elements.container.removeChild(elements.themeContents);
         elements = null;
         clearTimeout(mousemoveTimeoutId);
         $(window).off("resize", resizeEventHandler);
@@ -333,6 +355,7 @@ yox.themes.classic = function(data, options){
 }
 
 yox.themes.classic.defaults = {
+    showCopyright: false,
     showInfo: true,
     showThumbnails: true,
     thumbnailsHeight: 61
