@@ -528,6 +528,7 @@
                         this.elements.$slider.css({ transition: "none", "left": 0 });
                     }
                     this.triggerEvent("changeStatus", { scrollEnabled: enableDrag });
+                    this.elements.$container.toggleClass("yoxscroll_scrollEnabled", this.enableDrag);
                 }
 
                 if (this.options.centerContentsIfNotScrollable && !enableDrag){
