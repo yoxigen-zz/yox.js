@@ -472,6 +472,7 @@
 					return false;
 
                 this.triggerEvent("beforeSelect", { newItem: item, oldItem: currentItem, data: data });
+
 				this.currentItem = item;
 
                 this.cache.withItem(item, this, function(loadedItem){
