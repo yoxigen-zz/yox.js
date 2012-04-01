@@ -2,10 +2,9 @@ yox.data.sources.flickr = (function($){
     var dataSourceName = "flickr",
         flickrUrl = "http://www.flickr.com/",
         flickrApiUrl = "http://api.flickr.com/services/rest/",
-        apiKey = "af2780245ce7add695f16a91fb7d3afc",
+        apiKey = "9a220a98ef188519fb87b08d310ebdbe", // yox.js API key @flickr
         flickrUserIdRegex = /\d+@N\d+/,
         flickrUrlRegex = /^http:\/\/(?:www\.)?flickr\.com\/(\w+)\/(?:([^\/]+)\/(?:(\w+)\/?(?:([^\/]+)\/?)?)?)?(?:\?(.*))?/,
-        self = this,
         fixedOptions = {
             api_key: apiKey,
             format: 'json'
