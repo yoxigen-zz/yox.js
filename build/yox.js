@@ -402,7 +402,7 @@ yox.data.prototype = {
             for(var i=0; i < arguments.length; i++)
                 self.data.push(arguments[i]);
 
-            this.isLoading = false;
+            self.isLoading = false;
             self.triggerEvent("loadSources", Array.prototype.slice.call(arguments, 0));
         });
     },
@@ -585,10 +585,9 @@ yox.data.sources.flickr = (function($){
     var dataSourceName = "flickr",
         flickrUrl = "http://www.flickr.com/",
         flickrApiUrl = "http://api.flickr.com/services/rest/",
-        apiKey = "af2780245ce7add695f16a91fb7d3afc",
+        apiKey = "9a220a98ef188519fb87b08d310ebdbe", // yox.js API key @flickr
         flickrUserIdRegex = /\d+@N\d+/,
         flickrUrlRegex = /^http:\/\/(?:www\.)?flickr\.com\/(\w+)\/(?:([^\/]+)\/(?:(\w+)\/?(?:([^\/]+)\/?)?)?)?(?:\?(.*))?/,
-        self = this,
         fixedOptions = {
             api_key: apiKey,
             format: 'json'
@@ -862,6 +861,7 @@ yox.data.sources.html = (function(){
                     var el = elements[i];
                     items.push({
                         element: el,
+                        name: el.id,
                         type: "html",
                         title: el.title || el.getAttribute("data-title"),
                         width: el.clientWidth,
@@ -874,6 +874,13 @@ yox.data.sources.html = (function(){
                     el.parentNode.removeChild(el);
                 }
             }
+            else if (source.items){
+                items = Array.prototype.slice.call(source.items, 0);
+                for(var i=0, count = items.length; i < count; i++){
+                    items[i].type = "html";
+                }
+            }
+
             var data = {
                 items: items,
                 source: source,
@@ -900,7 +907,7 @@ yox.data.sources.picasa = (function(){
             cropThumbnails: false,
 			thumbsize: 64,
             imgmax: picasaUncropSizes[picasaUncropSizes.length - 1],
-            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href))"
+            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href)),entry(media:group(media:credit))"
         };
 
     function getDataFromUrl(url, options){
@@ -916,6 +923,9 @@ yox.data.sources.picasa = (function(){
             }
             else
                 data.fields += ",entry(title),entry(gphoto:numphotos),entry(gphoto:name),entry(link[@rel='alternate']),author,entry(summary)";
+
+            if (urlMatch[4])
+                $.extend(data, yox.utils.url.queryToJson(urlMatch[4]));
         }
 
         data.imgmax = getImgmax(picasaUncropSizes, data.imgmax);
@@ -954,6 +964,7 @@ yox.data.sources.picasa = (function(){
             var isAlbum = image.category[0].term.match(/#(.*)$/)[1] === "album";
             if (isAlbum && !image.gphoto$numphotos.$t)
                 return true;
+
             var imageTitle = isAlbum ? image.title.$t : image.summary.$t,
                 mediaData = image.media$group.media$content[0],
                 itemData = {
@@ -963,7 +974,8 @@ yox.data.sources.picasa = (function(){
                     url: mediaData.url,
                     link: image.link[0].href,
                     title: imageTitle,
-                    type: "image"
+                    type: "image",
+                    author: image.media$group.media$credit[0].$t
                 };
 
             if (isAlbum){
@@ -1786,6 +1798,7 @@ yox.data.sources.youtube = (function($){
                         this.elements.$slider.css({ transition: "none", "left": 0 });
                     }
                     this.triggerEvent("changeStatus", { scrollEnabled: enableDrag });
+                    this.elements.$container.toggleClass("yoxscroll_scrollEnabled", this.enableDrag);
                 }
 
                 if (this.options.centerContentsIfNotScrollable && !enableDrag){
@@ -2389,7 +2402,16 @@ yox.data.sources.youtube = (function($){
                     
                     item = this.items[item];
                 }
-                else{
+                if (String(item) === item){
+                    for(var i=0, tempItem; tempItem = this.items[i]; i++){
+                        if (tempItem.name && tempItem.name === item){
+                            item = tempItem;
+                            break;
+                        }
+                    }
+                    tempItem = null;
+                }
+                else {
                     if (item instanceof HTMLElement)
                         item = $(item);
 
@@ -2409,11 +2431,14 @@ yox.data.sources.youtube = (function($){
 					return false;
 
                 this.triggerEvent("beforeSelect", { newItem: item, oldItem: currentItem, data: data });
+
 				this.currentItem = item;
 
                 this.cache.withItem(item, this, function(loadedItem){
                     setItem.call(view, loadedItem);
                 });
+
+                return true;
             },
             unload: function(){
                 // SOON
@@ -2919,7 +2944,6 @@ yox.view.transitions.flip = function(){
                 position: "absolute",
                 top: "50%", left: "50%",
                 width: 0, height: 0,
-                border: "solid 1px #666",
                 transform: i ? "rotateY(180deg)" : "rotateY(0)", // The rotate(0) is for Firefox, which otherwise displays the backface (bug exists in version 11)
                 marginLeft: "-" + this.options.margin.left + "px"
             });
@@ -3171,6 +3195,18 @@ yox.themes.classic = function(data, options){
                 },
                 slideshowStop: function(){
                     toggleButton(buttons.slideshow);
+                },
+                beforeSelect: function(e){
+                    elements.infoText.innerHTML = e.newItem.title || "";
+                    elements.infoPosition.innerHTML = e.newItem.id;
+                    if (options.showCopyright){
+                        if (e.newItem.author){
+                            elements.copyright.href = e.newItem.link;
+                            elements.copyright.innerHTML = "&copy; " + e.newItem.author;
+                        }
+                        else
+                            elements.copyright.innerHTML = "";
+                    }
                 }
             }
         },
@@ -3178,12 +3214,14 @@ yox.themes.classic = function(data, options){
             events: {
                 beforeSelect: function(e){
                     this.select(e.newItem.id - 1);
-                    elements.infoPosition.innerHTML = e.newItem.id;
+
                 },
                 loadItem: function(item){
                     $(this.thumbnails[item.id - 1]).addClass("loaded");
                 },
-                "create.thumbnails": function(){ this.select(0); }
+                "create.thumbnails": function(){
+                    this.select(0);
+                }
             }
         },
         scroll: {
@@ -3194,13 +3232,11 @@ yox.themes.classic = function(data, options){
                 "select.thumbnails": function(e){
                     this.scrollTo(e, { centerElement: true, time: .5 });
                 },
-                resize: function(){ if (!isFullScreen) this.updateSize(); },
+                resize: function(){ this.updateSize(); },
                 beforeSelect: function(e){
                     var thumbnailIndex = e.newItem.id - 1;
                     if (self.modules.thumbnails.thumbnails)
                         this.scrollTo(self.modules.thumbnails.thumbnails[thumbnailIndex], { centerElement: !e.data });
-
-                    elements.infoText.innerHTML = e.newItem.title || "";
                 }
             },
             pressedButtonClass: "enabledThumbnailsButton"
@@ -3231,16 +3267,12 @@ yox.themes.classic = function(data, options){
         if (isFullScreen){
             self.modules.view.option("resizeMode", "fit");
             elements.gallery.style.cursor = "none";
+            elements.gallery.style.height = (document.documentElement.clientHeight - (isThumbnails ? options.thumbnailsHeight : 0)) + "px";
         }
         else{
-            //clearTimeout(mousemoveTimeoutId);
-            //elements.$thumbnails.css("opacity", "1");
             elements.gallery.style.height = galleryOriginalHeight + "px";
             elements.gallery.style.cursor = "default";
-            //self.modules.view.option("resizeMode", "fill");
         }
-
-        onResize();
 
         var $window = $(window),
             windowEventCaller = isFullScreen ? $window.on : $window.off;
@@ -3265,17 +3297,18 @@ yox.themes.classic = function(data, options){
                 document.cancelFullScreen();
             }
             else{
-                elements.gallery.style.height = "100%";
-                elements.gallery.requestFullScreen();
+                elements.themeContents.style.height = "100%";
+                elements.themeContents.requestFullScreen();
             }
         }
         else{
             isFullScreen = !isFullScreen;
-            elements.gallery.style.position = isFullScreen ? "fixed" : "relative";
-            elements.gallery.style.height = isFullScreen ? "100%" : galleryOriginalHeight;
-            elements.gallery.style.border = isFullScreen ? "none" : "solid 1px Black";
-            elements.gallery.style.zIndex = isFullScreen ? "100" : "1";
+            elements.themeContents.style.position = isFullScreen ? "fixed" : "relative";
+            elements.themeContents.style.height = isFullScreen ? "100%" : galleryOriginalHeight;
+            elements.themeContents.style.border = isFullScreen ? "none" : "solid 1px Black";
+            elements.themeContents.style.zIndex = isFullScreen ? "100" : "1";
             onFullScreenChange();
+            self.modules.scroll.updateSize();
         }
     }
 
@@ -3283,7 +3316,7 @@ yox.themes.classic = function(data, options){
         if (isFullScreenResize)
             return false;
 
-        if (!isFullScreen)
+        //if (!isFullScreen)
             setSize();
 
         self.modules.view.update(true);
@@ -3313,7 +3346,10 @@ yox.themes.classic = function(data, options){
     }
 
     function setSize(){
-        elements.gallery.style.height = (elements.container.clientHeight - (isThumbnails ? options.thumbnailsHeight : 0)) + "px";
+        var newHeight = isFullScreen ? document.documentElement.clientHeight : elements.container.clientHeight;
+        if (isThumbnails)
+            newHeight -= options.thumbnailsHeight;
+        elements.gallery.style.height = newHeight + "px";
     }
 
     function resizeEventHandler(e){
@@ -3340,11 +3376,12 @@ yox.themes.classic = function(data, options){
         return button;
     }
 
-    this.create = function(container){console.log("DATA: ", data.isLoading);
+    this.create = function(container){
         $(container).addClass(this.getThemeClass() + (data.isLoading ? " " + this.getThemeClass("loading") : ""));
 
         elements = {
             container: container,
+            themeContents: document.createElement("div"),
             gallery: document.createElement("div"),
             viewer: document.createElement("div"),
             thumbnails: document.createElement("div"),
@@ -3370,10 +3407,12 @@ yox.themes.classic = function(data, options){
         elements.thumbnailsPanel.appendChild(elements.thumbnails);
 
         this.config.scroll.elements = $("a", elements.thumbnailsPanel);
-        container.appendChild(elements.gallery);
+        elements.themeContents.appendChild(elements.gallery);
+        elements.themeContents.className = this.getThemeClass("contents");
+        container.appendChild(elements.themeContents);
         elements.gallery.appendChild(elements.viewer);
         elements.gallery.appendChild(elements.description);
-        container.appendChild(elements.thumbnailsPanel);
+        elements.themeContents.appendChild(elements.thumbnailsPanel);
         elements.gallery.appendChild(elements.loader);
 
         elements.viewer.className = this.getThemeClass("viewer") + " yoxview";
@@ -3420,6 +3459,14 @@ yox.themes.classic = function(data, options){
         elements.info.appendChild(position);
         elements.infoText.className = this.getThemeClass("info-text");
         elements.info.appendChild(elements.infoText);
+
+        if (options.showCopyright){
+            elements.copyright = document.createElement("a");
+            elements.copyright.target = "_blank";
+            elements.copyright.className = this.getThemeClass("copyright");
+            elements.info.appendChild(elements.copyright);
+        }
+
         elements.infoPanel.appendChild(elements.info);
         elements.gallery.appendChild(elements.infoPanel);
 
@@ -3443,8 +3490,7 @@ yox.themes.classic = function(data, options){
 
     this.destroy = function(){
         $(elements.container).removeClass(this.getThemeClass());
-        elements.container.removeChild(elements.gallery);
-        elements.container.removeChild(elements.thumbnailsPanel);
+        elements.container.removeChild(elements.themeContents);
         elements = null;
         clearTimeout(mousemoveTimeoutId);
         $(window).off("resize", resizeEventHandler);
@@ -3452,6 +3498,7 @@ yox.themes.classic = function(data, options){
 }
 
 yox.themes.classic.defaults = {
+    showCopyright: false,
     showInfo: true,
     showThumbnails: true,
     thumbnailsHeight: 61
