@@ -1,1 +1,5 @@
-YoxView is a jQuery plugin for displaying images and other media.
+yox.js is a platform for displaying content in web pages. It's built out of different modules, which can be used to create flexible and powerful themes.
+
+Dependencies: jQuery 1.7+
+
+Demo: http://www.yoxjs.com/demo/themes/classic.html
