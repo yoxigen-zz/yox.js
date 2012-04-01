@@ -13,7 +13,7 @@ yox.data.sources.picasa = (function(){
             cropThumbnails: false,
 			thumbsize: 64,
             imgmax: picasaUncropSizes[picasaUncropSizes.length - 1],
-            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href))"
+            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href)),entry(media:group(media:credit))"
         };
 
     function getDataFromUrl(url, options){
@@ -29,6 +29,9 @@ yox.data.sources.picasa = (function(){
             }
             else
                 data.fields += ",entry(title),entry(gphoto:numphotos),entry(gphoto:name),entry(link[@rel='alternate']),author,entry(summary)";
+
+            if (urlMatch[4])
+                $.extend(data, yox.utils.url.queryToJson(urlMatch[4]));
         }
 
         data.imgmax = getImgmax(picasaUncropSizes, data.imgmax);
@@ -67,6 +70,7 @@ yox.data.sources.picasa = (function(){
             var isAlbum = image.category[0].term.match(/#(.*)$/)[1] === "album";
             if (isAlbum && !image.gphoto$numphotos.$t)
                 return true;
+
             var imageTitle = isAlbum ? image.title.$t : image.summary.$t,
                 mediaData = image.media$group.media$content[0],
                 itemData = {
@@ -76,7 +80,8 @@ yox.data.sources.picasa = (function(){
                     url: mediaData.url,
                     link: image.link[0].href,
                     title: imageTitle,
-                    type: "image"
+                    type: "image",
+                    author: image.media$group.media$credit[0].$t
                 };
 
             if (isAlbum){
