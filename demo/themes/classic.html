@@ -6,42 +6,56 @@
     <link rel="Stylesheet" type="text/css" href="../css/demo.css" />
     <link rel="Stylesheet" type="text/css" href="../../src/modules/yox.view/yoxview.css" />
     <link rel="Stylesheet" type="text/css" href="../../src/themes/classic/css/yox.theme.classic.css" />
-    <script src="../js/ga.js"></script>
+    <script src="/js/ga.js"></script>
 </head>
 <body>
     <header id="demoHeader">
-        <h1>yox.js</h1>
+        <h1>yox<em>js</em></h1>
     </header>
     <div id="contents">
-        <div id="codePanel">
+        <div id="yox"></div>
+        <div class="cf" id="sidebar">
+            <div id="description">
             <h2><span class='themeName'>Classic</span> Theme</h2>
             <p>This is the first official yox.js theme. It introduces some core modules: data, view, thumbnails and scroll.</p>
             <h3>Features</h3>
             <ul>
-                <li>Fullscreen support</li>
+                <li>Fullscreen support (on browsers that don't support fullscreen, the viewer covers the whole window).</li>
                 <li>Thumbnails with scrolling, gestures and paging.</li>
-                <li>Viewer fits </li>
+                <li>Contents always fit the available space.</li>
+                <li>Contents can be loaded from files, Picasa, Flickr, YouTube, HTML elements or plain HTML.</li>
+                <li>Keyboard-enabled.</li>
             </ul>
-            <h3>Source Code</h3>
-            <pre><code>
-var yoxApi = new Yox(document.getElementById("yox"), {
-    theme: "classic",
-    data: {
-        type: "picasa",
-        source: {
-            url: "https://picasaweb.google.com/114231305708772868829/PhotographyPortfolio",
-            cropThumbnails: true
+            </div>
+            <div id="sourceCodePanel">
+                <h3>Source Code</h3>
+                <div id="sourceCode">
+                    <nav class="tabs">
+                        <a href="#js" class="selected">Javascript</a>
+                        <a href="#jquery">jQuery</a>
+                    </nav>
+                    <pre id="sourceCode_js"><code>
+    var yoxApi = new Yox(document.getElementById("yox"), {
+        theme: "classic",
+        showCopyright: true,
+        data: {
+            type: "picasa",
+            cache: true,
+            source: {
+                url: "https://picasaweb.google.com/114231305708772868829/PhotographyPortfolio",
+                cropThumbnails: true
+            }
         }
-    }
-});
-            </code></pre>
+    });
+                </code></pre>
+                </div>
+            </div>
         </div>
-        <div id="yox"></div>
     </div>
     <footer id="demoFooter">
         <small>2012 &copy; Yossi Kolesnicov</small>
         <div id="footerLinks">
-            <a href="http://github.com/yoxigen/yoxjs">yox.js on github</a>
+            <a href="http://github.com/yoxigen/yox.js" class="sprite githubBtn" target="_blank">yox.js on github</a>
         </div>
     </footer>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>

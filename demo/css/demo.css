@@ -1,5 +1,233 @@
-body{ padding: 0; margin: 0; font-family: Calibri, Arial, Sans-Serif;  }
-h1{ font-size: 14pt; color: #fff; margin: 0; padding: 0; display: inline; font-weight: normal }
-header{ height: 35px; line-height: 34px; padding: 0 11px; background: Black; z-index: 2 }
+html, body{ height: 100%; }
+body{
+    font-family: 'Pontano Sans', sans-serif;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+    background: Black;
+}
+header h1{
+    display: inline;
+    font-size: 19pt;
+    font-weight: bold;
+    line-height: 30px;
+    margin: 0;
+    padding: 0;
+}
+header h1 em{
+    font-style: normal;
+    font-weight: normal;
+    opacity: 0.6;
+}
+
+pre{ margin: 0 }
+p{ margin-top: 0; padding-top: 0 }
+ul{ margin-top: 0; padding-top: 0 }
+small{ opacity: .7 }
+a{ color: #93C240; text-decoration: none }
+a:hover{ color: #A5FD0A }
+header, footer{
+    background: none repeat scroll 0 0 Black;
+    color: White;
+    border-color: #333;
+    border-style: solid;
+    width: 100%;
+}
+header{
+    height: 35px;
+    line-height: 34px;
+    border-width: 0 0 1px 0;
+    padding: 0 15px;
+}
 header a{ color: #aaa; text-decoration: none }
 header a:hover{ color: White }
+
+footer{
+    height: 30px;
+    line-height: 29px;
+    border-width: 1px 0 0 0;
+    text-align: right;
+}
+    footer small{
+        float: left;
+        margin-left: 11px;
+    }
+    footer #footerLinks{
+
+        font-size: 10pt;
+    }
+    footer #footerLinks a{
+        color: White;
+        display: block;
+        float: right;
+        font-family: Arial;
+        font-size: 9pt;
+        height: 30px;
+        line-height: 29px;
+        padding: 0 10px;
+        opacity: .5;
+    }
+    footer #footerLinks a:hover{
+        background-color: #111;
+        opacity: 1;
+    }
+    .githubBtn{
+        background-position: 6px 5px;
+        padding-left: 32px !important;
+    }
+
+.sprite{
+    background-image: url(../img/sprites.png);
+    background-repeat: no-repeat;
+}
+.themeName{
+    color: #A5FD0A;
+    font-size: 1.2em;
+}
+
+/* For modern browsers */
+.cf:before,
+.cf:after {
+    content:"";
+    display:table;
+}
+
+.cf:after {
+    clear:both;
+}
+
+/* For IE 6/7 (trigger hasLayout) */
+.cf {
+    zoom:1;
+}
+
+
+#contents{
+
+}
+#sidebar{
+    padding: 15px;
+    background: #181818;
+    border-top: solid 1px #666;
+    color: White;
+    font-size: 13pt;
+}
+    #description{ float: left; width: 39%; }
+    #sourceCodePanel{ width: 58%; float: right; }
+
+    #sidebar ul{
+        margin: 0;
+        padding: 0 0 0 19px;
+        font-size: .9em;
+    }
+        #sidebar ul li{
+            margin-bottom: .5em;
+        }
+    #sidebar h3, #sidebar h2{
+        color: #93C240;
+        font-family: 'Quicksand',sans-serif;
+        font-weight: 400;
+        margin-bottom: 0.5em;
+        margin-top: 0;
+    }
+    #sidebar h3{ margin-top: 2em }
+    #sourceCodePanel h3{ margin-top: 0 }
+
+    #sidebar pre{
+        max-height: 400px;
+        overflow: auto;
+        border: dashed 1px #666;
+        background: #333;
+        margin-bottom: 1em;
+        padding: 15px;
+        font-size: 11pt;
+        display: none;
+    }
+    #sidebar pre.selected{ display: block }
+    #sidebar::-webkit-scrollbar{
+        background: #333;
+        width: 8px;
+    }
+    #sidebar::-webkit-scrollbar-track{ padding: 1px }
+    #sidebar::-webkit-scrollbar-thumb{
+        background: White;
+        border-radius: 4px;
+        border: solid 1px Transparent;
+    }
+
+    #sourceCode{ position: relative }
+    #sourceCode nav{
+        position: absolute;
+        right: 0;
+        top: -35px;
+    }
+        #sourceCode nav a{
+            background: none repeat scroll 0 0 #333;
+            border-radius: 6px 6px 6px 6px;
+            color: #FFFFFF;
+            display: inline-block;
+            font-size: 10pt;
+            font-weight: bold;
+            margin-left: 3px;
+            opacity: 0.6;
+            padding: 1px 10px;
+        }
+        #sourceCode nav a:hover{ opacity: 1; }
+        #sourceCode nav a.selected{
+            background-color: #93C240;
+            opacity: 1;
+            color: Black;
+            cursor: default;
+        }
+
+#yox{
+    border: medium none !important;
+    height: 500px;
+}
+@media only screen and (max-height:560px){
+    #yox{ height: 400px }
+}
+@media only screen and (min-width:1500px){
+    footer{
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        left: 0;
+    }
+    #contents{
+        position: absolute;
+        top: 36px;
+        bottom: 31px;
+        left: 0;
+        right: 0;
+    }
+    #sidebar{
+        max-width: 470px;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        height: auto;
+        border-right: solid 1px #333;
+        border-top: none;
+        overflow-y: auto;
+        position: absolute;
+    }
+    #yox{
+        left: 501px;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        height: auto;
+        position: absolute;
+    }
+    #description{ width: auto; float: none; }
+    #sourceCodePanel{ width: auto; float: none; }
+    #sourceCodePanel h3{ margin-top: 2em }
+}
+@media only screen and (max-width:800px){
+    #description{ width: auto; float: none; }
+    #sourceCodePanel{ width: auto; float: none; }
+    #sourceCodePanel h3{ margin-top: 2em }
+}
