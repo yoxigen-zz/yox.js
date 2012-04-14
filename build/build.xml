@@ -5,17 +5,20 @@
       classname="com.google.javascript.jscomp.ant.CompileTask"
       classpath="${jscompjar}"/>
 
-	<target name="all" description="Concatenate all js files">
+	<target name="all" description="Concatenate all js files, then minify the result using Google Closure Compiler">
 		<concat destfile="yox.js" fixlastline="yes" encoding="UTF-8">
 			<filelist id="baseScripts" dir="../src" files="yox.js, yox.utils.js, yox.eventsHandler.js"/>
-			<filelist id="data" dir="../src/modules/yox.data" files="yox.data.js" />
-			<filelist dir="../src/modules/yox.data/sources" files="yox.data.source.js" />
-			<fileset dir="../src/modules/yox.data/sources" includes="**/yox.data.source.*.js" />
-			<fileset id="data" dir="../src/modules/yox.scroll" includes="**/*.js" />
-			<fileset id="data" dir="../src/modules/yox.thumbnails" includes="**/*.js" />
-			<filelist id="view" dir="../src/modules/yox.view" files="yox.view.js, yox.view.cache.js" />
-            <filelist id="view" dir="../src/modules/yox.view/transitions" files="yox.view.transition.js" />
-			<fileset id="transitions" dir="../src/modules/yox.view/transitions" includes="**/yox.view.transition.*.js" />
+			<filelist id="data" dir="../src/modules/data" files="yox.data.js" />
+			<filelist dir="../src/modules/data/sources" files="yox.data.source.js" />
+			<fileset dir="../src/modules/data/sources" includes="**/yox.data.source.*.js" />
+			<filelist id="statistics" dir="../src/modules/statistics" files="yox.statistics.js" />
+			<filelist id="data" dir="../src/modules/statistics/reporters" files="yox.statistics.reporter.js" />
+			<fileset id="data" dir="../src/modules/statistics/reporters" includes="yox.statistics.reporter.*.js" />
+			<fileset id="data" dir="../src/modules/scroll" includes="**/*.js" />
+			<fileset id="data" dir="../src/modules/thumbnails" includes="**/*.js" />
+			<filelist id="view" dir="../src/modules/view" files="yox.view.js, yox.view.cache.js" />
+            <filelist id="view" dir="../src/modules/view/transitions" files="yox.view.transition.js" />
+			<fileset id="transitions" dir="../src/modules/view/transitions" includes="**/yox.view.transition.*.js" />
 			<filelist id="view" dir="../src/themes" files="yox.theme.js" />
 			<fileset dir="../src/themes/" includes="**/yox.theme.*.js" />
 		</concat>
@@ -25,5 +28,4 @@
           </sources>
         </jscomp>
 	</target>
-    
 </project>
