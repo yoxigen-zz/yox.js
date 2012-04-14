@@ -4,8 +4,10 @@
     <title>yox.js - Themes - Classic</title>
     <link href='http://fonts.googleapis.com/css?family=Pontano+Sans|Quicksand:400,700' rel='stylesheet' type='text/css'>
     <link rel="Stylesheet" type="text/css" href="../css/demo.css" />
-    <link rel="Stylesheet" type="text/css" href="../../src/modules/yox.view/yoxview.css" />
+    <link rel="Stylesheet" type="text/css" href="../../src/modules/view/yoxview.css" />
     <link rel="Stylesheet" type="text/css" href="../../src/themes/classic/css/yox.theme.classic.css" />
+    <link href="../js/prettify/prettify.css" type="text/css" rel="stylesheet" />
+
     <script src="/js/ga.js"></script>
 </head>
 <body>
@@ -28,26 +30,73 @@
             </ul>
             </div>
             <div id="sourceCodePanel">
+                <h3>Theme options</h3>
+                <h3>Data source</h3>
+                <div id="dataSource">
+                    <a href="#data-picasa" class="selected">Picasa</a>
+                    <a href="#data-flickr">Flickr</a>
+                    <a href="#data-files">Image files</a>
+                </div>
+                <ul id="dataSources">
+                    <li id="data-files">
+                        <div class="dataSourceOptions">
+                            <div class="dropZone">Drag image files here</div>
+                        </div>
+                    </li>
+                    <li id="data-picasa" data-source="picasa" class="selected">
+                        <ul class="dataSourceOptions">
+                            <li>
+                                <label for="data-picasa_url">Picasa URL: </label>
+                                <input id="data-picasa_url" type="text" placeholder="Enter a Picasa URL" value="https://picasaweb.google.com/114231305708772868829/PhotographyPortfolio" />
+                            </li>
+                            <li>
+                                <label for="data-picasa_imgmax">Image size:</label>
+                                <select id="data-picasa_imgmax" data-type="number">
+                                    <option>32</option><option>48</option><option>64</option><option>72</option><option>94</option><option>104</option><option>110</option><option>128</option><option>144</option><option>150</option><option>160</option><option>200</option><option>220</option><option>288</option><option>320</option><option>400</option><option>512</option><option>576</option><option>640</option><option>720</option><option selected="selected">800</option><option>912</option><option>1024</option><option>1152</option><option>1280</option><option>1440</option><option selected="selected">1600</option>
+                                </select>
+                            </li>
+                            <li>
+                                <label for="data-picasa_thumbsize">Thumbnail:</label>
+                                <select id="data-picasa_thumbsize" data-type="number">
+                                    <option>32</option><option>48</option><option>64</option><option>72</option><option selected="selected">104</option><option>144</option><option>150</option><option>160</option>
+                                </select>
+                            </li>
+                            <li>
+                                <input type="checkbox" checked="checked" id="data-picasa_cropThumbnails" />
+                                <label for="data-picasa_cropThumbnails" class='longLabel'>Crop thumbnails</label>
+                            </li>
+                            <li>
+                                <a class="loadBtn">Load from Picasa</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li id="data-flickr" data-source="flickr">
+                        <ul class="dataSourceOptions">
+                            <li>
+                                <label for="data-flickr_url">Flickr URL: </label>
+                                <input id="data-flickr_url" type="text" placeholder="Enter a Flickr URL" value="http://www.flickr.com/photos/xavibarca/" />
+                            </li>
+                            <li>
+                                <label for="data-flickr_imageSize">Image size: </label>
+                                <select id="data-flickr_imageSize">
+                                    <option value="medium" selected="selected">Medium: 500px</option>
+                                    <option value="large">Large: 1024px (Must be enabled on Flickr)</option>
+                                    <option value="original">Original: Upload size (Must be enabled on Flickr)</option>
+                                </select>
+                            </li>
+                            <li>
+                                <a class="loadBtn">Load from Flickr</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
                 <h3>Source Code</h3>
                 <div id="sourceCode">
                     <nav class="tabs">
                         <a href="#js" class="selected">Javascript</a>
                         <a href="#jquery">jQuery</a>
                     </nav>
-                    <pre id="sourceCode_js"><code>
-    var yoxApi = new Yox(document.getElementById("yox"), {
-        theme: "classic",
-        showCopyright: true,
-        data: {
-            type: "picasa",
-            cache: true,
-            source: {
-                url: "https://picasaweb.google.com/114231305708772868829/PhotographyPortfolio",
-                cropThumbnails: true
-            }
-        }
-    });
-                </code></pre>
+                    <pre id="sourceCode_js" class="prettyprint"><code class="language-html"></code></pre>
                 </div>
             </div>
         </div>
@@ -59,7 +108,32 @@
         </div>
     </footer>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-    <script src="../../build/yox.min.js"></script>
+    <script type="text/javascript" src="../../src/yox.js"></script>
+        <script type="text/javascript" src="../../src/yox.utils.js"></script>
+        <script type="text/javascript" src="../../src/modules/data/yox.data.js"></script>
+        <script type="text/javascript" src="../../src/modules/thumbnails/yox.thumbnails.js"></script>
+        <script type="text/javascript" src="../../src/modules/data/sources/yox.data.source.js"></script>
+        <script type="text/javascript" src="../../src/modules/data/sources/yox.data.source.picasa.js"></script>
+        <script type="text/javascript" src="../../src/modules/data/sources/yox.data.source.flickr.js"></script>
+        <script type="text/javascript" src="../../src/modules/data/sources/yox.data.source.files.js"></script>
+        <script type="text/javascript" src="../../src/yox.eventsHandler.js"></script>
+        <script type="text/javascript" src="../../src/modules/view/yox.view.js"></script>
+        <script type="text/javascript" src="../../src/modules/view/yox.view.cache.js"></script>
+        <script type="text/javascript" src="../../src/modules/view/transitions/yox.view.transition.js"></script>
+        <script type="text/javascript" src="../../src/modules/view/transitions/yox.view.transition.morph.js"></script>
+        <script type="text/javascript" src="../../src/modules/view/transitions/yox.view.transition.fade.js"></script>
+        <script type="text/javascript" src="../../src/modules/view/transitions/yox.view.transition.evaporate.js"></script>
+        <script type="text/javascript" src="../../src/modules/view/transitions/yox.view.transition.flip.js"></script>
+        <script type="text/javascript" src="../../src/modules/scroll/yox.scroll.js"></script>
+        <script type="text/javascript" src="../../src/themes/yox.theme.js"></script>
+        <script type="text/javascript" src="../../src/themes/inline/yox.theme.inline.js"></script>
+        <script type="text/javascript" src="../../src/themes/classic/yox.theme.classic.js"></script>
+        <script type="text/javascript" src="../../src/themes/scroll/yox.theme.scroll.js"></script>
+        <script type="text/javascript" src="../../src/themes/slideshow/yox.theme.slideshow.js"></script>
+        <!--<script src="../../build/yox.min.js"></script>-->
+    <script type="text/javascript" src="../js/prettify/prettify.js"></script>
     <script src="../js/demo.js"></script>
+    <script src="../js/dragndrop.js"></script>
+
 </body>
 </html>
