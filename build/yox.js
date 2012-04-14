@@ -895,7 +895,7 @@ yox.data.sources.html = (function(){
 yox.data.sources.picasa = (function(){
 	var dataSourceName = "picasa",
         picasaRegex = /^https?:\/\/picasaweb\.google\./,
-        picasaMatchRegex = /https?:\/\/picasaweb\.google\.\w+\/([^\/#\?]+)\/?([^\/#\?]+)?(\?([^#]*))?/,
+        picasaMatchRegex = /^https?:\/\/picasaweb\.google\.\w+\/([^\/#\?]+)\/?([^\/#\?]+)?(?:\?([^#]*))?/,
         apiUrl = "http://picasaweb.google.com/data/feed/api/",
         picasaCropSizes = [32, 48, 64, 72, 104, 144, 150, 160],
         picasaUncropSizes = [94, 110, 128, 200, 220, 288, 320, 400, 512, 576, 640, 720, 800, 912, 1024, 1152, 1280, 1440, 1600].concat(picasaCropSizes).sort(function(a,b){ return a-b; }),
@@ -916,16 +916,22 @@ yox.data.sources.picasa = (function(){
 
         if (urlMatch && urlMatch.length > 1)
         {
-            data.user = urlMatch[1];
-            if (urlMatch[2]){
-                data.album = urlMatch[2];
+            var urlData = {
+                user: urlMatch[1],
+                album: urlMatch[2],
+                query: urlMatch[3]
+            };
+
+            data.user = urlData.user;
+            if (urlData.album){
+                data.album = urlData.album;
                 data.fields += ",entry(summary),gphoto:name";
             }
             else
                 data.fields += ",entry(title),entry(gphoto:numphotos),entry(gphoto:name),entry(link[@rel='alternate']),author,entry(summary)";
 
-            if (urlMatch[4])
-                $.extend(data, yox.utils.url.queryToJson(urlMatch[4]));
+            if (urlData.query)
+                $.extend(data, yox.utils.url.queryToJson(urlData.query));
         }
 
         data.imgmax = getImgmax(picasaUncropSizes, data.imgmax);
@@ -1268,6 +1274,50 @@ yox.data.sources.youtube = (function($){
 	    }
     };
 })(jQuery);
+yox.statistics = function(container, options){
+    if (arguments.length === 1){
+        options = container;
+        container = null;
+    }
+
+    this.reporter = new yox.statistics.reporters[options.reporter || yox.statistics.defaults.reporter](options);
+    this.category = options.category || "yox.js";
+
+    var eventsHandler = options.eventsHandler || new yox.eventsHandler();
+    $.extend(this, eventsHandler);
+
+    if (options.events){
+        for(var eventName in options.events)
+            this.addEventListener(eventName, options.events[eventName]);
+    }
+};
+yox.statistics.prototype = {
+    report: function(data){
+        data.category = data.category || this.category;
+        this.reporter.report(data);
+    }
+};
+
+yox.statistics.defaults = {
+    reporter: "ga"
+};
+
+yox.statistics.reporter = function(name){ this.name = name; };
+yox.statistics.reporters = {};
+
+yox.statistics.reporter.prototype = {
+    report: function(data){ throw new Error("'report' method isn't implemented yet for this reporter type."); }
+};
+yox.statistics.reporters.ga = function(options){
+    if (!_gaq)
+        throw new Error("Can't initialize Google Analytics reporter, Google Analytics isn't loaded.");
+
+    this.report = function(data){
+        _gaq.push(['_trackEvent', data.category || options.category, data.action, data.label, data.value]);
+    }
+};
+
+yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
 (function($){
     $.fn.yoxscroll = function(options)
     {
@@ -1876,6 +1926,7 @@ yox.data.sources.youtube = (function($){
             this.thumbnails && this.thumbnails.remove();
             this.itemCount = 0;
             this.currentSelectedThumbnail = null;
+            this.thumbnails = $();
         },
         createThumbnail: function(item){
             var self = this,
@@ -2492,8 +2543,7 @@ yox.data.sources.youtube = (function($){
             lightbox: false, // If true, items should be opened as a lightbox, above the page. (NOT IMPLEMENTED YET)
             panelDimensions: { width: 1600, height: 1600 }, // Default width and height for panels which aren't images
             resizeMode: "fit", // The mode in which to resize the item in the container - 'fit' (shows the whole item, resized to fit inside the container) or 'fill' (fills the entire container).
-            slideshowDelay: 3000, // Time in milliseconds to display each image when in slideshow
-            storeDataSources: false // Whether to save to localStorage (if available) external data sources data, so as not to fetch it each time YoxView loads.
+            slideshowDelay: 3000 // Time in milliseconds to display each image when in slideshow
 
         },
         mode: {
@@ -3240,6 +3290,14 @@ yox.themes.classic = function(data, options){
                 }
             },
             pressedButtonClass: "enabledThumbnailsButton"
+        },
+        statistics: {
+            category: "yox.js Classic theme",
+            events: {
+                toggle: function(e){
+                    this.report({ action: "Toggle", label: e.action, value: e.state ? 1 : 0 });
+                }
+            }
         }
     };
 
@@ -3253,8 +3311,11 @@ yox.themes.classic = function(data, options){
 
     function emptyFunction(){};
     function toggleButton(button){
-        $(button).toggleClass("yox-theme-classic-button-on");
+        var $button = $(button);
+        $button.toggleClass("yox-theme-classic-button-on");
+        self.triggerEvent("toggle", { action: button.innerHTML, state: $button.hasClass("yox-theme-classic-button-on") });
     }
+
     if (options.enableFullScreen !== false){
         document.cancelFullScreen = document.cancelFullScreen || document.mozCancelFullScreen || document.webkitCancelFullScreen || emptyFunction;
         HTMLElement.prototype.requestFullScreen = HTMLElement.prototype.requestFullScreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullScreen || emptyFunction;
