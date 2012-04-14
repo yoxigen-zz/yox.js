@@ -1,7 +1,7 @@
 yox.data.sources.picasa = (function(){
 	var dataSourceName = "picasa",
         picasaRegex = /^https?:\/\/picasaweb\.google\./,
-        picasaMatchRegex = /https?:\/\/picasaweb\.google\.\w+\/([^\/#\?]+)\/?([^\/#\?]+)?(\?([^#]*))?/,
+        picasaMatchRegex = /^https?:\/\/picasaweb\.google\.\w+\/([^\/#\?]+)\/?([^\/#\?]+)?(?:\?([^#]*))?/,
         apiUrl = "http://picasaweb.google.com/data/feed/api/",
         picasaCropSizes = [32, 48, 64, 72, 104, 144, 150, 160],
         picasaUncropSizes = [94, 110, 128, 200, 220, 288, 320, 400, 512, 576, 640, 720, 800, 912, 1024, 1152, 1280, 1440, 1600].concat(picasaCropSizes).sort(function(a,b){ return a-b; }),
@@ -22,16 +22,22 @@ yox.data.sources.picasa = (function(){
 
         if (urlMatch && urlMatch.length > 1)
         {
-            data.user = urlMatch[1];
-            if (urlMatch[2]){
-                data.album = urlMatch[2];
+            var urlData = {
+                user: urlMatch[1],
+                album: urlMatch[2],
+                query: urlMatch[3]
+            };
+
+            data.user = urlData.user;
+            if (urlData.album){
+                data.album = urlData.album;
                 data.fields += ",entry(summary),gphoto:name";
             }
             else
                 data.fields += ",entry(title),entry(gphoto:numphotos),entry(gphoto:name),entry(link[@rel='alternate']),author,entry(summary)";
 
-            if (urlMatch[4])
-                $.extend(data, yox.utils.url.queryToJson(urlMatch[4]));
+            if (urlData.query)
+                $.extend(data, yox.utils.url.queryToJson(urlData.query));
         }
 
         data.imgmax = getImgmax(picasaUncropSizes, data.imgmax);

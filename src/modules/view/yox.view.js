@@ -533,8 +533,7 @@
             lightbox: false, // If true, items should be opened as a lightbox, above the page. (NOT IMPLEMENTED YET)
             panelDimensions: { width: 1600, height: 1600 }, // Default width and height for panels which aren't images
             resizeMode: "fit", // The mode in which to resize the item in the container - 'fit' (shows the whole item, resized to fit inside the container) or 'fill' (fills the entire container).
-            slideshowDelay: 3000, // Time in milliseconds to display each image when in slideshow
-            storeDataSources: false // Whether to save to localStorage (if available) external data sources data, so as not to fetch it each time YoxView loads.
+            slideshowDelay: 3000 // Time in milliseconds to display each image when in slideshow
 
         },
         mode: {

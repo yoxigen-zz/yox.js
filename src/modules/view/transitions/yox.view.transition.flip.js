@@ -35,7 +35,6 @@ yox.view.transitions.flip = function(){
                 position: "absolute",
                 top: "50%", left: "50%",
                 width: 0, height: 0,
-                border: "solid 1px #666",
                 transform: i ? "rotateY(180deg)" : "rotateY(0)", // The rotate(0) is for Firefox, which otherwise displays the backface (bug exists in version 11)
                 marginLeft: "-" + this.options.margin.left + "px"
             });

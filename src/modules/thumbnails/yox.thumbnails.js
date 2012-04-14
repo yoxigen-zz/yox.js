@@ -65,6 +65,7 @@
             this.thumbnails && this.thumbnails.remove();
             this.itemCount = 0;
             this.currentSelectedThumbnail = null;
+            this.thumbnails = $();
         },
         createThumbnail: function(item){
             var self = this,
