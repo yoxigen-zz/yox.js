@@ -97,6 +97,14 @@ yox.themes.classic = function(data, options){
                 }
             },
             pressedButtonClass: "enabledThumbnailsButton"
+        },
+        statistics: {
+            category: "yox.js Classic theme",
+            events: {
+                toggle: function(e){
+                    this.report({ action: "Toggle", label: e.action, value: e.state ? 1 : 0 });
+                }
+            }
         }
     };
 
@@ -110,8 +118,11 @@ yox.themes.classic = function(data, options){
 
     function emptyFunction(){};
     function toggleButton(button){
-        $(button).toggleClass("yox-theme-classic-button-on");
+        var $button = $(button);
+        $button.toggleClass("yox-theme-classic-button-on");
+        self.triggerEvent("toggle", { action: button.innerHTML, state: $button.hasClass("yox-theme-classic-button-on") });
     }
+
     if (options.enableFullScreen !== false){
         document.cancelFullScreen = document.cancelFullScreen || document.mozCancelFullScreen || document.webkitCancelFullScreen || emptyFunction;
         HTMLElement.prototype.requestFullScreen = HTMLElement.prototype.requestFullScreen || HTMLElement.prototype.mozRequestFullScreen || HTMLElement.prototype.webkitRequestFullScreen || emptyFunction;
