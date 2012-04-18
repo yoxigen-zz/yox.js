@@ -4,6 +4,8 @@
  * Each data source retrieves data from an external resource, such as external APIs, the DOM or HTML5 APIs (such as the File API).
  * Data can be cache in localStorage to improve loading times on recurring uses from external APIs.
  * yox.data can be used independently as an easy interface to external API's.
+ *
+ * @constructor
  * @param options
  */
 yox.data = function(options){
