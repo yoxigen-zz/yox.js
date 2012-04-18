@@ -1,3 +1,11 @@
+/**
+ * Statistics module, used for saving or sending usage data.
+ * Data is send through reporter sub-modules, each of which has a single method, 'report'.
+ *
+ * @constructor
+ * @param container
+ * @param options
+ */
 yox.statistics = function(container, options){
     if (arguments.length === 1){
         options = container;
@@ -16,6 +24,10 @@ yox.statistics = function(container, options){
     }
 };
 yox.statistics.prototype = {
+    /**
+     * Sends data through a reporter.
+     * @param data
+     */
     report: function(data){
         data.category = data.category || this.category;
         this.reporter.report(data);
