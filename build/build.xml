@@ -1,4 +1,4 @@
-﻿<project name="Build example" default="all" basedir=".">
+<project name="Build example" default="all" basedir=".">
     <property name="jscompjar" location="compiler.jar" />
 
     <taskdef name="jscomp"
