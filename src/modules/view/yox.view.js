@@ -93,15 +93,7 @@
         function createViewer(view){
             var elements = {};
 
-            if (view.options.lightbox){
-                elements.$background = $('<div class="yoxviewBackground"></div>').appendTo(document.body);
-                elements.$background.on("click",
-                    function(e){
-                        view.triggerEvent("backgroundClick", e);
-                    }
-                );
-            }
-            else if (view.$container.css("position") === "static")
+            if (view.$container.css("position") === "static")
                 view.$container.css("position", "relative");
 
             $.extend(view, {
@@ -262,21 +254,6 @@
         }
 
         return {
-            addDataSource: function(dataSource){
-                if (dataSources[dataSource.name])
-                    return false;
-
-                dataSources[dataSource.name] = dataSource;
-            },
-            addItems: function(items){
-                if (!items)
-                    return false;
-
-                if (!(items instanceof Array))
-                    items = [items];
-
-                loadSources.call(this, { items: items });
-            },
             addDataSources: function(dataSource){
                 var self = this,
                     dataSources = dataSource.getData();
@@ -530,7 +507,6 @@
                 }
             }, // A function to call when the popup's background is clicked. (Applies only in popup mode)
             container: document.body || document.getElementsByTagName("body")[0], // The element in which the viewer is rendered. Defaults to the whole window.
-            lightbox: false, // If true, items should be opened as a lightbox, above the page. (NOT IMPLEMENTED YET)
             panelDimensions: { width: 1600, height: 1600 }, // Default width and height for panels which aren't images
             resizeMode: "fit", // The mode in which to resize the item in the container - 'fit' (shows the whole item, resized to fit inside the container) or 'fill' (fills the entire container).
             slideshowDelay: 3000 // Time in milliseconds to display each image when in slideshow
