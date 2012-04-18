@@ -1,4 +1,4 @@
-﻿(function($){
+(function($){
     yox.utils.css.addJqueryCssHooks(["transition", "transitionDuration", "transform", "transformStyle", "backfaceVisibility", "perspective"]);
 
 	yox.view = function(container, options, cache){
