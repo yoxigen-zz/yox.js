@@ -58,8 +58,8 @@ yox.themes.classic = function(data, options){
                     elements.infoPosition.innerHTML = e.newItem.id;
                     if (options.showCopyright){
                         if (e.newItem.author){
-                            elements.copyright.href = e.newItem.link;
-                            elements.copyright.innerHTML = "&copy; " + e.newItem.author;
+                            elements.copyright.href = e.newItem.author.link || e.newItem.link;
+                            elements.copyright.innerHTML = "&copy; " + (e.newItem.author.name || e.newItem.author);
                         }
                         else
                             elements.copyright.innerHTML = "";
@@ -103,6 +103,9 @@ yox.themes.classic = function(data, options){
             events: {
                 toggle: function(e){
                     this.report({ action: "Toggle", label: e.action, value: e.state ? 1 : 0 });
+                },
+                "page.scroll": function(e){
+                    this.report({ action: "Page thumbnails", value: e.direction });
                 }
             }
         }
