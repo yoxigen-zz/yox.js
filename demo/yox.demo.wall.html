@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>yox.js demo - wall theme</title>
+    <link rel="Stylesheet" type="text/css" href="css/demo.css" />
+        <link rel="Stylesheet" type="text/css" href="../src/modules/view/yoxview.css" />
+        <link rel="Stylesheet" type="text/css" href="../src/themes/classic/css/yox.theme.classic.css" />
+        <style>
+            body{ padding: 0; margin: 0; overflow: scroll; background: White; }
+            img{ vertical-align: top }
+        </style>
+</head>
+<body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+
+    <script type="text/javascript" src="../src/yox.js"></script>
+    <script type="text/javascript" src="../src/yox.utils.js"></script>
+    <script type="text/javascript" src="../src/modules/data/yox.data.js"></script>
+    <script type="text/javascript" src="../src/modules/thumbnails/yox.thumbnails.js"></script>
+    <script type="text/javascript" src="../src/modules/data/sources/yox.data.source.js"></script>
+    <script type="text/javascript" src="../src/modules/data/sources/yox.data.source.picasa.js"></script>
+    <script type="text/javascript" src="../src/modules/data/sources/yox.data.source.flickr.js"></script>
+    <script type="text/javascript" src="../src/modules/data/sources/yox.data.source.twitpic.js"></script>
+    <script type="text/javascript" src="../src/modules/data/sources/yox.data.source.files.js"></script>
+    <script type="text/javascript" src="../src/yox.eventsHandler.js"></script>
+    <script type="text/javascript" src="../src/modules/view/yox.view.js"></script>
+    <script type="text/javascript" src="../src/modules/view/yox.view.cache.js"></script>
+    <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.js"></script>
+    <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.morph.js"></script>
+    <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.fade.js"></script>
+    <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.evaporate.js"></script>
+    <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.flip.js"></script>
+    <script type="text/javascript" src="../src/modules/scroll/yox.scroll.js"></script>
+    <script type="text/javascript" src="../src/modules/statistics/yox.statistics.js"></script>
+    <script type="text/javascript" src="../src/modules/statistics/reporters/yox.statistics.reporter.js"></script>
+    <script type="text/javascript" src="../src/modules/statistics/reporters/yox.statistics.reporter.ga.js"></script>
+    <script type="text/javascript" src="../src/themes/yox.theme.js"></script>
+    <script type="text/javascript" src="../src/themes/wall/yox.theme.wall.js"></script>
+
+    <script>
+        var yoxApi = new Yox(document.body, {
+            theme: "wall",
+            thumbnailsMaxHeight: 300,
+            data: {
+                type: "picasa",
+                cache: true,
+                source: {
+                    url: "https://picasaweb.google.com/yoxigen/MyFamily",
+                    imgmax: 912,
+                    thumbsize: 400
+                }
+            }
+        });
+    </script>
+</body>
+</html>
