@@ -444,6 +444,7 @@
             page: function(dir){
                 dir = dir === "left" ? 1 : -1;
                 this.scrollBy(dir * this.containerSize);
+                this.triggerEvent("page", { pageSize: this.containerSize, direction: dir });
             },
             // Scrolls the view until it reaches the limit. Scrolling can be stopped with stopScroll().
             scroll: function(dir){
