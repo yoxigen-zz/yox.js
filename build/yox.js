@@ -365,6 +365,16 @@ yox.eventsHandler = function(){
         return foundHandler;
     }
 };
+/**
+ * Data module, responsible for retrieving and holding data used by other modules.
+ * Data is retrieved through data sources, which are sub-modules of the data module.
+ * Each data source retrieves data from an external resource, such as external APIs, the DOM or HTML5 APIs (such as the File API).
+ * Data can be cache in localStorage to improve loading times on recurring uses from external APIs.
+ * yox.data can be used independently as an easy interface to external API's.
+ *
+ * @constructor
+ * @param options
+ */
 yox.data = function(options){
     this.data = [];
     this.options = $.extend(true, {}, this.defaults, options);
@@ -384,6 +394,13 @@ yox.data.prototype = {
     defaults: {
         cache: false // Set this to true to enable caching on localStorage. Cache is used only for external sources - it saves the data retrieved from the source (what's return from the source's load() method).
     },
+    /**
+     * Add sources to the data object.
+     * When the added sources are finished loading (when all the data sources' load() methods calls their callbacks),
+     * the 'loadSources' event is fired.
+     *
+     * @param {Object[]|Object} sourceArr An array of source data objects (or a single object) to add.
+     */
     addSources: function(sourceArr){
         var deferredPromises = [],
             sources = sourceArr instanceof Array ? sourceArr : arguments,
@@ -406,11 +423,19 @@ yox.data.prototype = {
             self.triggerEvent("loadSources", Array.prototype.slice.call(arguments, 0));
         });
     },
+    /**
+     * Clears the data object of all data.
+     * Triggers two events: 'removeSources', with the removed data, and 'clear', with no data.
+     */
     clear: function(){
         this.triggerEvent("removeSources", this.data);
         this.triggerEvent("clear");
         this.data = [];
     },
+    /**
+     * Returns a count of the total items in the data object (from all sources).
+     * @return {Number}
+     */
     countItems: function(){
         var totalItemsCount = 0;
         for(var i=this.data.length; i--;){
@@ -419,6 +444,13 @@ yox.data.prototype = {
 
         return totalItemsCount;
     },
+    /**
+     * Given an object with source data (the same as given to the 'addSources' method or to the yox.data constructor),
+     * returns the data source sub-module which matches the source data, using the data source's 'match' method.
+     *
+     * @param sourceData
+     * @return {Object} The data source object that matches the source data, or null if none found.
+     */
     findDataSource: function(sourceData){
         for(var dataSourceName in yox.data.sources){
             var dataSource = yox.data.sources[dataSourceName];
@@ -426,17 +458,35 @@ yox.data.prototype = {
             if (dataSource.match(sourceData))
                 return dataSource;
         }
+
+        return null;
     },
+    /**
+     * Returns an array of sources holding the module's data.
+     * @return {Array}
+     */
     getData: function(){ return this.data; },
+    /**
+     * Returns a data source, by name, simply gets yox.data.sources[dataSourceName].
+     * @param {String} dataSourceName The name of the data source, such as 'picasa', 'flickr' or 'html'.
+     * @return {*}
+     */
     getDataSource: function(dataSourceName){
         return yox.data.sources[dataSourceName];
     },
+    /**
+     * Given a valid source data (a matching data source sub-module is found), returns a jQuery Deferred object
+     * which resolves once the load() method of the data source sub-module called its callback.
+     *
+     * @param {Object} source
+     * @return {jQuery.Deferred} A jQuery.Deferred object, or null if no data source sub-module exists for the given data.
+     */
     loadSource: function(source){
         var dataSource = source.type ? this.getDataSource(source.type) : this.findDataSource(source),
             self = this;
 
         if (!dataSource)
-            return;
+            return null;
 
         var dfd = $.Deferred(),
             onLoadSource = function(sourceData){
@@ -456,12 +506,26 @@ yox.data.prototype = {
         }
         return dfd;
     },
+    /**
+     * Replaces all data in the yox.data object with the given source(s).
+     * @param {Object} sources One or more source data objects (for more than one, pass the method multiple params).
+     */
     source: function(sources){
         this.clear();
         this.addSources.apply(this, arguments);
     },
+    /**
+     * Saves or retrieves from localStorage a source's data object.
+     * options.cache must be set to true and to use this method, otherwise it just returns false.
+     * If there is no window.localStorage object, the method also returns false.
+     * If no data is specified, the method returns the available data for the given source.
+     *
+     * @param {Object} source The source data object to store (defines the localStorage key name)
+     * @param {object} data The source's data to save to localStorage.
+     * @return {Boolean|Object} true: data was saved, false: the method failed, JSON: the retrieved data.
+     */
     store: function(source, data){
-        if (!this.options.cache || !window.localStorage || !source.url)
+        if (!this.options.cache || !window.localStorage || !source || !source.url)
             return false;
 
         var keyName = this.namespace + ".source." + source.url;
@@ -474,6 +538,7 @@ yox.data.prototype = {
             return null;
         }
         window.localStorage.setItem(keyName, JSON.stringify(data));
+        return true;
     }
 };
 yox.data.source = function(){};
@@ -981,7 +1046,7 @@ yox.data.sources.picasa = (function(){
                     link: image.link[0].href,
                     title: imageTitle,
                     type: "image",
-                    author: image.media$group.media$credit[0].$t
+                    author: { name: image.media$group.media$credit[0].$t }
                 };
 
             if (isAlbum){
@@ -1051,6 +1116,92 @@ yox.data.sources.picasa = (function(){
 	    }
     };
 })();
+yox.data.sources.twitpic = (function($){
+    var dataSourceName = "twitpic",
+        twitpicUrl = "http://twitpic.com/",
+        twitpicApiUrl = "http://api.twitpic.com/2/",
+        twitpicImageUrl = "http://twitpic.com/show/",
+        apiKey = "f0be525ae803e5f60882432e925cbbc0", // yox.js API key @twitpic
+        twitpicUrlRegex = /^http:\/\/(?:www\.)?twitpic\.com\/(\w+)\/([^\/\?#]+)/,
+        defaults = {
+            imageSize: "full", // large (600px) / full (original, about 1024px)
+            thumbsize: "mini", // mini (75x75) / thumb (150x150),
+            page: 1 // Twitpic serves a maximum of 20 images per request, so paging is required to get more than that.
+        };
+
+    var dataTypes = {
+        photos: "users"
+    };
+
+    function getImageUrl(imageData, size){
+        return [twitpicImageUrl, size, "/", imageData.short_id, "?key=", apiKey].join("");
+    }
+
+    function getUrlData(url){
+        var urlDataMatch = url.match(twitpicUrlRegex);
+        return urlDataMatch ? {
+            method: urlDataMatch[1],
+            userId: urlDataMatch[2]
+        } : null;
+    }
+
+    function getApiUrl(data, options){
+        var apiParts = [twitpicApiUrl, dataTypes[data.method], "/show.jsonp?username=", data.userId, "&key=", apiKey];
+        if (options.page)
+            apiParts.push("&page=", options.page);
+
+        return apiParts.join("");
+    }
+
+    function getImagesDataFromJson(data, datasourceOptions){
+        var images = [],
+            author = { name: data.name, avatar: data.avatar_url, link: data.website };
+
+        for(var i=0, image; image = data.images[i]; i++){
+            images.push({
+                thumbnail: {
+                    src: getImageUrl(image, datasourceOptions.thumbsize)
+                },
+                link: twitpicUrl + image.short_id,
+                url: getImageUrl(image, datasourceOptions.imageSize),
+                title: image.message,
+                type: "image",
+                author: author
+            });
+        }
+
+        return images;
+    }
+
+    return {
+        name: dataSourceName,
+        defaults: defaults,
+        match: function(source){
+            return source.url && twitpicUrlRegex.test(source.url);
+        },
+        load: function(source, callback, error){
+            var urlData = getUrlData(source.url);
+            if (!urlData){
+                error && error({ message: "Invalid Twitpic URL, can't parse fields." });
+                return false;
+            }
+
+            $.ajax(getApiUrl(urlData, source), {
+                dataType: 'jsonp',
+                success: function(data){
+                    var datasourceOptions = jQuery.extend({}, defaults, urlData, source),
+                        returnData = {
+                            source: source,
+                            sourceType: dataSourceName,
+                            items: getImagesDataFromJson(data, datasourceOptions)
+                        };
+
+                    callback(returnData);
+                }
+            });
+        }
+    };
+})(jQuery);
 yox.data.sources.youtube = (function($){
 	var dataSourceName = "youtube",
         youtubeRegex = /^http:\/\/(?:www\.)?youtube.com\//,
@@ -1274,6 +1425,14 @@ yox.data.sources.youtube = (function($){
 	    }
     };
 })(jQuery);
+/**
+ * Statistics module, used for saving or sending usage data.
+ * Data is send through reporter sub-modules, each of which has a single method, 'report'.
+ *
+ * @constructor
+ * @param container
+ * @param options
+ */
 yox.statistics = function(container, options){
     if (arguments.length === 1){
         options = container;
@@ -1292,6 +1451,10 @@ yox.statistics = function(container, options){
     }
 };
 yox.statistics.prototype = {
+    /**
+     * Sends data through a reporter.
+     * @param data
+     */
     report: function(data){
         data.category = data.category || this.category;
         this.reporter.report(data);
@@ -1764,6 +1927,7 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
             page: function(dir){
                 dir = dir === "left" ? 1 : -1;
                 this.scrollBy(dir * this.containerSize);
+                this.triggerEvent("page", { pageSize: this.containerSize, direction: dir });
             },
             // Scrolls the view until it reaches the limit. Scrolling can be stopped with stopScroll().
             scroll: function(dir){
@@ -1958,7 +2122,7 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                     var documentFragment = document.createDocumentFragment();
                     for(var i = 0, count = source.items.length; i < count; i++, this.itemCount++){
                         var item = source.items[i],
-                            thumbnailEl = this.createThumbnail(item);
+                            thumbnailEl = self.options.createThumbnail ? self.options.createThumbnail.call(self, i, item, count) : this.createThumbnail(item);
 
                         thumbnailEl.setAttribute("data-yoxthumbindex", this.itemCount);
                         item.thumbnail.element = thumbnailEl;
@@ -1971,8 +2135,9 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                         documentFragment.appendChild(thumbnailEl);
                     }
 
+                    this.thumbnails = this.thumbnails.add(documentFragment.childNodes);
                     this.container.appendChild(documentFragment);
-                    this.thumbnails = this.thumbnails.add($(this.container).children("." + this.options.thumbnailClass));
+
                 }
 
                 thumbnailElements = this.container.childNodes;
@@ -1997,7 +2162,10 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
         },
         destroy: function(){
             this.triggerEvent("beforeDestroy");
+            this.clear();
         },
+        reset: function(){
+              },
         select: function(itemIndex){
             this.currentSelectedThumbnail && this.currentSelectedThumbnail.removeClass(this.options.selectedThumbnailClass);
             if (this.thumbnails)
@@ -2103,15 +2271,7 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
         function createViewer(view){
             var elements = {};
 
-            if (view.options.lightbox){
-                elements.$background = $('<div class="yoxviewBackground"></div>').appendTo(document.body);
-                elements.$background.on("click",
-                    function(e){
-                        view.triggerEvent("backgroundClick", e);
-                    }
-                );
-            }
-            else if (view.$container.css("position") === "static")
+            if (view.$container.css("position") === "static")
                 view.$container.css("position", "relative");
 
             $.extend(view, {
@@ -2272,21 +2432,6 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
         }
 
         return {
-            addDataSource: function(dataSource){
-                if (dataSources[dataSource.name])
-                    return false;
-
-                dataSources[dataSource.name] = dataSource;
-            },
-            addItems: function(items){
-                if (!items)
-                    return false;
-
-                if (!(items instanceof Array))
-                    items = [items];
-
-                loadSources.call(this, { items: items });
-            },
             addDataSources: function(dataSource){
                 var self = this,
                     dataSources = dataSource.getData();
@@ -2540,7 +2685,6 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                 }
             }, // A function to call when the popup's background is clicked. (Applies only in popup mode)
             container: document.body || document.getElementsByTagName("body")[0], // The element in which the viewer is rendered. Defaults to the whole window.
-            lightbox: false, // If true, items should be opened as a lightbox, above the page. (NOT IMPLEMENTED YET)
             panelDimensions: { width: 1600, height: 1600 }, // Default width and height for panels which aren't images
             resizeMode: "fit", // The mode in which to resize the item in the container - 'fit' (shows the whole item, resized to fit inside the container) or 'fill' (fills the entire container).
             slideshowDelay: 3000 // Time in milliseconds to display each image when in slideshow
@@ -3251,8 +3395,8 @@ yox.themes.classic = function(data, options){
                     elements.infoPosition.innerHTML = e.newItem.id;
                     if (options.showCopyright){
                         if (e.newItem.author){
-                            elements.copyright.href = e.newItem.link;
-                            elements.copyright.innerHTML = "&copy; " + e.newItem.author;
+                            elements.copyright.href = e.newItem.author.link || e.newItem.link;
+                            elements.copyright.innerHTML = "&copy; " + (e.newItem.author.name || e.newItem.author);
                         }
                         else
                             elements.copyright.innerHTML = "";
@@ -3296,6 +3440,9 @@ yox.themes.classic = function(data, options){
             events: {
                 toggle: function(e){
                     this.report({ action: "Toggle", label: e.action, value: e.state ? 1 : 0 });
+                },
+                "page.scroll": function(e){
+                    this.report({ action: "Page thumbnails", value: e.direction });
                 }
             }
         }
@@ -3909,3 +4056,76 @@ yox.themes.slideshow = function(data, options){
 };
 
 yox.themes.slideshow.prototype = new yox.theme();
+yox.themes.wall = function(data, options){
+    var elements = {},
+        containerWidth;
+
+    this.name = "wall";
+
+    var thumbs = [],
+        currentRowWidth = 0;
+
+    this.config = {
+        thumbnails: {
+            createThumbnail: function(itemIndex, item, totalItems){
+                var thumbnails = this,
+                    thumbnail = document.createElement("a"),
+                    thumbnailImg = document.createElement("img");
+
+                var dimensions = { height: options.thumbnailsMaxHeight, width: Math.round(options.thumbnailsMaxHeight / item.ratio) };
+                currentRowWidth += dimensions.width;
+                thumbs.push({ element: thumbnailImg, dimensions: dimensions });
+
+                if ((currentRowWidth  + options.borderWidth) >= containerWidth || itemIndex === totalItems - 1){
+                    var rowAspectRatio = containerWidth / currentRowWidth,
+                        rowHeight = Math.round(thumbs[0].dimensions.height * rowAspectRatio),
+                        setWidth = true;
+
+                    if (rowHeight > options.thumbnailsMaxHeight){
+                        rowHeight = options.thumbnailsMaxHeight;
+                        setWidth = false;
+                    }
+                    for(var i=0, thumb; thumb = thumbs[i]; i++){
+                        var borderWidth = i < thumbs.length - 1 ? options.borderWidth : 0,
+                            width = Math.floor(thumb.dimensions.width * rowAspectRatio - borderWidth);
+                        thumb.element.style.height = rowHeight + "px";
+                        if (setWidth)
+                            thumb.element.style.width = width + "px";
+                    }
+
+                    thumbs[thumbs.length - 1].element.style.marginRight = "0";
+
+                    thumbs = [];
+                    currentRowWidth = 0;
+                }
+
+                thumbnailImg.src = item.thumbnail.src;
+                thumbnail.appendChild(thumbnailImg);
+                thumbnail.setAttribute("href", item.url);
+                return thumbnail;
+            }
+        }
+    };
+
+    this.create = function(container){
+        var containerClass = this.getThemeClass();
+        $(container).addClass(containerClass);
+        elements.wall = document.createElement("div");
+        elements.wall.className = this.getThemeClass() + " yoxthumbnails";
+        elements.wall.style.padding = options.padding + "px";
+        container.appendChild(elements.wall);
+        containerWidth = container.clientWidth - options.padding * 2;
+
+        var styleEl = document.createElement("style");
+        styleEl.innerHTML = "." + containerClass + " img{ margin-right: " + options.borderWidth + "px; margin-bottom: " + options.borderWidth + "px; }";
+        document.getElementsByTagName("head")[0].appendChild(styleEl);
+    };
+}
+
+yox.themes.wall.defaults = {
+    borderWidth: 7,
+    padding: 10,
+    thumbnailsMaxHeight: 200
+};
+
+yox.themes.wall.prototype = new yox.theme();
