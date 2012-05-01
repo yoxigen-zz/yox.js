@@ -87,7 +87,7 @@ yox.data.sources.picasa = (function(){
                     link: image.link[0].href,
                     title: imageTitle,
                     type: "image",
-                    author: image.media$group.media$credit[0].$t
+                    author: { name: image.media$group.media$credit[0].$t }
                 };
 
             if (isAlbum){
