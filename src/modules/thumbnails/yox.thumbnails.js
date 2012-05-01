@@ -97,7 +97,7 @@
                     var documentFragment = document.createDocumentFragment();
                     for(var i = 0, count = source.items.length; i < count; i++, this.itemCount++){
                         var item = source.items[i],
-                            thumbnailEl = this.createThumbnail(item);
+                            thumbnailEl = self.options.createThumbnail ? self.options.createThumbnail.call(self, i, item, count) : this.createThumbnail(item);
 
                         thumbnailEl.setAttribute("data-yoxthumbindex", this.itemCount);
                         item.thumbnail.element = thumbnailEl;
@@ -110,8 +110,9 @@
                         documentFragment.appendChild(thumbnailEl);
                     }
 
+                    this.thumbnails = this.thumbnails.add(documentFragment.childNodes);
                     this.container.appendChild(documentFragment);
-                    this.thumbnails = this.thumbnails.add($(this.container).children("." + this.options.thumbnailClass));
+
                 }
 
                 thumbnailElements = this.container.childNodes;
@@ -136,7 +137,10 @@
         },
         destroy: function(){
             this.triggerEvent("beforeDestroy");
+            this.clear();
         },
+        reset: function(){
+              },
         select: function(itemIndex){
             this.currentSelectedThumbnail && this.currentSelectedThumbnail.removeClass(this.options.selectedThumbnailClass);
             if (this.thumbnails)
