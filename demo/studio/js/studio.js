@@ -137,7 +137,7 @@ function init(){
     addNameOptions(elements.options.dataSource, yox.data.sources);
     addNameOptions(elements.options.transition, yox.view.transitions);
 
-    elements.options.theme.value = "inline2";
+    elements.options.theme.value = "classic";
     elements.options.dataSource.value = "picasa";
 
 

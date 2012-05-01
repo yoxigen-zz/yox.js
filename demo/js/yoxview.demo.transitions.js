@@ -24,10 +24,14 @@ var dataSources = {
         type: "flickr",
         url: "http://www.flickr.com/search/?q=kittens",
         imageSize: "large"
+    },
+    youtube: {
+        type: "youtube",
+        url: "http://www.youtube.com/results?search_query=pearl+jam+alpine+valley"
     }
 };
 
-var dataSource = document.location.href.match(/yoxview\.demo\.transitions\.html/) ? dataSources.flickr : undefined;
+var dataSource = document.location.href.match(/yoxview\.demo\.transitions\.html/) ? dataSources.youtube : undefined;
 
 var modules = {
     data: new yox.data({
@@ -78,8 +82,8 @@ var yoxviewOptions = {
                 itemCounter.innerHTML = [item.id, '/', this.items.length].join("");
                 document.title = title + (item ? " - " + item.title : "");
             },
-            cacheStart: function(item){ loader.style.display = "inline" },
-            cacheEnd: function(item){ loader.style.display = "none" },
+            //cacheStart: function(item){ loader.style.display = "inline" },
+            //cacheEnd: function(item){ loader.style.display = "none" },
             init: function(){this.selectItem(0); },
             loadItem: function(item){ $(modules.thumbnails.thumbnails[item.id - 1]).addClass("loadedThumbnail"); },
             load: function(data){

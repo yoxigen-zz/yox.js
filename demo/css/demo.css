@@ -102,7 +102,7 @@ footer{
 .cf {
     zoom:1;
 }
-
+.notSupported{color: #ddd }
 
 #contents{
 
@@ -133,7 +133,134 @@ footer{
         margin-top: 0;
     }
     #sidebar h3{ margin-top: 2em }
-    #sourceCodePanel h3{ margin-top: 0 }
+    #sourceCodePanel h3:first-child{ margin-top: 0 }
+
+    #dataSource{
+        height: 30px;
+        position: relative;
+        top: 1px;
+    }
+        #dataSource a{
+            -moz-transition: all 200ms ease 0s;
+            -webkit-transition: all 200ms ease 0s;
+            -o-transition: all 200ms ease 0s;
+            background: none repeat scroll 0 0 #1A1A1A;
+            border: 1px solid #0A0A0A;
+            border-radius: 4px 4px 0 0;
+            box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.6) inset;
+            color: White;
+            display: inline-block;
+            font-size: 16px;
+            font-weight: bold;
+            height: 28px;
+            line-height: 30px;
+            margin-right: 2px;
+            outline: medium none;
+            padding: 0 27px;
+            text-align: center;
+        }
+        #dataSource a.selected, #dataSource a.selected:hover{
+            background: none repeat scroll 0 0 #333333;
+            border-bottom-color: #333333;
+            box-shadow: none;
+            cursor: default;
+            text-shadow: 0 1px 0 Black;
+            background-image: linear-gradient(bottom, rgb(51,51,51) 25%, rgb(17,17,17) 100%);
+            background-image: -o-linear-gradient(bottom, rgb(51,51,51) 25%, rgb(17,17,17) 100%);
+            background-image: -moz-linear-gradient(bottom, rgb(51,51,51) 25%, rgb(17,17,17) 100%);
+            background-image: -webkit-linear-gradient(bottom, rgb(51,51,51) 25%, rgb(17,17,17) 100%);
+            background-image: -ms-linear-gradient(bottom, rgb(51,51,51) 25%, rgb(17,17,17) 100%);
+
+            background-image: -webkit-gradient(
+            	linear,
+            	left bottom,
+            	left top,
+            	color-stop(0.25, rgb(51,51,51)),
+            	color-stop(1, rgb(17,17,17))
+            );
+        }
+        #dataSource a:hover{ background: #2a2a2a; }
+        #dataSource a:last-child{ margin-right: 0 }
+
+    #data-files{ margin-bottom: 0 !important }
+    #data-files .dropZone{
+        border: dashed 2px #999;
+        padding: 4px;
+        text-align: center;
+        border-radius: 5px;
+        height: 30px;
+        line-height: 30px;
+        -webkit-transition: all 300ms ease;
+        -moz-transition: all 300ms ease;
+        cursor: default;
+    }
+    #data-files .dropZone_dragging{ height: 100px; line-height: 100px; font-size: 1.2em; }
+    #data-files .dropZone_over{ color: #A5FD0A; border-color: #A5FD0A; text-shadow: 0 0 16px #A5FD0A; }
+    #data-files.selected{ display: block !important }
+
+    #dataSources{ list-style: none; margin: 0; padding: 0 !important }
+        #dataSources > li{ display: none; margin-bottom: 6px; }
+        #dataSources > li.selected{ display: block; }
+            #dataSources .dataSourceOptions{
+                background: none repeat scroll 0 0 #333333;
+                border: 1px solid #0A0A0A;
+                border-radius: 0 5px 5px 5px;
+                margin: 0;
+                padding: 10px 10px 8px;
+            }
+            .dataSourceOptions > li{
+                display: -moz-box; display: -webkit-box; display: -o-box; display: -ms-box;
+                width: 100%;
+                list-style: none;
+            }
+            .dataSourceOptions > li:last-child{
+                direction: rtl;
+                display: block;
+                margin-bottom: 0 !important;
+            }
+            .dataSourceOptions label{
+                -webkit-box-flex: 0; -moz-box-flex: 0;
+                width: 80px;
+                display: block;
+                font-weight: bold;
+            }
+            .dataSourceOptions label.longLabel{ width: auto; }
+
+            .dataSourceOptions input[type=checkbox]{ margin-left: 80px; margin-right: 10px; }
+            #dataSources input[type=text]{
+                -moz-box-flex: 1;
+                -webkit-box-flex: 1;
+                border: 1px solid Black;
+                border-radius: 3px;
+                display: block;
+                padding: 5px;
+                background-image: url(../img/data_sprites.png);
+                background-repeat: no-repeat;
+                padding-left: 30px;
+                width: 90%;
+            }
+            #dataSources input[type=text]:focus{ border-color: #A5FD0A }
+            #data-flickr input[type=text]{ background-position: 2px -23px; }
+            #data-picasa input[type=text]{ background-position: 0 0px; }
+            #dataSources .loadBtn{
+                background: none repeat scroll 0 0 #333333;
+                border: 1px solid #222222;
+                border-radius: 5px;
+                box-shadow: 0 0 1px rgba(255, 255, 255, 0.6) inset, 0 -17px 9px rgba(0, 0, 0, 0.8) inset;
+                color: #EEEEEE;
+                cursor: pointer;
+                display: block;
+                font-weight: bold;
+                line-height: 29px;
+                padding: 0 14px;
+                text-align: center;
+                width: auto;
+            }
+            #dataSources .loadBtn:hover{
+                background-color: #444;
+                box-shadow: 0 0 1px rgba(255, 255, 255, 0.8) inset, 0 -17px 9px rgba(0, 0, 0, 0.7) inset;
+                color: White;
+            }
 
     #sidebar pre{
         max-height: 400px;
@@ -143,7 +270,6 @@ footer{
         margin-bottom: 1em;
         padding: 15px;
         font-size: 11pt;
-        display: none;
     }
     #sidebar pre.selected{ display: block }
     #sidebar::-webkit-scrollbar{
@@ -212,8 +338,10 @@ footer{
         border-right: solid 1px #333;
         border-top: none;
         overflow-y: auto;
+        overflow-x: hidden;
         position: absolute;
     }
+        #sourceCodePanel h3:first-child{ margin-top: 2em }
     #yox{
         left: 501px;
         right: 0;
@@ -229,5 +357,5 @@ footer{
 @media only screen and (max-width:800px){
     #description{ width: auto; float: none; }
     #sourceCodePanel{ width: auto; float: none; }
-    #sourceCodePanel h3{ margin-top: 2em }
+    #sourceCodePanel h3{ margin-top: 2em !important }
 }
