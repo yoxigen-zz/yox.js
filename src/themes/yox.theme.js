@@ -13,11 +13,10 @@ yox.theme.prototype = {
     getThemeClass: function(className){
         return "yox-theme-" + this.name + (className ? "-" + className : "");
     },
-    init: function(container, data, options){
+    init: function(container, data, eventsHandler, options){
         if (!(data instanceof yox.data))
             throw new Error("Invalid data provided for theme, must be an instance of yox.data.");
 
-        var eventsHandler = new yox.eventsHandler();
         $.extend(this, eventsHandler);
 
         this.create(container);

@@ -8,8 +8,9 @@ function Yox(container, options){
 Yox.prototype = {
     init: function(){
         if (this.options.theme){
-            var themeConstructor = yox.themes[this.options.theme],
-                data;
+            var eventsHandler = new yox.eventsHandler(),
+                data,
+                self = this;
 
             if (this.options.data){
                 if (this.options.data instanceof yox.data)
@@ -18,17 +19,32 @@ Yox.prototype = {
                     data = new yox.data(this.options.data);
             }
 
-            if (!themeConstructor)
-                throw new Error("Invalid theme, '" + this.options.theme + "' does not exist.");
+            function createTheme(themeName, themeOptions){
+                var themeConstructor = yox.themes[themeName];
 
-            var theme = new themeConstructor(data, $.extend({}, themeConstructor.defaults, this.options));
-            if (!(theme instanceof yox.theme))
-                throw new Error("Invalid theme, '" + this.options.theme + "' is not an instance of yox.theme.");
+                if (!themeConstructor)
+                    throw new Error("Invalid theme, '" + themeName + "' does not exist.");
 
-            theme.init(this.container, data, this.options);
+                var theme = new themeConstructor(data, $.extend({}, themeConstructor.defaults, themeOptions));
+                if (!(theme instanceof yox.theme))
+                    throw new Error("Invalid theme, '" + themeName + "' is not an instance of yox.theme.");
+
+                theme.init(self.container, data, eventsHandler, themeOptions);
+                return theme;
+            }
+
+            if (this.options.theme instanceof Array){
+                this.themes = {};
+                for(var i=0, theme; theme = this.options.theme[i]; i++){
+                    this.themes[theme.id || theme.name] = createTheme(theme.name, theme.options || {});
+                }
+            }
+            else{
+                var theme = createTheme(this.options.theme, this.options);
+                this.modules = theme.modules;
+            }
 
             $.extend(this, {
-                addEventListener: theme.addEventListener,
                 destroy: function(){
                     for(var moduleName in this.modules){
                         var module = this.modules[moduleName],
@@ -38,10 +54,9 @@ Yox.prototype = {
                     }
                     theme.destroy.call(theme);
                 },
-                modules: theme.modules,
-                triggerEvent: theme.triggerEvent,
                 data: data
-            });
+            },
+            eventsHandler);
         }
 
         delete this.init;
