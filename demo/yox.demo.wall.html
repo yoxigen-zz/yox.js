@@ -6,7 +6,7 @@
         <link rel="Stylesheet" type="text/css" href="../src/modules/view/yoxview.css" />
         <link rel="Stylesheet" type="text/css" href="../src/themes/classic/css/yox.theme.classic.css" />
         <style>
-            body{ padding: 0; margin: 0; overflow: scroll; background: White; }
+            body{ padding: 0; margin: 0; overflow-y: scroll; background: White; }
             img{ vertical-align: top }
         </style>
 </head>
@@ -36,21 +36,21 @@
     <script type="text/javascript" src="../src/modules/statistics/reporters/yox.statistics.reporter.ga.js"></script>
     <script type="text/javascript" src="../src/themes/yox.theme.js"></script>
     <script type="text/javascript" src="../src/themes/wall/yox.theme.wall.js"></script>
-    -->
-<script src="../build/yox.min.js"></script>
-
-
+-->
+    <script src="../build/yox.min.js"></script>
     <script>
         var yoxApi = new Yox(document.body, {
             theme: "wall",
             thumbnailsMaxHeight: 300,
             data: {
                 type: "picasa",
-                cache: true,
+                cache: false,
                 source: {
-                    url: "https://picasaweb.google.com/yoxigen/MyFamily",
+                    url: "https://picasaweb.google.com/yoxigen",
                     imgmax: 912,
-                    thumbsize: 400
+                    thumbsize: 400,
+                    kind: "photo",
+                    pageSize: 25
                 }
             }
         });
