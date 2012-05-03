@@ -8,8 +8,9 @@ function Yox(container, options){
 Yox.prototype = {
     init: function(){
         if (this.options.theme){
-            var themeConstructor = yox.themes[this.options.theme],
-                data;
+            var eventsHandler = new yox.eventsHandler(),
+                data,
+                self = this;
 
             if (this.options.data){
                 if (this.options.data instanceof yox.data)
@@ -18,17 +19,32 @@ Yox.prototype = {
                     data = new yox.data(this.options.data);
             }
 
-            if (!themeConstructor)
-                throw new Error("Invalid theme, '" + this.options.theme + "' does not exist.");
+            function createTheme(themeName, themeOptions){
+                var themeConstructor = yox.themes[themeName];
 
-            var theme = new themeConstructor(data, $.extend({}, themeConstructor.defaults, this.options));
-            if (!(theme instanceof yox.theme))
-                throw new Error("Invalid theme, '" + this.options.theme + "' is not an instance of yox.theme.");
+                if (!themeConstructor)
+                    throw new Error("Invalid theme, '" + themeName + "' does not exist.");
 
-            theme.init(this.container, data, this.options);
+                var theme = new themeConstructor(data, $.extend({}, themeConstructor.defaults, themeOptions));
+                if (!(theme instanceof yox.theme))
+                    throw new Error("Invalid theme, '" + themeName + "' is not an instance of yox.theme.");
+
+                theme.init(self.container, data, eventsHandler, themeOptions);
+                return theme;
+            }
+
+            if (this.options.theme instanceof Array){
+                this.themes = {};
+                for(var i=0, theme; theme = this.options.theme[i]; i++){
+                    this.themes[theme.id || theme.name] = createTheme(theme.name, theme.options || {});
+                }
+            }
+            else{
+                var theme = createTheme(this.options.theme, this.options);
+                this.modules = theme.modules;
+            }
 
             $.extend(this, {
-                addEventListener: theme.addEventListener,
                 destroy: function(){
                     for(var moduleName in this.modules){
                         var module = this.modules[moduleName],
@@ -38,10 +54,9 @@ Yox.prototype = {
                     }
                     theme.destroy.call(theme);
                 },
-                modules: theme.modules,
-                triggerEvent: theme.triggerEvent,
                 data: data
-            });
+            },
+            eventsHandler);
         }
 
         delete this.init;
@@ -498,6 +513,20 @@ yox.data.prototype = {
         if (savedSourceData)
             onLoadSource(savedSourceData);
         else{
+            // If a property map exists in the data source, convert properies in the data to the data source's own format:
+            if (source.page && source.pageSize && source.offset === undefined){
+                source.offset = source.pageSize * source.page;
+            }
+
+            if (dataSource.map){
+                for(var mapProperty in dataSource.map){
+                    var sourceProperty = source[mapProperty];
+                    if (sourceProperty){
+                        source[dataSource.map[mapProperty]] = sourceProperty;
+                    }
+                }
+            }
+
             dataSource.load(source, onLoadSource,
                 function(error){
                     dfd.reject();
@@ -758,6 +787,7 @@ yox.data.sources.flickr = (function($){
     return {
         name: dataSourceName,
         defaults: defaults,
+        map: { pageSize: "per_page" },
         match: function(source){
             return source.url && flickrUrlRegex.test(source.url);
         },
@@ -972,7 +1002,7 @@ yox.data.sources.picasa = (function(){
             cropThumbnails: false,
 			thumbsize: 64,
             imgmax: picasaUncropSizes[picasaUncropSizes.length - 1],
-            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href)),entry(media:group(media:credit))"
+            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href)),entry(media:group(media:credit)),openSearch:totalResults"
         };
 
     function getDataFromUrl(url, options){
@@ -1069,6 +1099,7 @@ yox.data.sources.picasa = (function(){
 
 	return {
 		name: dataSourceName,
+        map: { pageSize: "max-results", offset: "start-index" },
 		match: function(source){ return source.url && picasaRegex.test(source.url); },
 		load: function(source, callback){
             var picasaData = getDataFromUrl(source.url, source);
@@ -1081,7 +1112,8 @@ yox.data.sources.picasa = (function(){
                 {
                     var returnData = {
                         source: source,
-                        sourceType: dataSourceName
+                        sourceType: dataSourceName,
+                        totalItems: data.feed.openSearch$totalResults.$t
                     };
 
                     if (!data.feed.entry || data.feed.entry.length == 0){
@@ -3287,11 +3319,10 @@ yox.theme.prototype = {
     getThemeClass: function(className){
         return "yox-theme-" + this.name + (className ? "-" + className : "");
     },
-    init: function(container, data, options){
+    init: function(container, data, eventsHandler, options){
         if (!(data instanceof yox.data))
             throw new Error("Invalid data provided for theme, must be an instance of yox.data.");
 
-        var eventsHandler = new yox.eventsHandler();
         $.extend(this, eventsHandler);
 
         this.create(container);
@@ -3889,6 +3920,51 @@ yox.themes.inline = function(data, options){
 }
 
 yox.themes.inline.prototype = new yox.theme();
+yox.themes.lightbox = function(data, options){
+    var elements,
+        self = this;
+
+    this.name = "lightbox";
+
+    this.config = {
+        view: {
+            enableKeyboard: true,
+            enlarge: false,
+            resizeMode: "fit",
+            transition: yox.view.transitions.morph,
+            transitionTime: 300,
+            margin: 30,
+            events: {
+                "init.view": function(){
+                    this.selectItem(this.options.firstItem || 0);
+                }
+            }
+        }
+    };
+
+    this.create = function(container){
+        elements = {
+            background: document.createElement("div"),
+            view: document.createElement("div")
+        };
+
+        elements.background.className = this.getThemeClass("background");
+        elements.view.className = this.getThemeClass("view") + " yoxview";
+
+        container.appendChild(elements.background);
+        container.appendChild(elements.view);
+
+        $(window).on("resize", function(){
+            self.modules.view.update();
+        });
+    };
+
+};
+yox.themes.lightbox.defaults = {
+    margin: 30
+};
+
+yox.themes.lightbox.prototype = new yox.theme();
 yox.themes.scroll = function(data, options){
     var self = this;
     this.name = "scroll";
@@ -4058,7 +4134,9 @@ yox.themes.slideshow = function(data, options){
 yox.themes.slideshow.prototype = new yox.theme();
 yox.themes.wall = function(data, options){
     var elements = {},
-        containerWidth;
+        containerWidth,
+        self = this,
+        isLoading; // Flag indicating whether new contents are currently being fetched
 
     this.name = "wall";
 
@@ -4068,57 +4146,168 @@ yox.themes.wall = function(data, options){
     this.config = {
         thumbnails: {
             createThumbnail: function(itemIndex, item, totalItems){
-                var thumbnails = this,
-                    thumbnail = document.createElement("a"),
+                var thumbnail = document.createElement("a"),
                     thumbnailImg = document.createElement("img");
 
                 var dimensions = { height: options.thumbnailsMaxHeight, width: Math.round(options.thumbnailsMaxHeight / item.ratio) };
-                currentRowWidth += dimensions.width;
-                thumbs.push({ element: thumbnailImg, dimensions: dimensions });
-
-                if ((currentRowWidth  + options.borderWidth) >= containerWidth || itemIndex === totalItems - 1){
-                    var rowAspectRatio = containerWidth / currentRowWidth,
-                        rowHeight = Math.round(thumbs[0].dimensions.height * rowAspectRatio),
-                        setWidth = true;
-
-                    if (rowHeight > options.thumbnailsMaxHeight){
-                        rowHeight = options.thumbnailsMaxHeight;
-                        setWidth = false;
-                    }
-                    for(var i=0, thumb; thumb = thumbs[i]; i++){
-                        var borderWidth = i < thumbs.length - 1 ? options.borderWidth : 0,
-                            width = Math.floor(thumb.dimensions.width * rowAspectRatio - borderWidth);
-                        thumb.element.style.height = rowHeight + "px";
-                        if (setWidth)
-                            thumb.element.style.width = width + "px";
-                    }
-
-                    thumbs[thumbs.length - 1].element.style.marginRight = "0";
-
-                    thumbs = [];
-                    currentRowWidth = 0;
-                }
+                thumbnail.dimensions = dimensions;
 
                 thumbnailImg.src = item.thumbnail.src;
                 thumbnail.appendChild(thumbnailImg);
                 thumbnail.setAttribute("href", item.url);
+
+                calculateDimensions(thumbnail, itemIndex, totalItems);
                 return thumbnail;
             }
         }
     };
 
+    function calculateDimensions(thumbnail, index, totalThumbnailsCount, isUpdate){
+        currentRowWidth += thumbnail.dimensions.width;
+        thumbs.push(thumbnail);
+
+        var isLastThumbnail = index === totalThumbnailsCount - 1;
+        if ((currentRowWidth  + options.borderWidth) >= containerWidth || isLastThumbnail){
+            var rowAspectRatio = containerWidth / currentRowWidth,
+                rowHeight = Math.round(thumbs[0].dimensions.height * rowAspectRatio),
+                setWidth = true;
+
+            if (rowHeight > options.thumbnailsMaxHeight){
+                rowHeight = options.thumbnailsMaxHeight;
+                setWidth = false;
+            }
+            for(var i=0, thumb; thumb = thumbs[i]; i++){
+                var borderWidth = i < thumbs.length - 1 ? options.borderWidth : 0,
+                    width = Math.floor(thumb.dimensions.width * rowAspectRatio - borderWidth);
+
+                thumb.style.height = rowHeight + "px";
+                if (setWidth)
+                    thumb.style.width = width + "px";
+                else if (isLastThumbnail)
+                    thumb.style.width = thumb.dimensions.width + "px";
+            }
+
+            if (!isLastThumbnail){
+                thumbs[thumbs.length - 1].style.marginRight = "0";
+                thumbs = [];
+                currentRowWidth = 0;
+            }
+        }
+        else if (isUpdate)
+            thumbnail.style.removeProperty("margin-right");
+
+    }
+
+    var thumbnailsResizeTimeoutId;
+    function updateThumbnails(){
+        var thumbnails = self.modules.thumbnails.thumbnails;
+        if (!thumbnails)
+            return;
+
+        var thumbnailsCount = thumbnails.length;
+
+        for(var i=0, thumbnail; thumbnail = thumbnails[i]; i++){
+            calculateDimensions(thumbnail, i, thumbnailsCount, true);
+        }
+    }
+
+    var dataSource,
+        totalItems;
+
+    setDataSource(data.getData());
+
+    function loadMoreItems(){
+        dataSource.offset = data.countItems();
+        var itemsLeft = totalItems - dataSource.offset;
+        if (itemsLeft < dataSource.pageSize)
+            dataSource.pageSize = itemsLeft;
+
+        data.addSources([ dataSource ]);
+    }
+
+    function setDataSource(loadedDataSources){
+        if (loadedDataSources.length){
+            var loadedDataSource = loadedDataSources[0];
+            if (!dataSource){
+                dataSource = loadedDataSource.source;
+                totalItems = loadedDataSource.totalItems;
+                dataSource.type = loadedDataSource.sourceType;
+            }
+
+            if (data.countItems() >= totalItems){
+                self.triggerEvent("loadedAllItems");
+            }
+        }
+        isLoading = false;
+    }
+
+    data.addEventListener("loadSources", setDataSource);
+
     this.create = function(container){
         var containerClass = this.getThemeClass();
+
+        function getContainerWidth(){
+            containerWidth = container.clientWidth - options.padding * 2;
+        }
+
         $(container).addClass(containerClass);
         elements.wall = document.createElement("div");
         elements.wall.className = this.getThemeClass() + " yoxthumbnails";
         elements.wall.style.padding = options.padding + "px";
         container.appendChild(elements.wall);
-        containerWidth = container.clientWidth - options.padding * 2;
+        getContainerWidth();
 
-        var styleEl = document.createElement("style");
-        styleEl.innerHTML = "." + containerClass + " img{ margin-right: " + options.borderWidth + "px; margin-bottom: " + options.borderWidth + "px; }";
+        var styleEl = document.createElement("style"),
+            imgStyle = [
+                //"opacity: 0",
+                "width: 100%",
+                "height: 100%",
+                "visibility: hidden",
+                yox.utils.browser.getCssPrefix() + "transform: scale(0.5)",
+                yox.utils.browser.getCssPrefix() + "transition: " + yox.utils.browser.getCssPrefix() + "transform 300ms ease-out"
+            ],
+            thumbnailStyle = [
+                "display: inline-block",
+                "margin-right: " + options.borderWidth + "px",
+                "margin-bottom: " + options.borderWidth + "px",
+                "background: #ddd"
+            ];
+
+        styleEl.innerHTML = "." + containerClass + " img{ " +  imgStyle.join("; ") + " } ." + containerClass + " a{ " + thumbnailStyle.join("; ") + " }";
         document.getElementsByTagName("head")[0].appendChild(styleEl);
+        container.addEventListener("load", function(e){
+            if (e.target.nodeName === "IMG"){
+                e.target.style.visibility = "visible";
+                e.target.style.setProperty(yox.utils.browser.getCssPrefix() + "transform", "scale(1)");
+            }
+        }, true);
+
+        $(window).on("resize", function(e){
+            clearTimeout(thumbnailsResizeTimeoutId);
+            thumbnailsResizeTimeoutId = setTimeout(function(){
+                getContainerWidth();
+                thumbs = [];
+                currentRowWidth = 0;
+                updateThumbnails();
+            }, 50);
+        });
+
+        var scrollElement = container === document.body ? document : container;
+        // Used for infinite scrolling:
+        function onScroll(e){
+            // When reaching the scroll limit, check for new contents:
+            if (!isLoading && container.scrollTop >= container.scrollHeight - container.clientHeight - options.thumbnailsMaxHeight){
+                isLoading = true;
+                loadMoreItems();
+            }
+        }
+
+        scrollElement.addEventListener("scroll", onScroll, false);
+
+        self.addEventListener("loadedAllItems", function(){
+            scrollElement.removeEventListener("scroll", onScroll, false);
+            data.removeEventListener("loadSources", setDataSource);
+        });
     };
 }
 
