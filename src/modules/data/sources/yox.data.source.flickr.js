@@ -110,6 +110,7 @@ yox.data.sources.flickr = (function($){
     return {
         name: dataSourceName,
         defaults: defaults,
+        map: { pageSize: "per_page" },
         match: function(source){
             return source.url && flickrUrlRegex.test(source.url);
         },

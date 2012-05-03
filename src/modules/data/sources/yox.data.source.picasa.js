@@ -13,7 +13,7 @@ yox.data.sources.picasa = (function(){
             cropThumbnails: false,
 			thumbsize: 64,
             imgmax: picasaUncropSizes[picasaUncropSizes.length - 1],
-            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href)),entry(media:group(media:credit))"
+            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href)),entry(media:group(media:credit)),openSearch:totalResults"
         };
 
     function getDataFromUrl(url, options){
@@ -110,6 +110,7 @@ yox.data.sources.picasa = (function(){
 
 	return {
 		name: dataSourceName,
+        map: { pageSize: "max-results", offset: "start-index" },
 		match: function(source){ return source.url && picasaRegex.test(source.url); },
 		load: function(source, callback){
             var picasaData = getDataFromUrl(source.url, source);
@@ -122,7 +123,8 @@ yox.data.sources.picasa = (function(){
                 {
                     var returnData = {
                         source: source,
-                        sourceType: dataSourceName
+                        sourceType: dataSourceName,
+                        totalItems: data.feed.openSearch$totalResults.$t
                     };
 
                     if (!data.feed.entry || data.feed.entry.length == 0){

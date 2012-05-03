@@ -131,6 +131,20 @@ yox.data.prototype = {
         if (savedSourceData)
             onLoadSource(savedSourceData);
         else{
+            // If a property map exists in the data source, convert properies in the data to the data source's own format:
+            if (source.page && source.pageSize && source.offset === undefined){
+                source.offset = source.pageSize * source.page;
+            }
+
+            if (dataSource.map){
+                for(var mapProperty in dataSource.map){
+                    var sourceProperty = source[mapProperty];
+                    if (sourceProperty){
+                        source[dataSource.map[mapProperty]] = sourceProperty;
+                    }
+                }
+            }
+
             dataSource.load(source, onLoadSource,
                 function(error){
                     dfd.reject();
