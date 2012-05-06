@@ -4136,11 +4136,13 @@ yox.themes.wall = function(data, options){
     var elements = {},
         containerWidth,
         self = this,
-        isLoading; // Flag indicating whether new contents are currently being fetched
+        isLoading, // Flag indicating whether new contents are currently being fetched
+        loadedAllItems = false; // Flag indicating whether all the items have been loaded (all the possible items, after loading all pages)
 
     this.name = "wall";
 
-    var thumbs = [],
+    var loadingClass = this.getThemeClass("loading"),
+        thumbs = [],
         currentRowWidth = 0;
 
     this.config = {
@@ -4152,9 +4154,12 @@ yox.themes.wall = function(data, options){
                 var dimensions = { height: options.thumbnailsMaxHeight, width: Math.round(options.thumbnailsMaxHeight / item.ratio) };
                 thumbnail.dimensions = dimensions;
 
+                thumbnailImg.addEventListener("load", onImageLoad, false);
+
                 thumbnailImg.src = item.thumbnail.src;
                 thumbnail.appendChild(thumbnailImg);
                 thumbnail.setAttribute("href", item.url);
+                thumbnail.style.display = "none";
 
                 calculateDimensions(thumbnail, itemIndex, totalItems);
                 return thumbnail;
@@ -4162,33 +4167,51 @@ yox.themes.wall = function(data, options){
         }
     };
 
+    // This function does the resizing that creates the wall effect:
     function calculateDimensions(thumbnail, index, totalThumbnailsCount, isUpdate){
         currentRowWidth += thumbnail.dimensions.width;
         thumbs.push(thumbnail);
 
-        var isLastThumbnail = index === totalThumbnailsCount - 1;
-        if ((currentRowWidth  + options.borderWidth) >= containerWidth || isLastThumbnail){
-            var rowAspectRatio = containerWidth / currentRowWidth,
+        var isLastThumbnail = index === totalThumbnailsCount - 1,
+            totalBordersWidth = (thumbs.length - 1) * options.borderWidth,
+            isFullRow = currentRowWidth + totalBordersWidth >= containerWidth;
+
+        // Gathered enough thumbnails to fill the current row:
+        if (isFullRow || isLastThumbnail){
+            var rowAspectRatio = (containerWidth - totalBordersWidth) / currentRowWidth,
                 rowHeight = Math.round(thumbs[0].dimensions.height * rowAspectRatio),
-                setWidth = true;
+                setWidth = true,
+                showThumbnail = isFullRow || loadedAllItems,
+                finalRowWidth = totalBordersWidth;
 
             if (rowHeight > options.thumbnailsMaxHeight){
                 rowHeight = options.thumbnailsMaxHeight;
                 setWidth = false;
             }
+
             for(var i=0, thumb; thumb = thumbs[i]; i++){
-                var borderWidth = i < thumbs.length - 1 ? options.borderWidth : 0,
-                    width = Math.floor(thumb.dimensions.width * rowAspectRatio - borderWidth);
+                var width = Math.floor(thumb.dimensions.width * rowAspectRatio);
+                finalRowWidth += width;
 
                 thumb.style.height = rowHeight + "px";
                 if (setWidth)
                     thumb.style.width = width + "px";
                 else if (isLastThumbnail)
                     thumb.style.width = thumb.dimensions.width + "px";
+
+                if (showThumbnail)
+                    thumb.style.removeProperty("display");
             }
 
-            if (!isLastThumbnail){
-                thumbs[thumbs.length - 1].style.marginRight = "0";
+            // Due to the rounding in image widths, a small fix is required to arrange the thumbnails pixel-perfect:
+            for(var thumbIndex = thumbs.length; thumbIndex-- && finalRowWidth < containerWidth; finalRowWidth++){
+                thumb = thumbs[thumbIndex];
+                thumb.style.width = (parseInt(thumb.style.width, 10) + 1) + "px";
+            }
+
+            // Finally, the last thumbnail in the row's right margin is removed and the row is closed:
+            if (!isLastThumbnail || isFullRow){
+                thumbnail.style.marginRight = "0";
                 thumbs = [];
                 currentRowWidth = 0;
             }
@@ -4216,8 +4239,13 @@ yox.themes.wall = function(data, options){
 
     setDataSource(data.getData());
 
+    // Used for infinite scrolling to get the next batch of items.
+    // TODO: Try to make this part of the data module itself, so other themes may benefit.
     function loadMoreItems(){
-        dataSource.offset = data.countItems();
+        if (!dataSource)
+            return false;
+
+        dataSource.offset = data.countItems() + 1;
         var itemsLeft = totalItems - dataSource.offset;
         if (itemsLeft < dataSource.pageSize)
             dataSource.pageSize = itemsLeft;
@@ -4239,11 +4267,19 @@ yox.themes.wall = function(data, options){
             }
         }
         isLoading = false;
+        $(elements.wall).removeClass(loadingClass);
+    }
+
+    function onImageLoad(e){
+        this.style.visibility = "visible";
+        this.style.setProperty(yox.utils.browser.getCssPrefix() + "transform", "scale(1)");
+        this.removeEventListener("load", onImageLoad, false);
     }
 
     data.addEventListener("loadSources", setDataSource);
 
     this.create = function(container){
+        this.container = container;
         var containerClass = this.getThemeClass();
 
         function getContainerWidth(){
@@ -4258,29 +4294,13 @@ yox.themes.wall = function(data, options){
         getContainerWidth();
 
         var styleEl = document.createElement("style"),
-            imgStyle = [
-                //"opacity: 0",
-                "width: 100%",
-                "height: 100%",
-                "visibility: hidden",
-                yox.utils.browser.getCssPrefix() + "transform: scale(0.5)",
-                yox.utils.browser.getCssPrefix() + "transition: " + yox.utils.browser.getCssPrefix() + "transform 300ms ease-out"
-            ],
             thumbnailStyle = [
-                "display: inline-block",
                 "margin-right: " + options.borderWidth + "px",
-                "margin-bottom: " + options.borderWidth + "px",
-                "background: #ddd"
+                "margin-bottom: " + options.borderWidth + "px"
             ];
 
-        styleEl.innerHTML = "." + containerClass + " img{ " +  imgStyle.join("; ") + " } ." + containerClass + " a{ " + thumbnailStyle.join("; ") + " }";
+        styleEl.innerHTML = "." + containerClass + " ." + containerClass + " a{ " + thumbnailStyle.join("; ") + " }";
         document.getElementsByTagName("head")[0].appendChild(styleEl);
-        container.addEventListener("load", function(e){
-            if (e.target.nodeName === "IMG"){
-                e.target.style.visibility = "visible";
-                e.target.style.setProperty(yox.utils.browser.getCssPrefix() + "transform", "scale(1)");
-            }
-        }, true);
 
         $(window).on("resize", function(e){
             clearTimeout(thumbnailsResizeTimeoutId);
@@ -4292,12 +4312,19 @@ yox.themes.wall = function(data, options){
             }, 50);
         });
 
-        var scrollElement = container === document.body ? document : container;
+        var scrollElement = container === document.body ? document : container,
+            scrollElementForMeasure = container;
+
+        // All non-webkit browsers measure scrollTop for the body element in the HTML element rather than the document (Firefox 13, IE9, Opera 11.62):
+        if (!$.browser.webkit && container === document.body)
+            scrollElementForMeasure = document.documentElement;
+
         // Used for infinite scrolling:
         function onScroll(e){
             // When reaching the scroll limit, check for new contents:
-            if (!isLoading && container.scrollTop >= container.scrollHeight - container.clientHeight - options.thumbnailsMaxHeight){
+            if (!isLoading && scrollElementForMeasure.scrollTop >= scrollElementForMeasure.scrollHeight - scrollElementForMeasure.clientHeight - options.thumbnailsMaxHeight){
                 isLoading = true;
+                $(elements.wall).addClass(loadingClass);
                 loadMoreItems();
             }
         }
@@ -4307,14 +4334,17 @@ yox.themes.wall = function(data, options){
         self.addEventListener("loadedAllItems", function(){
             scrollElement.removeEventListener("scroll", onScroll, false);
             data.removeEventListener("loadSources", setDataSource);
+            loadedAllItems = true;
+            $(container).addClass(self.getThemeClass("loadedAll"));
         });
     };
 }
 
 yox.themes.wall.defaults = {
-    borderWidth: 7,
-    padding: 10,
-    thumbnailsMaxHeight: 200
+    borderWidth: 7, // The size, in pixels, of the space between thumbnails
+    loadItemsOnScroll: false, // Whether to get more results from the data source when scrolling down
+    padding: 10, // The padding arround the thumbnails (padding for the element that contains all the thumbnails)
+    thumbnailsMaxHeight: 200 // The maximum height allowed for each thumbnail
 };
 
 yox.themes.wall.prototype = new yox.theme();
