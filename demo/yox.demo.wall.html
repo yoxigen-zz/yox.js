@@ -4,7 +4,7 @@
     <title>yox.js demo - wall theme</title>
     <link rel="Stylesheet" type="text/css" href="css/demo.css" />
         <link rel="Stylesheet" type="text/css" href="../src/modules/view/yoxview.css" />
-        <link rel="Stylesheet" type="text/css" href="../src/themes/classic/css/yox.theme.classic.css" />
+        <link rel="Stylesheet" type="text/css" href="../src/themes/wall/yox.theme.wall.css" />
         <style>
             body{ padding: 0; margin: 0; overflow-y: scroll; background: White; }
             img{ vertical-align: top }
@@ -37,11 +37,12 @@
     <script type="text/javascript" src="../src/themes/yox.theme.js"></script>
     <script type="text/javascript" src="../src/themes/wall/yox.theme.wall.js"></script>
 -->
-    <script src="../build/yox.min.js"></script>
+<script src="../build/yox.min.js"></script>
     <script>
         var yoxApi = new Yox(document.body, {
             theme: "wall",
             thumbnailsMaxHeight: 300,
+            borderWidth: 7,
             data: {
                 type: "picasa",
                 cache: false,
