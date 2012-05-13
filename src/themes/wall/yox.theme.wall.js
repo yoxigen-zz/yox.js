@@ -154,7 +154,7 @@ yox.themes.wall = function(data, options){
 
         $(container).addClass(containerClass);
         elements.wall = document.createElement("div");
-        elements.wall.className = this.getThemeClass() + " yoxthumbnails";
+        elements.wall.className = this.getThemeClass("thumbnails") + " yoxthumbnails";
         elements.wall.style.padding = options.padding + "px";
         container.appendChild(elements.wall);
         getContainerWidth();
@@ -165,7 +165,7 @@ yox.themes.wall = function(data, options){
                 "margin-bottom: " + options.borderWidth + "px"
             ];
 
-        styleEl.innerHTML = "." + containerClass + " ." + containerClass + " a{ " + thumbnailStyle.join("; ") + " }";
+        styleEl.innerHTML = " ." + containerClass + " a{ " + thumbnailStyle.join("; ") + " }";
         document.getElementsByTagName("head")[0].appendChild(styleEl);
 
         $(window).on("resize", function(e){
@@ -184,6 +184,12 @@ yox.themes.wall = function(data, options){
         // All non-webkit browsers measure scrollTop for the body element in the HTML element rather than the document (Firefox 13, IE9, Opera 11.62):
         if (!$.browser.webkit && container === document.body)
             scrollElementForMeasure = document.documentElement;
+
+        elements.loader = document.createElement("div");
+        elements.loader.className = this.getThemeClass("loader");
+        elements.loader.style.paddingBottom = (options.borderWidth + options.padding) + "px";
+
+        container.appendChild(elements.loader);
 
         // Used for infinite scrolling:
         function onScroll(e){

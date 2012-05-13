@@ -1,16 +1,15 @@
-.yox-theme-wall{
-    padding-bottom: 20px;
-    margin-bottom: 5px;
-}
-.yox-theme-wall-loading{
-    background: url(ajax-loader.gif) no-repeat center bottom;
+.yox-theme-wall-loading{}
+.yox-theme-wall-loader{
+    background: url(ajax-loader.gif) no-repeat center top;
+    height: 32px;
 }
 .yox-theme-wall-loadedAll{ padding-bottom: 0; margin-bottom: 0 }
+.yox-theme-wall-loadedAll .yox-theme-wall-loader{ display: none }
 
-.yox-theme-wall a{
+.yox-theme-wall-thumbnails a{
     display: inline-block;
-    background: #ddd;
-
+    background: #333;
+    opacity: .8;
     -webkit-transform: scale(1) translateZ(1);
     -moz-transform: scale(1);
     -webkit-transition: all 200ms ease-out;
@@ -20,29 +19,30 @@
     position: relative;
     z-index: 1;
 }
-.yox-theme-wall a:hover{
+.yox-theme-wall-thumbnails a:hover{
+    /*
     -webkit-transform: scale(1.2);
     -moz-transform: scale(1.2);
     -ms-transform: scale(1.2);
     -o-transform: scale(1.2);
+    */
+    opacity: 1;
     z-index: 99;
-    box-shadow: 2px 2px 7px rgba(0,0,0,.6);
 }
 
-.yox-theme-wall img{
+.yox-theme-wall-thumbnails img{
     width: 100%;
     height: 100%;
     border: 0; /* For IE */
     visibility: hidden;
-    background: #ddd;
 
     -webkit-transform: scale(.5);
     -moz-transform: scale(.5);
-    -ms-transform: scale(.5);
+    transform: scale(.5);
     -o-transform: scale(.5);
 
     -webkit-transition: -webkit-transform 300ms ease-out;
-    -moz-transition: -webkit-transform 300ms ease-out;
-    -o-transition: -webkit-transform 300ms ease-out;
-    -ms-transition: -webkit-transform 300ms ease-out;
+    -moz-transition: -moz-transform 300ms ease-out;
+    -o-transition: -o-transform 300ms ease-out;
+    transition: transform 300ms ease-out;
 }
