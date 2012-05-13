@@ -142,7 +142,7 @@
                     item.ratio = item.height / item.width;
 
                     var position = this.getPosition(item, this.containerDimensions, this.options);
-                    this.transition.transition.call(this, { position: position, index: item.id - 1 });
+                    this.transition.transition.call(this, { position: position, index: item.id - 1, item: item });
                     this.triggerEvent("select", item);
                 }
             },
@@ -157,7 +157,7 @@
                     var item = view.currentItem,
                         position = view.getPosition(item, view.containerDimensions, view.options);
 
-                    view.transition.transition.call(view, { position: position, index: item.id - 1 });
+                    view.transition.transition.call(view, { position: position, index: item.id - 1, item: item });
                     view.triggerEvent("select", item);
                 }
 
