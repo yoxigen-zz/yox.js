@@ -22,7 +22,7 @@
                 self.triggerEvent("click", { originalEvent: e, index: index, target: this });
                 self.select(index);
             }
-            $(this.container).on("click", "." + self.options.thumbnailClass, onClick);
+            $(this.container).on("click", "[data-yoxthumbindex]", onClick);
             this.addEventListener("beforeDestroy", function(){
                 $(this.container).off("click", "." + self.options.thumbnailClass, onClick);
             });
