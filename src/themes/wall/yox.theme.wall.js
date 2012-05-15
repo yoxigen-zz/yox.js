@@ -29,6 +29,13 @@ yox.themes.wall = function(data, options){
 
                 calculateDimensions(thumbnail, itemIndex, totalItems);
                 return thumbnail;
+            },
+            events: {
+                beforeSelect: function(e){
+                    if (options.scrollToElementOnSelect && e.newItem){
+                        yox.utils.dom.scrollIntoView(e.newItem.thumbnail.element, self.container, 500);
+                    }
+                }
             }
         }
     };
@@ -216,6 +223,8 @@ yox.themes.wall.defaults = {
     borderWidth: 7, // The size, in pixels, of the space between thumbnails
     loadItemsOnScroll: false, // Whether to get more results from the data source when scrolling down
     padding: 10, // The padding arround the thumbnails (padding for the element that contains all the thumbnails)
+    scrollAnimationDuration: 500, // The time, in milliseconds, for the scroll animation, when a thumbnail is brought into view.
+    scrollToElementOnSelect: false, // If set to true, the theme's container will be scrolled to the selected thumbnail when its item is selected
     thumbnailsMaxHeight: 200 // The maximum height allowed for each thumbnail
 };
 
