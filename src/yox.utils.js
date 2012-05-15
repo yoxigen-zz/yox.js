@@ -98,13 +98,64 @@ yox.utils = {
         }
     },
     dom: {
+        /**
+         * Returns true if the specified value is a DOM element, false if it isn't.
+         */
         isElement: Object(HTMLElement) === HTMLElement
             ? function(el){ return el instanceof HTMLElement; }
             : Object(Element) === Element
                 ? function(el){ return el instanceof Element; }
                 : function(e){
                     return Object(el) === el && el.nodeType === 1 && typeof(el.nodeName) === "string";
+                },
+        scrollIntoView: function(element, container, animateTime){
+            var containerSize = { width: container.clientWidth, height: container.clientHeight },
+                containerScrollSize = { height: container.scrollHeight, width: container.scrollWidth };
+
+            if (containerSize.height >= containerScrollSize.height && containerSize.width >= containerScrollSize.width)
+                return false;
+
+            if (!animateTime){
+                element.scrollIntoView();
+                return true;
+            }
+
+            var elementBoundingRect = element.getBoundingClientRect(),
+                $element = $(element),
+                elementOffset = $element.offset(),
+                elementSize = { width: $element.width(), height: $element.height() },
+                containerScrollPos = { left: container.scrollLeft, top: container.scrollTop },
+                containerOffset = $(container).offset(),
+                scrollTo = {},
+                sizes = { top: "height", left: "width" };
+
+            function setScroll(side){
+                var firstDelta = elementOffset[side] - containerScrollPos[side];
+                if (containerOffset[side] > firstDelta){
+                    scrollTo[side] = containerScrollPos[side] + firstDelta;
                 }
+                else {
+                    var sizeParam = sizes[side],
+                        elementLimit = elementOffset[side] - containerScrollPos[side] + elementSize[sizeParam],
+                        containerLimit = containerOffset[side] + containerSize[sizeParam];
+
+                    if (containerLimit < elementLimit){
+                        scrollTo[side] = containerScrollPos[side] + elementLimit - containerLimit;
+                    }
+                }
+            }
+            setScroll("top");
+            setScroll("left");
+
+            if (scrollTo.top || scrollTo.left){
+                var animateParams = {};
+                if (scrollTo.top)
+                    animateParams.scrollTop = scrollTo.top;
+                if (scrollTo.left)
+                    animateParams.scrollLeft = scrollTo.left;
+                $(container).animate(animateParams, animateTime);
+            }
+        }
     },
     dimensions: {
         // Distributes an object or number into the following structure:
@@ -132,8 +183,8 @@ yox.utils = {
                 item.ratio = item.ratio || (item.height / item.width);
 
                 var newWidth = options.enlarge ? containerDimensions.width : Math.min(item.width, containerDimensions.width),
-                    newHeight = Math.round(newWidth * item.ratio),
-                    maxHeight = containerDimensions.height;
+                        newHeight = Math.round(newWidth * item.ratio),
+                        maxHeight = containerDimensions.height;
 
                 if (newHeight < maxHeight && (maxHeight <= item.height || options.enlarge)){
                     newHeight = maxHeight;
@@ -152,11 +203,11 @@ yox.utils = {
                 item.ratio = item.ratio || (item.height / item.width);
 
                 var margin = options.margin || {},
-                    padding = options.padding || {},
-                    requiredWidth = containerDimensions.width - (margin.horizontal || 0) - (padding.horizontal || 0),
-                    newWidth =  options.enlarge ? requiredWidth : Math.min(item.width, requiredWidth),
-                    newHeight = Math.round(newWidth * item.ratio),
-                    maxHeight = containerDimensions.height - (margin.vertical || 0) - (padding.vertical || 0);
+                        padding = options.padding || {},
+                        requiredWidth = containerDimensions.width - (margin.horizontal || 0) - (padding.horizontal || 0),
+                        newWidth =  options.enlarge ? requiredWidth : Math.min(item.width, requiredWidth),
+                        newHeight = Math.round(newWidth * item.ratio),
+                        maxHeight = containerDimensions.height - (margin.vertical || 0) - (padding.vertical || 0);
 
                 if (newHeight > maxHeight){
                     newHeight = maxHeight;
@@ -169,6 +220,29 @@ yox.utils = {
                     width: newWidth,
                     height: newHeight
                 };
+            }
+        }
+    },
+    performance: {
+        debounce: function(fn, delay, params){
+            var context = this,
+                args = Array.prototype.slice.call(arguments, 2);
+
+            clearTimeout(fn.bounceTimer);
+            fn.bounceTimer = setTimeout(function () {
+                fn.apply(context, args);
+            }, delay);
+        },
+        // http://remysharp.com/2010/07/21/throttling-function-calls/
+        // http://www.nczonline.net/blog/2007/11/30/the-throttle-function/
+        throttle: function(fn, delay){
+            fn.bounceTimer = null;
+            return function () {
+                var context = this, args = arguments;
+                clearTimeout(fn.bounceTimer);
+                fn.bounceTimer = setTimeout(function () {
+                    fn.apply(context, args);
+                }, delay);
             }
         }
     },
