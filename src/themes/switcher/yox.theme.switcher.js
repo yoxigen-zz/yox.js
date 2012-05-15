@@ -1,6 +1,7 @@
 yox.themes.switcher = function(data, options){
     var elements,
-        self = this;
+        self = this,
+        isOpen = false;
 
     this.name = "switcher";
 
@@ -13,15 +14,31 @@ yox.themes.switcher = function(data, options){
             transitionTime: 300,
             margin: 30,
             events: {
-                "click.thumbnails": function(e){ this.selectItem(e.index); }
+                "click.thumbnails": function(e){ this.selectItem(e.index); },
+                beforeSelect: function(e){
+                    if (!isOpen && e.newItem){
+                        isOpen = true;
+                        $(elements.container).addClass(self.getThemeClass("open"));
+                    }
+                },
+                close: function(e){
+                    self.modules.view.close();
+                    isOpen = false;
+                    $(elements.container).removeClass(self.getThemeClass("open"));
+                }
             }
         }
     };
 
+    function resizeEventHandler(){
+        self.modules.view.update();
+    }
+
     this.create = function(container){
         elements = {
             background: document.createElement("div"),
-            view: document.createElement("div")
+            view: document.createElement("div"),
+            container: container
         };
 
         elements.background.className = this.getThemeClass("background");
@@ -30,14 +47,21 @@ yox.themes.switcher = function(data, options){
         container.appendChild(elements.background);
         container.appendChild(elements.view);
 
-        $(window).on("resize", function(){
-            self.modules.view.update();
-        });
+        $(window).on("resize", resizeEventHandler);
+        $(elements.view).on("click", "img", function(){ self.modules.view.next() });
     };
+
+    this.destroy = function(){
+        elements.container.removeChild(elements.background);
+        elements.container.removeChild(elements.view);
+        $(window).off("resize", resizeEventHandler);
+        $(elements.container).removeClass(self.getThemeClass("open"));
+        elements = null;
+    }
 
 };
 yox.themes.switcher.defaults = {
-    margin: 30
+    scrollDuration: 500 // The time, in milliseconds, for scrolling animations, when a thumbnailo should be brought into view
 };
 
 yox.themes.switcher.prototype = new yox.theme();
