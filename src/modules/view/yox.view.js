@@ -231,26 +231,33 @@
             if (item !== this.currentItem)
                 return false;
 
-            var itemType = itemTypes[item.type],
-                $panel = itemType.checkLoading ? this.transition.getCurrentPanel() : this.transition.getPanel(),
-                currentPanelItemType = $panel.data("itemType"),
-                element = checkElementExists.call(this, $panel, item.type);
+            if (item){
+                var itemType = itemTypes[item.type],
+                    $panel = itemType.checkLoading ? this.transition.getCurrentPanel() : this.transition.getPanel(),
+                    currentPanelItemType = $panel.data("itemType"),
+                    element = checkElementExists.call(this, $panel, item.type);
 
-            if (currentPanelItemType !== item.type){
-                if (currentPanelItemType){
-                    currentPanelItemType && itemType.clear.call(this, element);
-                    $panel.data(currentPanelItemType).style.display = "none";
+                if (currentPanelItemType !== item.type){
+                    if (currentPanelItemType){
+                        currentPanelItemType && itemType.clear.call(this, element);
+                        $panel.data(currentPanelItemType).style.display = "none";
+                    }
+                    $panel.data("itemType", item.type);
                 }
-                $panel.data("itemType", item.type);
-            }
 
-            if (itemType.checkLoading && !element.loading){
-                $panel = this.transition.getPanel(true);
-                element = checkElementExists.call(this, $panel, item.type);
-            }
+                if (itemType.checkLoading && !element.loading){
+                    $panel = this.transition.getPanel(item);
+                    element = checkElementExists.call(this, $panel, item.type);
+                }
 
-            element.style.display = "block";
-            itemType.set.call(this, item, element);
+                element.style.display = "block";
+                itemType.set.call(this, item, element);
+            }
+            else {
+                this.transition.getPanel(item);
+                this.transition.transition.call(this, { item: item });
+                this.triggerEvent("select", item);
+            }
         }
 
         return {
@@ -276,6 +283,18 @@
                 });
             },
             cacheCount: 0,
+            /**
+             * Selects a null item. Transitions that support this should close the view.
+             */
+            close: function(){
+                if (this.currentItem){
+                    this.selectItem(null);
+                    this.triggerEvent("close");
+                }
+            },
+            /**
+             * Removes all elements created for the view, keyboard events.
+             */
             destroy: function(){
                 this.triggerEvent("beforeDestroy");
                 this.disableKeyboard();
@@ -445,16 +464,20 @@
                 var currentItem = this.currentItem,
                     view = this;
 
-                if (currentItem && item.id === currentItem.id)
+                if (currentItem && item && item.id === currentItem.id)
 					return false;
 
                 this.triggerEvent("beforeSelect", { newItem: item, oldItem: currentItem, data: data });
 
 				this.currentItem = item;
 
-                this.cache.withItem(item, this, function(loadedItem){
-                    setItem.call(view, loadedItem);
-                });
+                if (item){
+                    this.cache.withItem(item, this, function(loadedItem){
+                        setItem.call(view, loadedItem);
+                    });
+                }
+                else
+                    setItem.call(view, item);
 
                 return true;
             },
@@ -462,7 +485,6 @@
                 // SOON
             },
             update: function(force){
-                var self = this;
                 if (this.options.transitionTime){
                     if (this.updateTransitionTimeoutId){
                         clearTimeout(this.updateTransitionTimeoutId);
