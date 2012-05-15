@@ -185,13 +185,64 @@ yox.utils = {
         }
     },
     dom: {
+        /**
+         * Returns true if the specified value is a DOM element, false if it isn't.
+         */
         isElement: Object(HTMLElement) === HTMLElement
             ? function(el){ return el instanceof HTMLElement; }
             : Object(Element) === Element
                 ? function(el){ return el instanceof Element; }
                 : function(e){
                     return Object(el) === el && el.nodeType === 1 && typeof(el.nodeName) === "string";
+                },
+        scrollIntoView: function(element, container, animateTime){
+            var containerSize = { width: container.clientWidth, height: container.clientHeight },
+                containerScrollSize = { height: container.scrollHeight, width: container.scrollWidth };
+
+            if (containerSize.height >= containerScrollSize.height && containerSize.width >= containerScrollSize.width)
+                return false;
+
+            if (!animateTime){
+                element.scrollIntoView();
+                return true;
+            }
+
+            var elementBoundingRect = element.getBoundingClientRect(),
+                $element = $(element),
+                elementOffset = $element.offset(),
+                elementSize = { width: $element.width(), height: $element.height() },
+                containerScrollPos = { left: container.scrollLeft, top: container.scrollTop },
+                containerOffset = $(container).offset(),
+                scrollTo = {},
+                sizes = { top: "height", left: "width" };
+
+            function setScroll(side){
+                var firstDelta = elementOffset[side] - containerScrollPos[side];
+                if (containerOffset[side] > firstDelta){
+                    scrollTo[side] = containerScrollPos[side] + firstDelta;
                 }
+                else {
+                    var sizeParam = sizes[side],
+                        elementLimit = elementOffset[side] - containerScrollPos[side] + elementSize[sizeParam],
+                        containerLimit = containerOffset[side] + containerSize[sizeParam];
+
+                    if (containerLimit < elementLimit){
+                        scrollTo[side] = containerScrollPos[side] + elementLimit - containerLimit;
+                    }
+                }
+            }
+            setScroll("top");
+            setScroll("left");
+
+            if (scrollTo.top || scrollTo.left){
+                var animateParams = {};
+                if (scrollTo.top)
+                    animateParams.scrollTop = scrollTo.top;
+                if (scrollTo.left)
+                    animateParams.scrollLeft = scrollTo.left;
+                $(container).animate(animateParams, animateTime);
+            }
+        }
     },
     dimensions: {
         // Distributes an object or number into the following structure:
@@ -219,8 +270,8 @@ yox.utils = {
                 item.ratio = item.ratio || (item.height / item.width);
 
                 var newWidth = options.enlarge ? containerDimensions.width : Math.min(item.width, containerDimensions.width),
-                    newHeight = Math.round(newWidth * item.ratio),
-                    maxHeight = containerDimensions.height;
+                        newHeight = Math.round(newWidth * item.ratio),
+                        maxHeight = containerDimensions.height;
 
                 if (newHeight < maxHeight && (maxHeight <= item.height || options.enlarge)){
                     newHeight = maxHeight;
@@ -239,11 +290,11 @@ yox.utils = {
                 item.ratio = item.ratio || (item.height / item.width);
 
                 var margin = options.margin || {},
-                    padding = options.padding || {},
-                    requiredWidth = containerDimensions.width - (margin.horizontal || 0) - (padding.horizontal || 0),
-                    newWidth =  options.enlarge ? requiredWidth : Math.min(item.width, requiredWidth),
-                    newHeight = Math.round(newWidth * item.ratio),
-                    maxHeight = containerDimensions.height - (margin.vertical || 0) - (padding.vertical || 0);
+                        padding = options.padding || {},
+                        requiredWidth = containerDimensions.width - (margin.horizontal || 0) - (padding.horizontal || 0),
+                        newWidth =  options.enlarge ? requiredWidth : Math.min(item.width, requiredWidth),
+                        newHeight = Math.round(newWidth * item.ratio),
+                        maxHeight = containerDimensions.height - (margin.vertical || 0) - (padding.vertical || 0);
 
                 if (newHeight > maxHeight){
                     newHeight = maxHeight;
@@ -256,6 +307,29 @@ yox.utils = {
                     width: newWidth,
                     height: newHeight
                 };
+            }
+        }
+    },
+    performance: {
+        debounce: function(fn, delay, params){
+            var context = this,
+                args = Array.prototype.slice.call(arguments, 2);
+
+            clearTimeout(fn.bounceTimer);
+            fn.bounceTimer = setTimeout(function () {
+                fn.apply(context, args);
+            }, delay);
+        },
+        // http://remysharp.com/2010/07/21/throttling-function-calls/
+        // http://www.nczonline.net/blog/2007/11/30/the-throttle-function/
+        throttle: function(fn, delay){
+            fn.bounceTimer = null;
+            return function () {
+                var context = this, args = arguments;
+                clearTimeout(fn.bounceTimer);
+                fn.bounceTimer = setTimeout(function () {
+                    fn.apply(context, args);
+                }, delay);
             }
         }
     },
@@ -2079,7 +2153,7 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                 self.triggerEvent("click", { originalEvent: e, index: index, target: this });
                 self.select(index);
             }
-            $(this.container).on("click", "." + self.options.thumbnailClass, onClick);
+            $(this.container).on("click", "[data-yoxthumbindex]", onClick);
             this.addEventListener("beforeDestroy", function(){
                 $(this.container).off("click", "." + self.options.thumbnailClass, onClick);
             });
@@ -2352,7 +2426,7 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                     item.ratio = item.height / item.width;
 
                     var position = this.getPosition(item, this.containerDimensions, this.options);
-                    this.transition.transition.call(this, { position: position, index: item.id - 1 });
+                    this.transition.transition.call(this, { position: position, index: item.id - 1, item: item });
                     this.triggerEvent("select", item);
                 }
             },
@@ -2367,7 +2441,7 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                     var item = view.currentItem,
                         position = view.getPosition(item, view.containerDimensions, view.options);
 
-                    view.transition.transition.call(view, { position: position, index: item.id - 1 });
+                    view.transition.transition.call(view, { position: position, index: item.id - 1, item: item });
                     view.triggerEvent("select", item);
                 }
 
@@ -2441,26 +2515,33 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
             if (item !== this.currentItem)
                 return false;
 
-            var itemType = itemTypes[item.type],
-                $panel = itemType.checkLoading ? this.transition.getCurrentPanel() : this.transition.getPanel(),
-                currentPanelItemType = $panel.data("itemType"),
-                element = checkElementExists.call(this, $panel, item.type);
+            if (item){
+                var itemType = itemTypes[item.type],
+                    $panel = itemType.checkLoading ? this.transition.getCurrentPanel() : this.transition.getPanel(),
+                    currentPanelItemType = $panel.data("itemType"),
+                    element = checkElementExists.call(this, $panel, item.type);
 
-            if (currentPanelItemType !== item.type){
-                if (currentPanelItemType){
-                    currentPanelItemType && itemType.clear.call(this, element);
-                    $panel.data(currentPanelItemType).style.display = "none";
+                if (currentPanelItemType !== item.type){
+                    if (currentPanelItemType){
+                        currentPanelItemType && itemType.clear.call(this, element);
+                        $panel.data(currentPanelItemType).style.display = "none";
+                    }
+                    $panel.data("itemType", item.type);
                 }
-                $panel.data("itemType", item.type);
-            }
 
-            if (itemType.checkLoading && !element.loading){
-                $panel = this.transition.getPanel(true);
-                element = checkElementExists.call(this, $panel, item.type);
-            }
+                if (itemType.checkLoading && !element.loading){
+                    $panel = this.transition.getPanel(item);
+                    element = checkElementExists.call(this, $panel, item.type);
+                }
 
-            element.style.display = "block";
-            itemType.set.call(this, item, element);
+                element.style.display = "block";
+                itemType.set.call(this, item, element);
+            }
+            else {
+                this.transition.getPanel(item);
+                this.transition.transition.call(this, { item: item });
+                this.triggerEvent("select", item);
+            }
         }
 
         return {
@@ -2486,6 +2567,18 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                 });
             },
             cacheCount: 0,
+            /**
+             * Selects a null item. Transitions that support this should close the view.
+             */
+            close: function(){
+                if (this.currentItem){
+                    this.selectItem(null);
+                    this.triggerEvent("close");
+                }
+            },
+            /**
+             * Removes all elements created for the view, keyboard events.
+             */
             destroy: function(){
                 this.triggerEvent("beforeDestroy");
                 this.disableKeyboard();
@@ -2655,16 +2748,20 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                 var currentItem = this.currentItem,
                     view = this;
 
-                if (currentItem && item.id === currentItem.id)
+                if (currentItem && item && item.id === currentItem.id)
 					return false;
 
                 this.triggerEvent("beforeSelect", { newItem: item, oldItem: currentItem, data: data });
 
 				this.currentItem = item;
 
-                this.cache.withItem(item, this, function(loadedItem){
-                    setItem.call(view, loadedItem);
-                });
+                if (item){
+                    this.cache.withItem(item, this, function(loadedItem){
+                        setItem.call(view, loadedItem);
+                    });
+                }
+                else
+                    setItem.call(view, item);
 
                 return true;
             },
@@ -2672,7 +2769,6 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                 // SOON
             },
             update: function(force){
-                var self = this;
                 if (this.options.transitionTime){
                     if (this.updateTransitionTimeoutId){
                         clearTimeout(this.updateTransitionTimeoutId);
@@ -3304,6 +3400,168 @@ yox.view.transitions.morph = function(){
 };
 
 yox.view.transitions.morph.prototype = new yox.view.transition("morph");
+yox.view.transitions.thumbnails = function(){
+    var panels,
+        currentPanelIndex = 1,
+        defaultTransitionTime,
+        currentTransitionTime,
+        $currentItemThumbnail,
+        zIndex = 100,
+        scrollElement,
+        scrollEventElement,
+        isOpen = false,
+        lastPosition;
+
+    this.create = function($container){
+        var self = this;
+        function createImg(index){
+            var $panel = $("<div>", {
+                "class": "yoxviewFrame yoxviewFrame_" + self.options.resizeMode + " yoxviewFrame_" + yox.utils.browser.getPlatform(),
+                css: {
+                    transition: "all " + defaultTransitionTime + "ms ease-out",
+                    display: "none",
+                    "box-sizing": "border-box"
+                }
+            }).appendTo($container);
+
+            if ($.browser.webkit) // GPU acceleration for webkit:
+                $panel[0].style.setProperty("-webkit-transform", "translateZ(0)");
+
+            $container.append($panel);
+            return $panel;
+        }
+
+        currentTransitionTime = defaultTransitionTime = this.options.transitionTime;
+        panels = [];
+
+        for(var i=0; i<2; i++){
+            panels.push(createImg(i));
+        }
+
+        function isScrollableElement(element){
+            var compStyleOverflow = window.getComputedStyle(element, null).overflow;
+            return ~["scroll", "auto"].indexOf(compStyleOverflow);
+        }
+
+        scrollElement = $container[0];
+        while(!isScrollableElement(scrollElement) && scrollElement.parentNode && scrollElement !== document.documentElement){
+            scrollElement = scrollElement.parentNode;
+        }
+
+        scrollEventElement = scrollElement;
+        if (scrollElement === document.body || scrollElement === document.documentElement)
+            scrollEventElement = window;
+    };
+
+    var onScroll = yox.utils.performance.throttle(function(){
+        panels[currentPanelIndex].css({
+            top: lastPosition.top + scrollElement.scrollTop,
+            left: lastPosition.left + scrollElement.scrollLeft
+        });
+    }, 50);
+
+    this.destroy = function(){
+        for(var i=0; i<panels.length; i++){
+            panels[i].remove();
+        }
+        panels = [];
+    };
+
+    this.getCurrentPanel = function(){
+        return panels[currentPanelIndex];
+    };
+
+    this.getPanel = function(item){
+        currentPanelIndex = currentPanelIndex ? 0 : 1;
+        return panels[currentPanelIndex];
+    };
+
+    function showThumbnail($thumbnail){
+        return function(){
+            $thumbnail.css("visibility", "visible");
+        };
+    }
+
+    function doTransition(options){
+        clearTimeout(openPanelTimeoutId);
+        clearTimeout(hideOldPanelTimeoutId);
+
+        var $newPanel = panels[currentPanelIndex],
+                $oldPanel = panels[currentPanelIndex ? 0 : 1];
+
+        if (options.position){
+            lastPosition = {
+                top: options.position.top,
+                left: options.position.left
+            };
+
+            options.position.top += scrollElement.scrollTop;
+            options.position.left += scrollElement.scrollLeft;
+        }
+
+        if (!options.isUpdate){
+            if (options.item){
+                var $thumbnail = $(options.item.thumbnail.image),
+                        thumbnailOffset = $thumbnail.offset();
+
+                $newPanel
+                        .show()
+                        .css($.extend({
+                    transition: "none",
+                    "z-index": zIndex + 1
+                }, thumbnailOffset, { width: $thumbnail.width(), height: $thumbnail.height() }));
+
+                openPanelTimeoutId = setTimeout(function(){
+                    $newPanel.css($.extend({
+                        transition: "all " + defaultTransitionTime +"ms ease-out"
+                    }, options.position ));
+                }, 5);
+
+                if (!isOpen){
+                    isOpen = true;
+                    scrollEventElement.addEventListener("scroll", onScroll, false);
+                }
+            }
+            else{
+                isOpen = false;
+                scrollEventElement.removeEventListener("scroll", onScroll, false);
+            }
+
+            if ($oldPanel && $currentItemThumbnail){
+                $oldPanel.css($.extend({ "z-index": zIndex}, $currentItemThumbnail.offset(), {width: $currentItemThumbnail.width(), height: $currentItemThumbnail.height()}));
+                hideOldPanelTimeoutId = setTimeout(function(){ $oldPanel.hide() }, defaultTransitionTime);
+                showThumbnailTimeoutId = setTimeout(showThumbnail($currentItemThumbnail), defaultTransitionTime);
+            }
+            $currentItemThumbnail = $thumbnail;
+            if ($currentItemThumbnail)
+                $currentItemThumbnail.css("visibility", "hidden");
+        }
+        else {
+            $newPanel.css(options.position);
+        }
+    }
+    var throttledTransition = yox.utils.performance.throttle(doTransition, 120);
+
+    var openPanelTimeoutId, hideOldPanelTimeoutId, showThumbnailTimeoutId;
+    this.transition = function(options){
+        if (options.isUpdate)
+            throttledTransition.call(this,options);
+        else
+            doTransition.call(this, options);
+    };
+
+    this.update = function(updateData){
+        /*
+        if (updateData.transitionTime !== undefined){
+            $frame.css("transitionDuration", updateData.transitionTime + "ms");
+            for(var i=panels.length; i--;)
+                panels[i].css("transitionDuration", updateData.transitionTime + "ms");
+        }
+        */
+    };
+};
+
+yox.view.transitions.thumbnails.prototype = new yox.view.transition("thumbnails");
 yox.theme = function(data, options){};
 yox.themes = {}; // Will hold the theme types
 
@@ -4132,6 +4390,73 @@ yox.themes.slideshow = function(data, options){
 };
 
 yox.themes.slideshow.prototype = new yox.theme();
+yox.themes.switcher = function(data, options){
+    var elements,
+        self = this,
+        isOpen = false;
+
+    this.name = "switcher";
+
+    this.config = {
+        view: {
+            enableKeyboard: true,
+            enlarge: false,
+            resizeMode: "fit",
+            transition: yox.view.transitions.thumbnails,
+            transitionTime: 300,
+            margin: 30,
+            events: {
+                "click.thumbnails": function(e){ this.selectItem(e.index); },
+                beforeSelect: function(e){
+                    if (!isOpen && e.newItem){
+                        isOpen = true;
+                        $(elements.container).addClass(self.getThemeClass("open"));
+                    }
+                },
+                close: function(e){
+                    self.modules.view.close();
+                    isOpen = false;
+                    $(elements.container).removeClass(self.getThemeClass("open"));
+                }
+            }
+        }
+    };
+
+    function resizeEventHandler(){
+        self.modules.view.update();
+    }
+
+    this.create = function(container){
+        elements = {
+            background: document.createElement("div"),
+            view: document.createElement("div"),
+            container: container
+        };
+
+        elements.background.className = this.getThemeClass("background");
+        elements.view.className = this.getThemeClass("view") + " yoxview";
+
+        container.appendChild(elements.background);
+        container.appendChild(elements.view);
+
+        $(window).on("resize", resizeEventHandler);
+        $(elements.view).on("click", "img", function(){ self.modules.view.next() });
+    };
+
+    this.destroy = function(){
+        elements.container.removeChild(elements.background);
+        elements.container.removeChild(elements.view);
+        $(window).off("resize", resizeEventHandler);
+        $(elements.container).removeClass(self.getThemeClass("open"));
+        elements = null;
+    }
+
+};
+yox.themes.switcher.defaults = {
+    scrollDuration: 500 // The time, in milliseconds, for scrolling animations, when a thumbnailo should be brought into view
+};
+
+yox.themes.switcher.prototype = new yox.theme();
 yox.themes.wall = function(data, options){
     var elements = {},
         containerWidth,
@@ -4163,6 +4488,13 @@ yox.themes.wall = function(data, options){
 
                 calculateDimensions(thumbnail, itemIndex, totalItems);
                 return thumbnail;
+            },
+            events: {
+                beforeSelect: function(e){
+                    if (options.scrollToElementOnSelect && e.newItem){
+                        yox.utils.dom.scrollIntoView(e.newItem.thumbnail.element, self.container, 500);
+                    }
+                }
             }
         }
     };
@@ -4288,7 +4620,7 @@ yox.themes.wall = function(data, options){
 
         $(container).addClass(containerClass);
         elements.wall = document.createElement("div");
-        elements.wall.className = this.getThemeClass() + " yoxthumbnails";
+        elements.wall.className = this.getThemeClass("thumbnails") + " yoxthumbnails";
         elements.wall.style.padding = options.padding + "px";
         container.appendChild(elements.wall);
         getContainerWidth();
@@ -4299,7 +4631,7 @@ yox.themes.wall = function(data, options){
                 "margin-bottom: " + options.borderWidth + "px"
             ];
 
-        styleEl.innerHTML = "." + containerClass + " ." + containerClass + " a{ " + thumbnailStyle.join("; ") + " }";
+        styleEl.innerHTML = " ." + containerClass + " a{ " + thumbnailStyle.join("; ") + " }";
         document.getElementsByTagName("head")[0].appendChild(styleEl);
 
         $(window).on("resize", function(e){
@@ -4318,6 +4650,12 @@ yox.themes.wall = function(data, options){
         // All non-webkit browsers measure scrollTop for the body element in the HTML element rather than the document (Firefox 13, IE9, Opera 11.62):
         if (!$.browser.webkit && container === document.body)
             scrollElementForMeasure = document.documentElement;
+
+        elements.loader = document.createElement("div");
+        elements.loader.className = this.getThemeClass("loader");
+        elements.loader.style.paddingBottom = (options.borderWidth + options.padding) + "px";
+
+        container.appendChild(elements.loader);
 
         // Used for infinite scrolling:
         function onScroll(e){
@@ -4344,6 +4682,8 @@ yox.themes.wall.defaults = {
     borderWidth: 7, // The size, in pixels, of the space between thumbnails
     loadItemsOnScroll: false, // Whether to get more results from the data source when scrolling down
     padding: 10, // The padding arround the thumbnails (padding for the element that contains all the thumbnails)
+    scrollAnimationDuration: 500, // The time, in milliseconds, for the scroll animation, when a thumbnail is brought into view.
+    scrollToElementOnSelect: false, // If set to true, the theme's container will be scrolled to the selected thumbnail when its item is selected
     thumbnailsMaxHeight: 200 // The maximum height allowed for each thumbnail
 };
 
