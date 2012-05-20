@@ -1076,7 +1076,7 @@ yox.data.sources.picasa = (function(){
             cropThumbnails: false,
 			thumbsize: 64,
             imgmax: picasaUncropSizes[picasaUncropSizes.length - 1],
-            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href)),entry(media:group(media:credit)),openSearch:totalResults"
+            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href)),entry(media:group(media:credit)),openSearch:totalResults,entry(gphoto:height),entry(gphoto:width)"
         };
 
     function getDataFromUrl(url, options){
@@ -1150,8 +1150,12 @@ yox.data.sources.picasa = (function(){
                     link: image.link[0].href,
                     title: imageTitle,
                     type: "image",
-                    author: { name: image.media$group.media$credit[0].$t }
+                    author: { name: image.media$group.media$credit[0].$t },
+                    width: parseInt(image.gphoto$width, 10),
+                    height: parseInt(image.gphoto$height, 10)
                 };
+
+            itemData.ratio = itemData.height / itemData.width;
 
             if (isAlbum){
                 itemData.data = { album: { name: image.title.$t, imageCount: image.gphoto$numphotos.$t, description: image.summary.$t }};
@@ -2432,17 +2436,19 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
             },
             image: (function(){
                 function onImageLoad(e){
-                    this.loading = false;
                     var view = e instanceof yox.view ? e : e.data.view;
-                    if (view.currentItem.url !== this.src){
+                    this.loading = false;
+                    if (view.currentItem.url !== this.src && view.currentItem.thumbnail.src !== this.src){
                         return false;
                     }
 
-                    var item = view.currentItem,
-                        position = view.getPosition(item, view.containerDimensions, view.options);
+                    if (!view.options.showThumbnailsBeforeLoad || this.loadingThumbnail){
+                        this.loadingThumbnail = false;
+                        var item = view.currentItem,
+                            position = view.getPosition(item, view.containerDimensions, view.options);
 
-                    view.transition.transition.call(view, { position: position, index: item.id - 1, item: item });
-                    view.triggerEvent("select", item);
+                        view.transition.transition.call(view, { position: position, index: item.id - 1, item: item });
+                    }
                 }
 
                 return {
@@ -2456,11 +2462,15 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                         $(img).on("load", { view: this }, onImageLoad);
                         return img;
                     },
-                    set: function(item, element){
+                    set: function(item, element, loadThumbnail){
+                        var imageUrl = loadThumbnail && item.thumbnail ? item.thumbnail.src : item.url;
                         element.loading = true;
-                        if (element.src !== item.url){
+                        if (loadThumbnail)
+                            element.loadingThumbnail = true;
+
+                        if (element.src !== imageUrl){
                             element.src = "";
-                            element.src = item.url;
+                            element.src = imageUrl;
                         }
                         else
                             onImageLoad.call(element, this);
@@ -2511,7 +2521,7 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
             }
         }
 
-        function setItem(item){
+        function setItem(item, loadThumbnail){
             if (item !== this.currentItem)
                 return false;
 
@@ -2529,15 +2539,15 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                     $panel.data("itemType", item.type);
                 }
 
-                if (itemType.checkLoading && !element.loading){
+                if (itemType.checkLoading && !element.loading && (!this.options.showThumbnailsBeforeLoad || loadThumbnail)){
                     $panel = this.transition.getPanel(item);
                     element = checkElementExists.call(this, $panel, item.type);
                 }
 
                 element.style.display = "block";
-                itemType.set.call(this, item, element);
+                itemType.set.call(this, item, element, loadThumbnail);
             }
-            else {
+            else { // No item given, the transition should close if it can.
                 this.transition.getPanel(item);
                 this.transition.transition.call(this, { item: item });
                 this.triggerEvent("select", item);
@@ -2752,10 +2762,13 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
 					return false;
 
                 this.triggerEvent("beforeSelect", { newItem: item, oldItem: currentItem, data: data });
-
 				this.currentItem = item;
 
                 if (item){
+                    if (view.options.showThumbnailsBeforeLoad){
+                        setItem.call(view, item, true);
+                    }
+
                     this.cache.withItem(item, this, function(loadedItem){
                         setItem.call(view, loadedItem);
                     });
@@ -2815,6 +2828,7 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
             container: document.body || document.getElementsByTagName("body")[0], // The element in which the viewer is rendered. Defaults to the whole window.
             panelDimensions: { width: 1600, height: 1600 }, // Default width and height for panels which aren't images
             resizeMode: "fit", // The mode in which to resize the item in the container - 'fit' (shows the whole item, resized to fit inside the container) or 'fill' (fills the entire container).
+            showThumbnailsBeforeLoad: false, // If set to true, the viewer will open thumbnails using the transition. When the full image is loaded, it replaces the thumbnail.
             slideshowDelay: 3000 // Time in milliseconds to display each image when in slideshow
 
         },
@@ -4405,6 +4419,7 @@ yox.themes.switcher = function(data, options){
             transition: yox.view.transitions.thumbnails,
             transitionTime: 300,
             margin: 30,
+            showThumbnailsBeforeLoad: true,
             events: {
                 "click.thumbnails": function(e){ this.selectItem(e.index); },
                 beforeSelect: function(e){
