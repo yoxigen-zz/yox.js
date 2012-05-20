@@ -13,7 +13,7 @@ yox.data.sources.picasa = (function(){
             cropThumbnails: false,
 			thumbsize: 64,
             imgmax: picasaUncropSizes[picasaUncropSizes.length - 1],
-            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href)),entry(media:group(media:credit)),openSearch:totalResults"
+            fields: "category(@term),entry(category(@term)),title,entry(summary),entry(media:group(media:thumbnail(@url))),entry(media:group(media:content(@url))),entry(media:group(media:content(@width))),entry(media:group(media:content(@height))),entry(link[@rel='alternate'](@href)),entry(media:group(media:credit)),openSearch:totalResults,entry(gphoto:height),entry(gphoto:width)"
         };
 
     function getDataFromUrl(url, options){
@@ -87,8 +87,12 @@ yox.data.sources.picasa = (function(){
                     link: image.link[0].href,
                     title: imageTitle,
                     type: "image",
-                    author: { name: image.media$group.media$credit[0].$t }
+                    author: { name: image.media$group.media$credit[0].$t },
+                    width: parseInt(image.gphoto$width, 10),
+                    height: parseInt(image.gphoto$height, 10)
                 };
+
+            itemData.ratio = itemData.height / itemData.width;
 
             if (isAlbum){
                 itemData.data = { album: { name: image.title.$t, imageCount: image.gphoto$numphotos.$t, description: image.summary.$t }};

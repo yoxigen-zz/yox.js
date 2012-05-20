@@ -13,6 +13,7 @@ yox.themes.switcher = function(data, options){
             transition: yox.view.transitions.thumbnails,
             transitionTime: 300,
             margin: 30,
+            showThumbnailsBeforeLoad: true,
             events: {
                 "click.thumbnails": function(e){ this.selectItem(e.index); },
                 beforeSelect: function(e){

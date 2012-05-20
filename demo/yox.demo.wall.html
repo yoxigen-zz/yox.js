@@ -2,17 +2,39 @@
 <html>
 <head>
     <title>yox.js demo - wall theme</title>
+    <link href='http://fonts.googleapis.com/css?family=Pontano+Sans|Quicksand:400,700' rel='stylesheet' type='text/css'>
     <link rel="Stylesheet" type="text/css" href="css/demo.css" />
         <link rel="Stylesheet" type="text/css" href="../src/modules/view/yoxview.css" />
         <link rel="Stylesheet" type="text/css" href="../src/themes/wall/yox.theme.wall.css" />
         <style>
-            body{ padding: 0; margin: 0; overflow-y: scroll; background: White; }
+            body{ padding: 36px 0 0; margin: 0; overflow-y: scroll; background: Black; }
             img{ vertical-align: top }
+            header{
+                background: none repeat scroll 0 0 rgba(0, 0, 0, 0.75);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+                padding: 0 10px;
+                position: fixed;
+                z-index: 100;
+                top: 0;
+                line-height: 39px;
+                border: none;
+            }
+            header h1{
+                font-family: 'Quicksand',sans-serif;
+                font-weight: 400;
+                font-size: 20px;
+            }
+            header h1 span{
+                color: #bbb;
+            }
         </style>
 </head>
 <body>
+<header>
+    <h1>Yossi Kolesnicov <span>Photography</span></h1>
+</header>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-<!--
+
     <script type="text/javascript" src="../src/yox.js"></script>
     <script type="text/javascript" src="../src/yox.utils.js"></script>
     <script type="text/javascript" src="../src/modules/data/yox.data.js"></script>
@@ -30,19 +52,20 @@
     <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.fade.js"></script>
     <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.evaporate.js"></script>
     <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.flip.js"></script>
+    <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.thumbnails.js"></script>
     <script type="text/javascript" src="../src/modules/scroll/yox.scroll.js"></script>
     <script type="text/javascript" src="../src/modules/statistics/yox.statistics.js"></script>
     <script type="text/javascript" src="../src/modules/statistics/reporters/yox.statistics.reporter.js"></script>
     <script type="text/javascript" src="../src/modules/statistics/reporters/yox.statistics.reporter.ga.js"></script>
     <script type="text/javascript" src="../src/themes/yox.theme.js"></script>
     <script type="text/javascript" src="../src/themes/wall/yox.theme.wall.js"></script>
--->
-<script src="../build/yox.min.js"></script>
+
+<!--<script src="../build/yox.min.js"></script>-->
     <script>
         var yoxApi = new Yox(document.body, {
             theme: "wall",
             thumbnailsMaxHeight: 300,
-            borderWidth: 7,
+            borderWidth: 3,
             data: {
                 type: "picasa",
                 cache: false,
