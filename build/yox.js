@@ -195,9 +195,11 @@ yox.utils = {
                 : function(e){
                     return Object(el) === el && el.nodeType === 1 && typeof(el.nodeName) === "string";
                 },
-        scrollIntoView: function(element, container, animateTime){
+        scrollIntoView: function(element, container, animateTime, margin){
             var containerSize = { width: container.clientWidth, height: container.clientHeight },
                 containerScrollSize = { height: container.scrollHeight, width: container.scrollWidth };
+
+            margin = margin || 0;
 
             if (containerSize.height >= containerScrollSize.height && containerSize.width >= containerScrollSize.width)
                 return false;
@@ -207,8 +209,7 @@ yox.utils = {
                 return true;
             }
 
-            var elementBoundingRect = element.getBoundingClientRect(),
-                $element = $(element),
+            var $element = $(element),
                 elementOffset = $element.offset(),
                 elementSize = { width: $element.width(), height: $element.height() },
                 containerScrollPos = { left: container.scrollLeft, top: container.scrollTop },
@@ -217,13 +218,13 @@ yox.utils = {
                 sizes = { top: "height", left: "width" };
 
             function setScroll(side){
-                var firstDelta = elementOffset[side] - containerScrollPos[side];
+                var firstDelta = elementOffset[side] - containerScrollPos[side] - margin;
                 if (containerOffset[side] > firstDelta){
                     scrollTo[side] = containerScrollPos[side] + firstDelta;
                 }
                 else {
                     var sizeParam = sizes[side],
-                        elementLimit = elementOffset[side] - containerScrollPos[side] + elementSize[sizeParam],
+                        elementLimit = elementOffset[side] - containerScrollPos[side] + elementSize[sizeParam] + margin,
                         containerLimit = containerOffset[side] + containerSize[sizeParam];
 
                     if (containerLimit < elementLimit){
@@ -234,13 +235,13 @@ yox.utils = {
             setScroll("top");
             setScroll("left");
 
-            if (scrollTo.top || scrollTo.left){
+            if (scrollTo.top !== undefined || scrollTo.left !== undefined){
                 var animateParams = {};
                 if (scrollTo.top)
                     animateParams.scrollTop = scrollTo.top;
                 if (scrollTo.left)
                     animateParams.scrollLeft = scrollTo.left;
-                $(container).animate(animateParams, animateTime);
+                $(container).stop(true, true).animate(animateParams, animateTime);
             }
         }
     },
@@ -380,7 +381,7 @@ yox.eventsHandler = function(){
         _default: {}
     };
 
-    this.triggerEvent = function(eventName, data, id){
+    this.triggerEvent = function(eventName, data, sender){
         var eventNameParts = eventName.split("."),
             eventType = eventNameParts[0],
             namespaceName = eventNameParts[1];
@@ -391,7 +392,7 @@ yox.eventsHandler = function(){
                 var namespaceEvents = namespace[eventType];
                 if (namespaceEvents){
                     for(var i=0, eventHandler; eventHandler = namespaceEvents[i]; i++){
-                        eventHandler.call(this, data, id);
+                        eventHandler.call(this, data, sender);
                     }
                 }
             }
@@ -400,7 +401,7 @@ yox.eventsHandler = function(){
         var noNamespacedEvents = namespaces._default[eventType];
         if (noNamespacedEvents){
             for(var i=0, eventHandler; eventHandler = noNamespacedEvents[i]; i++){
-                eventHandler.call(this, data, id);
+                eventHandler.call(this, data, sender);
             }
         }
     };
@@ -454,6 +455,22 @@ yox.eventsHandler = function(){
         return foundHandler;
     }
 };
+
+yox.eventsHandler.prototype = {
+    /**
+     * Wraps the eventHandler's triggerEvent method with a specified 'this' and 'sender' arguments.
+     * Note: This isn't done simply with the 'bind' function because the sender should be the last parameter,
+     * rather than the first, and 'bind' only prepends parameters.
+     * @param thisArg The object to serve as the 'this' of the triggerEvent function's call.
+     * @param sender The 'sender' argument to send on triggerEvent function calls.
+     */
+    bindTriggerEvent: function(thisArg, sender){
+        var self = this;
+        return function(eventName, data){
+            return self.triggerEvent.call(thisArg, eventName, data, sender);
+        };
+    }
+}
 /**
  * Data module, responsible for retrieving and holding data used by other modules.
  * Data is retrieved through data sources, which are sub-modules of the data module.
@@ -2144,6 +2161,10 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
         var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
         $.extend(this, eventsHandler);
 
+        this.triggerEvent = function(eventName, data){
+            eventsHandler.triggerEvent.call(self, eventName, data, self);
+        }
+
         if (this.options.events){
             for(var eventName in this.options.events)
                 this.addEventListener(eventName, this.options.events[eventName]);
@@ -2152,10 +2173,20 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
 
         if (this.options.handleClick !== false){
             function onClick(e){
-                var index = this.getAttribute("data-yoxthumbIndex");
+                var index = this.getAttribute("data-yoxthumbIndex"),
+                    isSelected;
+
                 e.preventDefault();
-                self.triggerEvent("click", { originalEvent: e, index: index, target: this });
-                self.select(index);
+
+                if (this.classList && self.options.selectedThumbnailClass)
+                    isSelected = this.classList.contains(self.options.selectedThumbnailClass);
+                else
+                    isSelected = $(this).hasClass(self.options.selectedThumbnailClass);
+
+                self.triggerEvent("click", { originalEvent: e, index: index, target: this, isSelected: isSelected });
+
+                if (!isSelected)
+                    self.select(index);
             }
             $(this.container).on("click", "[data-yoxthumbindex]", onClick);
             this.addEventListener("beforeDestroy", function(){
@@ -2275,13 +2306,19 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
             this.clear();
         },
         reset: function(){
-              },
+        },
         select: function(itemIndex){
-            this.currentSelectedThumbnail && this.currentSelectedThumbnail.removeClass(this.options.selectedThumbnailClass);
+            this.unselect();
             if (this.thumbnails)
                 this.currentSelectedThumbnail = this.thumbnails.eq(itemIndex).addClass(this.options.selectedThumbnailClass);
         },
-        template: "<a class='${$item.options.thumbnailClass}' href='${link || url}'{{if $item.options.renderThumbnailsTitle}} title='title'{{/if}} data-yoxthumbIndex='${$item.getIndex()}'><img src='${thumbnail.src}' alt='${title}' /></a>"
+        template: "<a class='${$item.options.thumbnailClass}' href='${link || url}'{{if $item.options.renderThumbnailsTitle}} title='title'{{/if}} data-yoxthumbIndex='${$item.getIndex()}'><img src='${thumbnail.src}' alt='${title}' /></a>",
+        unselect: function(){
+            if (this.currentSelectedThumbnail){
+                this.currentSelectedThumbnail.removeClass(this.options.selectedThumbnailClass);
+                this.currentSelectedThumbnail = null;
+            }
+        }
     };
 
     window.yox.thumbnails = yox.thumbnails;
@@ -3423,7 +3460,6 @@ yox.view.transitions.thumbnails = function(){
         zIndex = 100,
         scrollElement,
         scrollEventElement,
-        isOpen = false,
         lastPosition;
 
     this.create = function($container){
@@ -3434,7 +3470,8 @@ yox.view.transitions.thumbnails = function(){
                 css: {
                     transition: "all " + defaultTransitionTime + "ms ease-out",
                     display: "none",
-                    "box-sizing": "border-box"
+                    "box-sizing": "border-box",
+                    position: "fixed"
                 }
             }).appendTo($container);
 
@@ -3467,13 +3504,6 @@ yox.view.transitions.thumbnails = function(){
             scrollEventElement = window;
     };
 
-    var onScroll = yox.utils.performance.throttle(function(){
-        panels[currentPanelIndex].css({
-            top: lastPosition.top + scrollElement.scrollTop,
-            left: lastPosition.left + scrollElement.scrollLeft
-        });
-    }, 50);
-
     this.destroy = function(){
         for(var i=0; i<panels.length; i++){
             panels[i].remove();
@@ -3501,22 +3531,22 @@ yox.view.transitions.thumbnails = function(){
         clearTimeout(hideOldPanelTimeoutId);
 
         var $newPanel = panels[currentPanelIndex],
-                $oldPanel = panels[currentPanelIndex ? 0 : 1];
+            $oldPanel = panels[currentPanelIndex ? 0 : 1];
 
         if (options.position){
             lastPosition = {
                 top: options.position.top,
                 left: options.position.left
             };
-
-            options.position.top += scrollElement.scrollTop;
-            options.position.left += scrollElement.scrollLeft;
         }
 
         if (!options.isUpdate){
             if (options.item){
                 var $thumbnail = $(options.item.thumbnail.image),
-                        thumbnailOffset = $thumbnail.offset();
+                    thumbnailOffset = $thumbnail.offset();
+
+                thumbnailOffset.top -= scrollElement.scrollTop;
+                thumbnailOffset.left -= scrollElement.scrollLeft;
 
                 $newPanel
                         .show()
@@ -3530,19 +3560,15 @@ yox.view.transitions.thumbnails = function(){
                         transition: "all " + defaultTransitionTime +"ms ease-out"
                     }, options.position ));
                 }, 5);
-
-                if (!isOpen){
-                    isOpen = true;
-                    scrollEventElement.addEventListener("scroll", onScroll, false);
-                }
-            }
-            else{
-                isOpen = false;
-                scrollEventElement.removeEventListener("scroll", onScroll, false);
             }
 
             if ($oldPanel && $currentItemThumbnail){
-                $oldPanel.css($.extend({ "z-index": zIndex}, $currentItemThumbnail.offset(), {width: $currentItemThumbnail.width(), height: $currentItemThumbnail.height()}));
+                var thumbnailPosition = $currentItemThumbnail.offset();
+                thumbnailPosition.top -= scrollElement.scrollTop;
+                thumbnailPosition.left -= scrollElement.scrollLeft;
+
+                $oldPanel.css($.extend({ "z-index": zIndex}, thumbnailPosition,
+                        {width: $currentItemThumbnail.width(), height: $currentItemThumbnail.height()}));
                 hideOldPanelTimeoutId = setTimeout(function(){ $oldPanel.hide() }, defaultTransitionTime);
                 showThumbnailTimeoutId = setTimeout(showThumbnail($currentItemThumbnail), defaultTransitionTime);
             }
@@ -3606,8 +3632,8 @@ yox.theme.prototype = {
                 addEventListener: function(eventName, eventHandler){
                     eventsHandler.addEventListener(eventName, eventHandler.bind(this));
                 },
-                triggerEvent: function(eventName, eventData){
-                    eventsHandler.triggerEvent.call(this, eventName + "." + moduleName, eventData, moduleOptions.id);
+                triggerEvent: function(eventName, eventData, sender){
+                    eventsHandler.triggerEvent.call(this, eventName + "." + moduleName, eventData, sender || this);
                 }
             };
 
@@ -4270,8 +4296,8 @@ yox.themes.scroll = function(data, options){
         ],
         scroll: {
             events: {
-                "create.thumbnails": function(e, id){
-                    if (id === "scroller")
+                "create.thumbnails": function(e, sender){
+                    if (sender instanceof yox.scroll)
                         this.update();
                 },
                 "select.thumbnails": function(e){
@@ -4421,7 +4447,14 @@ yox.themes.switcher = function(data, options){
             margin: 30,
             showThumbnailsBeforeLoad: true,
             events: {
-                "click.thumbnails": function(e){ this.selectItem(e.index); },
+                "click.thumbnails": function(e, sender){
+                    if (e.isSelected){
+                        this.close();
+                        sender.unselect();
+                    }
+                    else
+                        this.selectItem(e.index);
+                },
                 beforeSelect: function(e){
                     if (!isOpen && e.newItem){
                         isOpen = true;
@@ -4507,7 +4540,7 @@ yox.themes.wall = function(data, options){
             events: {
                 beforeSelect: function(e){
                     if (options.scrollToElementOnSelect && e.newItem){
-                        yox.utils.dom.scrollIntoView(e.newItem.thumbnail.element, self.container, 500);
+                        yox.utils.dom.scrollIntoView(e.newItem.thumbnail.element, self.container, options.scrollAnimationDuration, options.scrollOffset);
                     }
                 }
             }
@@ -4698,6 +4731,7 @@ yox.themes.wall.defaults = {
     loadItemsOnScroll: false, // Whether to get more results from the data source when scrolling down
     padding: 10, // The padding arround the thumbnails (padding for the element that contains all the thumbnails)
     scrollAnimationDuration: 500, // The time, in milliseconds, for the scroll animation, when a thumbnail is brought into view.
+    scrollOffset: 60, // When scrolling a thumbnail into view, this number of pixels will be added to the scroll distance, so the thumbnail isn't at the very limit of the visible area.
     scrollToElementOnSelect: false, // If set to true, the theme's container will be scrolled to the selected thumbnail when its item is selected
     thumbnailsMaxHeight: 200 // The maximum height allowed for each thumbnail
 };
