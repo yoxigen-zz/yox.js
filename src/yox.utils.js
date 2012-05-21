@@ -108,9 +108,11 @@ yox.utils = {
                 : function(e){
                     return Object(el) === el && el.nodeType === 1 && typeof(el.nodeName) === "string";
                 },
-        scrollIntoView: function(element, container, animateTime){
+        scrollIntoView: function(element, container, animateTime, margin){
             var containerSize = { width: container.clientWidth, height: container.clientHeight },
                 containerScrollSize = { height: container.scrollHeight, width: container.scrollWidth };
+
+            margin = margin || 0;
 
             if (containerSize.height >= containerScrollSize.height && containerSize.width >= containerScrollSize.width)
                 return false;
@@ -120,8 +122,7 @@ yox.utils = {
                 return true;
             }
 
-            var elementBoundingRect = element.getBoundingClientRect(),
-                $element = $(element),
+            var $element = $(element),
                 elementOffset = $element.offset(),
                 elementSize = { width: $element.width(), height: $element.height() },
                 containerScrollPos = { left: container.scrollLeft, top: container.scrollTop },
@@ -130,13 +131,13 @@ yox.utils = {
                 sizes = { top: "height", left: "width" };
 
             function setScroll(side){
-                var firstDelta = elementOffset[side] - containerScrollPos[side];
+                var firstDelta = elementOffset[side] - containerScrollPos[side] - margin;
                 if (containerOffset[side] > firstDelta){
                     scrollTo[side] = containerScrollPos[side] + firstDelta;
                 }
                 else {
                     var sizeParam = sizes[side],
-                        elementLimit = elementOffset[side] - containerScrollPos[side] + elementSize[sizeParam],
+                        elementLimit = elementOffset[side] - containerScrollPos[side] + elementSize[sizeParam] + margin,
                         containerLimit = containerOffset[side] + containerSize[sizeParam];
 
                     if (containerLimit < elementLimit){
@@ -147,13 +148,13 @@ yox.utils = {
             setScroll("top");
             setScroll("left");
 
-            if (scrollTo.top || scrollTo.left){
+            if (scrollTo.top !== undefined || scrollTo.left !== undefined){
                 var animateParams = {};
                 if (scrollTo.top)
                     animateParams.scrollTop = scrollTo.top;
                 if (scrollTo.left)
                     animateParams.scrollLeft = scrollTo.left;
-                $(container).animate(animateParams, animateTime);
+                $(container).stop(true, true).animate(animateParams, animateTime);
             }
         }
     },

@@ -31,8 +31,8 @@ yox.themes.scroll = function(data, options){
         ],
         scroll: {
             events: {
-                "create.thumbnails": function(e, id){
-                    if (id === "scroller")
+                "create.thumbnails": function(e, sender){
+                    if (sender instanceof yox.scroll)
                         this.update();
                 },
                 "select.thumbnails": function(e){

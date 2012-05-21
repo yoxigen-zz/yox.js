@@ -33,7 +33,7 @@ yox.themes.wall = function(data, options){
             events: {
                 beforeSelect: function(e){
                     if (options.scrollToElementOnSelect && e.newItem){
-                        yox.utils.dom.scrollIntoView(e.newItem.thumbnail.element, self.container, 500);
+                        yox.utils.dom.scrollIntoView(e.newItem.thumbnail.element, self.container, options.scrollAnimationDuration, options.scrollOffset);
                     }
                 }
             }
@@ -224,6 +224,7 @@ yox.themes.wall.defaults = {
     loadItemsOnScroll: false, // Whether to get more results from the data source when scrolling down
     padding: 10, // The padding arround the thumbnails (padding for the element that contains all the thumbnails)
     scrollAnimationDuration: 500, // The time, in milliseconds, for the scroll animation, when a thumbnail is brought into view.
+    scrollOffset: 60, // When scrolling a thumbnail into view, this number of pixels will be added to the scroll distance, so the thumbnail isn't at the very limit of the visible area.
     scrollToElementOnSelect: false, // If set to true, the theme's container will be scrolled to the selected thumbnail when its item is selected
     thumbnailsMaxHeight: 200 // The maximum height allowed for each thumbnail
 };

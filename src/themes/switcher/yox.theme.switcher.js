@@ -15,7 +15,14 @@ yox.themes.switcher = function(data, options){
             margin: 30,
             showThumbnailsBeforeLoad: true,
             events: {
-                "click.thumbnails": function(e){ this.selectItem(e.index); },
+                "click.thumbnails": function(e, sender){
+                    if (e.isSelected){
+                        this.close();
+                        sender.unselect();
+                    }
+                    else
+                        this.selectItem(e.index);
+                },
                 beforeSelect: function(e){
                     if (!isOpen && e.newItem){
                         isOpen = true;

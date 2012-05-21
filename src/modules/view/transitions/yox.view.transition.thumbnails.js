@@ -7,7 +7,6 @@ yox.view.transitions.thumbnails = function(){
         zIndex = 100,
         scrollElement,
         scrollEventElement,
-        isOpen = false,
         lastPosition;
 
     this.create = function($container){
@@ -18,7 +17,8 @@ yox.view.transitions.thumbnails = function(){
                 css: {
                     transition: "all " + defaultTransitionTime + "ms ease-out",
                     display: "none",
-                    "box-sizing": "border-box"
+                    "box-sizing": "border-box",
+                    position: "fixed"
                 }
             }).appendTo($container);
 
@@ -51,13 +51,6 @@ yox.view.transitions.thumbnails = function(){
             scrollEventElement = window;
     };
 
-    var onScroll = yox.utils.performance.throttle(function(){
-        panels[currentPanelIndex].css({
-            top: lastPosition.top + scrollElement.scrollTop,
-            left: lastPosition.left + scrollElement.scrollLeft
-        });
-    }, 50);
-
     this.destroy = function(){
         for(var i=0; i<panels.length; i++){
             panels[i].remove();
@@ -85,22 +78,22 @@ yox.view.transitions.thumbnails = function(){
         clearTimeout(hideOldPanelTimeoutId);
 
         var $newPanel = panels[currentPanelIndex],
-                $oldPanel = panels[currentPanelIndex ? 0 : 1];
+            $oldPanel = panels[currentPanelIndex ? 0 : 1];
 
         if (options.position){
             lastPosition = {
                 top: options.position.top,
                 left: options.position.left
             };
-
-            options.position.top += scrollElement.scrollTop;
-            options.position.left += scrollElement.scrollLeft;
         }
 
         if (!options.isUpdate){
             if (options.item){
                 var $thumbnail = $(options.item.thumbnail.image),
-                        thumbnailOffset = $thumbnail.offset();
+                    thumbnailOffset = $thumbnail.offset();
+
+                thumbnailOffset.top -= scrollElement.scrollTop;
+                thumbnailOffset.left -= scrollElement.scrollLeft;
 
                 $newPanel
                         .show()
@@ -114,19 +107,15 @@ yox.view.transitions.thumbnails = function(){
                         transition: "all " + defaultTransitionTime +"ms ease-out"
                     }, options.position ));
                 }, 5);
-
-                if (!isOpen){
-                    isOpen = true;
-                    scrollEventElement.addEventListener("scroll", onScroll, false);
-                }
-            }
-            else{
-                isOpen = false;
-                scrollEventElement.removeEventListener("scroll", onScroll, false);
             }
 
             if ($oldPanel && $currentItemThumbnail){
-                $oldPanel.css($.extend({ "z-index": zIndex}, $currentItemThumbnail.offset(), {width: $currentItemThumbnail.width(), height: $currentItemThumbnail.height()}));
+                var thumbnailPosition = $currentItemThumbnail.offset();
+                thumbnailPosition.top -= scrollElement.scrollTop;
+                thumbnailPosition.left -= scrollElement.scrollLeft;
+
+                $oldPanel.css($.extend({ "z-index": zIndex}, thumbnailPosition,
+                        {width: $currentItemThumbnail.width(), height: $currentItemThumbnail.height()}));
                 hideOldPanelTimeoutId = setTimeout(function(){ $oldPanel.hide() }, defaultTransitionTime);
                 showThumbnailTimeoutId = setTimeout(showThumbnail($currentItemThumbnail), defaultTransitionTime);
             }

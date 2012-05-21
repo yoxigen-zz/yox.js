@@ -19,6 +19,12 @@
     position: relative;
     z-index: 1;
 }
+@media only screen and (max-device-width:500px){
+    .yox-theme-wall-thumbnails a{
+        opacity: 1;
+
+    }
+}
 .yox-theme-switcher-open .yox-theme-wall-thumbnails a{ opacity: .2; background: Transparent; }
 .yox-theme-wall-thumbnails a:hover{
     /*
