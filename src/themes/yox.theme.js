@@ -28,8 +28,8 @@ yox.theme.prototype = {
                 addEventListener: function(eventName, eventHandler){
                     eventsHandler.addEventListener(eventName, eventHandler.bind(this));
                 },
-                triggerEvent: function(eventName, eventData){
-                    eventsHandler.triggerEvent.call(this, eventName + "." + moduleName, eventData, moduleOptions.id);
+                triggerEvent: function(eventName, eventData, sender){
+                    eventsHandler.triggerEvent.call(this, eventName + "." + moduleName, eventData, sender || this);
                 }
             };
 

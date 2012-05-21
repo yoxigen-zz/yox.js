@@ -9,6 +9,10 @@
         var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
         $.extend(this, eventsHandler);
 
+        this.triggerEvent = function(eventName, data){
+            eventsHandler.triggerEvent.call(self, eventName, data, self);
+        }
+
         if (this.options.events){
             for(var eventName in this.options.events)
                 this.addEventListener(eventName, this.options.events[eventName]);
@@ -17,10 +21,20 @@
 
         if (this.options.handleClick !== false){
             function onClick(e){
-                var index = this.getAttribute("data-yoxthumbIndex");
+                var index = this.getAttribute("data-yoxthumbIndex"),
+                    isSelected;
+
                 e.preventDefault();
-                self.triggerEvent("click", { originalEvent: e, index: index, target: this });
-                self.select(index);
+
+                if (this.classList && self.options.selectedThumbnailClass)
+                    isSelected = this.classList.contains(self.options.selectedThumbnailClass);
+                else
+                    isSelected = $(this).hasClass(self.options.selectedThumbnailClass);
+
+                self.triggerEvent("click", { originalEvent: e, index: index, target: this, isSelected: isSelected });
+
+                if (!isSelected)
+                    self.select(index);
             }
             $(this.container).on("click", "[data-yoxthumbindex]", onClick);
             this.addEventListener("beforeDestroy", function(){
@@ -140,13 +154,19 @@
             this.clear();
         },
         reset: function(){
-              },
+        },
         select: function(itemIndex){
-            this.currentSelectedThumbnail && this.currentSelectedThumbnail.removeClass(this.options.selectedThumbnailClass);
+            this.unselect();
             if (this.thumbnails)
                 this.currentSelectedThumbnail = this.thumbnails.eq(itemIndex).addClass(this.options.selectedThumbnailClass);
         },
-        template: "<a class='${$item.options.thumbnailClass}' href='${link || url}'{{if $item.options.renderThumbnailsTitle}} title='title'{{/if}} data-yoxthumbIndex='${$item.getIndex()}'><img src='${thumbnail.src}' alt='${title}' /></a>"
+        template: "<a class='${$item.options.thumbnailClass}' href='${link || url}'{{if $item.options.renderThumbnailsTitle}} title='title'{{/if}} data-yoxthumbIndex='${$item.getIndex()}'><img src='${thumbnail.src}' alt='${title}' /></a>",
+        unselect: function(){
+            if (this.currentSelectedThumbnail){
+                this.currentSelectedThumbnail.removeClass(this.options.selectedThumbnailClass);
+                this.currentSelectedThumbnail = null;
+            }
+        }
     };
 
     window.yox.thumbnails = yox.thumbnails;
