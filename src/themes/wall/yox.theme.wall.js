@@ -76,7 +76,7 @@ yox.themes.wall = function(data, options){
                     thumb.style.removeProperty("display");
             }
 
-            // Due to the rounding in image widths, a small fix is required to arrange the thumbnails pixel-perfect:
+            // Due to the rounding in image widths, a small fix is required to arrange the thumbnails pixel-perfectly:
             for(var thumbIndex = thumbs.length; thumbIndex-- && finalRowWidth < containerWidth; finalRowWidth++){
                 thumb = thumbs[thumbIndex];
                 thumb.style.width = (parseInt(thumb.style.width, 10) + 1) + "px";
@@ -119,10 +119,6 @@ yox.themes.wall = function(data, options){
             return false;
 
         dataSource.offset = data.countItems() + 1;
-        var itemsLeft = totalItems - dataSource.offset;
-        if (itemsLeft < dataSource.pageSize)
-            dataSource.pageSize = itemsLeft;
-
         data.addSources([ dataSource ]);
     }
 
@@ -147,6 +143,12 @@ yox.themes.wall = function(data, options){
         this.style.visibility = "visible";
         this.style.setProperty(yox.utils.browser.getCssPrefix() + "transform", "scale(1)");
         this.removeEventListener("load", onImageLoad, false);
+    }
+
+    function loadItems(){
+        isLoading = true;
+        $(elements.wall).addClass(loadingClass);
+        loadMoreItems();
     }
 
     data.addEventListener("loadSources", setDataSource);
@@ -202,9 +204,7 @@ yox.themes.wall = function(data, options){
         function onScroll(e){
             // When reaching the scroll limit, check for new contents:
             if (!isLoading && scrollElementForMeasure.scrollTop >= scrollElementForMeasure.scrollHeight - scrollElementForMeasure.clientHeight - options.thumbnailsMaxHeight){
-                isLoading = true;
-                $(elements.wall).addClass(loadingClass);
-                loadMoreItems();
+                loadItems();
             }
         }
 
