@@ -1,9 +1,13 @@
 yox.eventsHandler = function(){
     var namespaces = {
-        _default: {}
-    };
+            _default: {}
+        },
+        currentlyTriggeredEventName,
+        eventListenersToBeRemoved,
+        self = this;
 
     this.triggerEvent = function(eventName, data, sender){
+        currentlyTriggeredEventName = eventName;
         var eventNameParts = eventName.split("."),
             eventType = eventNameParts[0],
             namespaceName = eventNameParts[1];
@@ -25,6 +29,14 @@ yox.eventsHandler = function(){
             for(var i=0, eventHandler; eventHandler = noNamespacedEvents[i]; i++){
                 eventHandler.call(this, data, sender);
             }
+        }
+
+        currentlyTriggeredEventName = undefined;
+        if (eventListenersToBeRemoved){
+            for(var i=0, eventListenerToBeRemoved; eventListenerToBeRemoved = eventListenersToBeRemoved[i]; i++){
+                self.removeEventListener(eventListenerToBeRemoved.eventName, eventListenerToBeRemoved.eventHandler);
+            }
+            eventListenersToBeRemoved = undefined;
         }
     };
 
@@ -50,6 +62,14 @@ yox.eventsHandler = function(){
     };
 
     this.removeEventListener = function(eventName, eventHandler){
+        // A safety measure - in case an event is removed that's currently being triggered (if removeEventListener is called from inside an event handler),
+        // delay the removeEventListener until after the trigger is done.
+        if (eventName === currentlyTriggeredEventName){
+            eventListenersToBeRemoved = eventListenersToBeRemoved || [];
+            eventListenersToBeRemoved.push({ eventName: eventName, eventHandler: eventHandler });
+            return false;
+        }
+
         var eventNameParts = eventName.split("."),
             eventType = eventNameParts[0],
             namespaceName = eventNameParts[1],
