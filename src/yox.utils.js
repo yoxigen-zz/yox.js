@@ -109,8 +109,13 @@ yox.utils = {
                     return Object(el) === el && el.nodeType === 1 && typeof(el.nodeName) === "string";
                 },
         scrollIntoView: function(element, container, animateTime, margin){
+            var scrollElement = container;
+
+            if (container === document.body && !$.browser.webkit)
+                scrollElement = document.documentElement;
+
             var containerSize = { width: container.clientWidth, height: container.clientHeight },
-                containerScrollSize = { height: container.scrollHeight, width: container.scrollWidth };
+                containerScrollSize = { height: scrollElement.scrollHeight, width: scrollElement.scrollWidth };
 
             margin = margin || 0;
 
@@ -125,7 +130,7 @@ yox.utils = {
             var $element = $(element),
                 elementOffset = $element.offset(),
                 elementSize = { width: $element.width(), height: $element.height() },
-                containerScrollPos = { left: container.scrollLeft, top: container.scrollTop },
+                containerScrollPos = { left: scrollElement.scrollLeft, top: scrollElement.scrollTop },
                 containerOffset = $(container).offset(),
                 scrollTo = {},
                 sizes = { top: "height", left: "width" };
@@ -154,7 +159,7 @@ yox.utils = {
                     animateParams.scrollTop = scrollTo.top;
                 if (scrollTo.left)
                     animateParams.scrollLeft = scrollTo.left;
-                $(container).stop(true, true).animate(animateParams, animateTime);
+                $(scrollElement).stop(true, true).animate(animateParams, animateTime);
             }
         }
     },
