@@ -5,3 +5,20 @@
     top: 0;
     left: 0;
 }
+.yox-theme-switcher-view .yoxview_info{
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    height: 40px;
+    background: rgba(0, 0, 0, .5);
+    color: white;
+    border-radius: 10px;
+    padding: 0 15px;
+    font-size: 12pt;
+    line-height: 40px;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    text-shadow: -1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+.yox-theme-switcher-view .yoxview_info[disabled]{ display: none }

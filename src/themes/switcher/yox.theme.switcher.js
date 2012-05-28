@@ -7,12 +7,13 @@ yox.themes.switcher = function(data, options){
 
     this.config = {
         view: {
+            displayInfo: true,
             enableKeyboard: true,
             enlarge: false,
             resizeMode: "fit",
             transition: yox.view.transitions.thumbnails,
             transitionTime: 300,
-            margin: 30,
+            margin: { top: 45, right: 30, left: 30, bottom: 30 },
             showThumbnailsBeforeLoad: true,
             events: {
                 "click.thumbnails": function(e, sender){
@@ -38,6 +39,9 @@ yox.themes.switcher = function(data, options){
         }
     };
 
+    data.addEventListener("clear", function(){
+        self.modules.view.close();
+    });
     function resizeEventHandler(){
         self.modules.view.update();
     }

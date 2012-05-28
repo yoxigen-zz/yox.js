@@ -35,7 +35,8 @@ yox.themes.wall = function(data, options){
                     if (options.scrollToElementOnSelect && e.newItem){
                         yox.utils.dom.scrollIntoView(e.newItem.thumbnail.element, self.container, options.scrollAnimationDuration, options.scrollOffset);
                     }
-                }
+                },
+                create: onScroll
             }
         }
     };
@@ -136,7 +137,7 @@ yox.themes.wall = function(data, options){
             }
         }
         isLoading = false;
-        $(elements.wall).removeClass(loadingClass);
+        $(self.container).removeClass(loadingClass);
     }
 
     function onImageLoad(e){
@@ -147,11 +148,30 @@ yox.themes.wall = function(data, options){
 
     function loadItems(){
         isLoading = true;
-        $(elements.wall).addClass(loadingClass);
+        $(self.container).addClass(loadingClass);
         loadMoreItems();
     }
 
+    // Used for infinite scrolling:
+    function onScroll(){
+        // When reaching the scroll limit, check for new contents:
+        if (!isLoading && elements.scrollElementForMeasure.scrollTop >= elements.scrollElementForMeasure.scrollHeight - elements.scrollElementForMeasure.clientHeight - options.thumbnailsMaxHeight){
+            loadItems();
+        }
+    }
+
     data.addEventListener("loadSources", setDataSource);
+    data.addEventListener("clear", function(){
+        dataSource = null;
+        thumbs = [];
+        currentRowWidth = 0;
+        if (loadedAllItems){
+            loadedAllItems = false;
+            elements.scrollElement.addEventListener("scroll", onScroll, false);
+            data.addEventListener("loadSources", setDataSource);
+            $(self.container).removeClass(self.getThemeClass("loadedAll"));
+        }
+    });
 
     this.create = function(container){
         this.container = container;
@@ -161,7 +181,7 @@ yox.themes.wall = function(data, options){
             containerWidth = container.clientWidth - options.padding * 2;
         }
 
-        $(container).addClass(containerClass);
+        $(container).addClass(containerClass).addClass(loadingClass);
         elements.wall = document.createElement("div");
         elements.wall.className = this.getThemeClass("thumbnails") + " yoxthumbnails";
         elements.wall.style.padding = options.padding + "px";
@@ -174,7 +194,7 @@ yox.themes.wall = function(data, options){
                 "margin-bottom: " + options.borderWidth + "px"
             ];
 
-        styleEl.innerHTML = " ." + containerClass + " a{ " + thumbnailStyle.join("; ") + " }";
+        styleEl.innerHTML = " ." + containerClass + " a[data-yoxthumbindex]{ " + thumbnailStyle.join("; ") + " }";
         document.getElementsByTagName("head")[0].appendChild(styleEl);
 
         $(window).on("resize", function(e){
@@ -187,12 +207,12 @@ yox.themes.wall = function(data, options){
             }, 50);
         });
 
-        var scrollElement = container === document.body ? document : container,
-            scrollElementForMeasure = container;
+        elements.scrollElement = container === document.body ? document : container;
+        elements.scrollElementForMeasure = container;
 
         // All non-webkit browsers measure scrollTop for the body element in the HTML element rather than the document (Firefox 13, IE9, Opera 11.62):
         if (!$.browser.webkit && container === document.body)
-            scrollElementForMeasure = document.documentElement;
+            elements.scrollElementForMeasure = document.documentElement;
 
         elements.loader = document.createElement("div");
         elements.loader.className = this.getThemeClass("loader");
@@ -200,18 +220,10 @@ yox.themes.wall = function(data, options){
 
         container.appendChild(elements.loader);
 
-        // Used for infinite scrolling:
-        function onScroll(e){
-            // When reaching the scroll limit, check for new contents:
-            if (!isLoading && scrollElementForMeasure.scrollTop >= scrollElementForMeasure.scrollHeight - scrollElementForMeasure.clientHeight - options.thumbnailsMaxHeight){
-                loadItems();
-            }
-        }
-
-        scrollElement.addEventListener("scroll", onScroll, false);
+        elements.scrollElement.addEventListener("scroll", onScroll, false);
 
         self.addEventListener("loadedAllItems", function(){
-            scrollElement.removeEventListener("scroll", onScroll, false);
+            elements.scrollElement.removeEventListener("scroll", onScroll, false);
             data.removeEventListener("loadSources", setDataSource);
             loadedAllItems = true;
             $(container).addClass(self.getThemeClass("loadedAll"));
