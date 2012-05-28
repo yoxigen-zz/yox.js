@@ -34,7 +34,7 @@ yox.data.sources.picasa = (function(){
                 data.fields += ",entry(summary),gphoto:name";
             }
             else
-                data.fields += ",entry(title),entry(gphoto:numphotos),entry(gphoto:name),entry(link[@rel='alternate']),author,entry(summary)";
+                data.fields += ",entry(title),entry(gphoto:numphotos),entry(gphoto:name),entry(link[@rel='alternate']),author,entry(summary),entry(id)";
 
             if (urlData.query)
                 $.extend(data, yox.utils.url.queryToJson(urlData.query));
@@ -95,7 +95,7 @@ yox.data.sources.picasa = (function(){
             itemData.ratio = itemData.height / itemData.width;
 
             if (isAlbum){
-                itemData.data = { album: { name: image.title.$t, imageCount: image.gphoto$numphotos.$t, description: image.summary.$t }};
+                itemData.data = { album: { name: image.gphoto$name.$t, imageCount: image.gphoto$numphotos.$t, description: image.summary.$t }};
                 itemData.isLoaded = true;
             }
             else{
