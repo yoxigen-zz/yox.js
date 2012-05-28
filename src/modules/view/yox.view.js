@@ -104,6 +104,13 @@
             setTransition.call(view, view.options.transition);
         }
 
+        function createInfo(){
+            var $info = $("<div>", {
+                "class": "yoxview_info"
+            });
+            return $info;
+        }
+
         var onOptionsChange = {
             resizeMode: function(resizeMode){
                 this.getPosition = yox.utils.dimensions.resize[resizeMode];
@@ -205,6 +212,11 @@
                     element.style.height = element.style.width = "100%";
                     element.style.display = "none";
                 }
+
+                if (this.options.displayInfo){
+                    var $info = createInfo();
+                    $panel.append($info).data("info", $info);
+                }
             }
 
             return element;
@@ -254,6 +266,14 @@
                 if (itemType.checkLoading && !element.loading && (!this.options.showThumbnailsBeforeLoad || loadThumbnail)){
                     $panel = this.transition.getPanel(item);
                     element = checkElementExists.call(this, $panel, item.type);
+                }
+
+                if (this.options.displayInfo){
+                    var $info = $panel.data("info");
+                    if (item.title)
+                        $info.text(item.title).removeAttr("disabled");
+                    else
+                        $info.text("").attr("disabled", "disabled");
                 }
 
                 element.style.display = "block";
@@ -519,6 +539,7 @@
 	yox.view.config = {
         defaults: {
             cacheImagesInBackground: true, // If true, full-size images are cached even while the gallery hasn't been opened yet.
+            createInfo: undefined, // If this is set to a function, it overrides the default createInfo function, which creates the info elements for an item.
             enableKeyPresses: true, // If set to false, YoxView won't catch any keyboard press events. To change individual keys, use keyPress.
             enlarge: false, // Whether to enlarge images to fit the container
             keyPress: { left: "prev", right: "next", up: "prev", down: "next", escape: "close", home: "first", end: "last", enter: "toggleSlideshow" }, // Functions to apply on key presses
