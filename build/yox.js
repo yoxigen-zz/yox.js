@@ -3517,12 +3517,19 @@ yox.view.transitions.thumbnails = function(){
                     transition: "all " + defaultTransitionTime + "ms ease-out",
                     display: "none",
                     "box-sizing": "border-box",
-                    position: "fixed"
+                    position: "fixed",
+                    overflow: "visible"
                 }
             }).appendTo($container);
 
             if ($.browser.webkit) // GPU acceleration for webkit:
                 $panel[0].style.setProperty("-webkit-transform", "translateZ(0)");
+
+            var closeBtn = document.createElement("a");
+            closeBtn.className = "yoxview_close";
+            closeBtn.onclick = self.close;
+
+            $panel.append(closeBtn);
 
             $container.append($panel);
             return $panel;
@@ -4264,51 +4271,6 @@ yox.themes.inline = function(data, options){
 }
 
 yox.themes.inline.prototype = new yox.theme();
-yox.themes.lightbox = function(data, options){
-    var elements,
-        self = this;
-
-    this.name = "lightbox";
-
-    this.config = {
-        view: {
-            enableKeyboard: true,
-            enlarge: false,
-            resizeMode: "fit",
-            transition: yox.view.transitions.morph,
-            transitionTime: 300,
-            margin: 30,
-            events: {
-                "init.view": function(){
-                    this.selectItem(this.options.firstItem || 0);
-                }
-            }
-        }
-    };
-
-    this.create = function(container){
-        elements = {
-            background: document.createElement("div"),
-            view: document.createElement("div")
-        };
-
-        elements.background.className = this.getThemeClass("background");
-        elements.view.className = this.getThemeClass("view") + " yoxview";
-
-        container.appendChild(elements.background);
-        container.appendChild(elements.view);
-
-        $(window).on("resize", function(){
-            self.modules.view.update();
-        });
-    };
-
-};
-yox.themes.lightbox.defaults = {
-    margin: 30
-};
-
-yox.themes.lightbox.prototype = new yox.theme();
 yox.themes.scroll = function(data, options){
     var self = this;
     this.name = "scroll";
@@ -4495,7 +4457,7 @@ yox.themes.switcher = function(data, options){
             showThumbnailsBeforeLoad: true,
             events: {
                 "click.thumbnails": function(e, sender){
-                    if (e.isSelected){
+                    if (isOpen && e.isSelected){
                         this.close();
                         sender.unselect();
                     }
@@ -4504,6 +4466,7 @@ yox.themes.switcher = function(data, options){
                 },
                 beforeSelect: function(e){
                     if (!isOpen && e.newItem){
+                        clearTimeout(closeTimeoutId);
                         isOpen = true;
                         $(elements.container).addClass(self.getThemeClass("open"));
                     }
