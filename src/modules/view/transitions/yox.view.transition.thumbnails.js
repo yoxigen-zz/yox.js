@@ -18,12 +18,19 @@ yox.view.transitions.thumbnails = function(){
                     transition: "all " + defaultTransitionTime + "ms ease-out",
                     display: "none",
                     "box-sizing": "border-box",
-                    position: "fixed"
+                    position: "fixed",
+                    overflow: "visible"
                 }
             }).appendTo($container);
 
             if ($.browser.webkit) // GPU acceleration for webkit:
                 $panel[0].style.setProperty("-webkit-transform", "translateZ(0)");
+
+            var closeBtn = document.createElement("a");
+            closeBtn.className = "yoxview_close";
+            closeBtn.onclick = self.close;
+
+            $panel.append(closeBtn);
 
             $container.append($panel);
             return $panel;

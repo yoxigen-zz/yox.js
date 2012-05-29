@@ -17,7 +17,7 @@ yox.themes.switcher = function(data, options){
             showThumbnailsBeforeLoad: true,
             events: {
                 "click.thumbnails": function(e, sender){
-                    if (e.isSelected){
+                    if (isOpen && e.isSelected){
                         this.close();
                         sender.unselect();
                     }
@@ -26,6 +26,7 @@ yox.themes.switcher = function(data, options){
                 },
                 beforeSelect: function(e){
                     if (!isOpen && e.newItem){
+                        clearTimeout(closeTimeoutId);
                         isOpen = true;
                         $(elements.container).addClass(self.getThemeClass("open"));
                     }
