@@ -14,7 +14,7 @@
         display: inline-block;
         background: #333;
         opacity: .8;
-        -webkit-transform: scale(1) translateZ(1);
+        -webkit-transform: scale(1) translateZ(0);
         -moz-transform: scale(1);
         -webkit-transition: all 400ms ease-out;
         -moz-transition: all 400ms ease-out;
@@ -22,6 +22,12 @@
         -ms-transition: all 400ms ease-out;
         position: relative;
         z-index: 1;
+    }
+    .yox-theme-wall-resizing .yox-theme-wall-thumbnails a{
+        -webkit-transition: none;
+        -moz-transition: none;
+        -o-transition: none;
+        -ms-transition: none;
     }
     @media only screen and (max-device-width:500px){
         .yox-theme-wall-thumbnails a{
