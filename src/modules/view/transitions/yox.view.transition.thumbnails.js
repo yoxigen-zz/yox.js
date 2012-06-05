@@ -13,9 +13,10 @@ yox.view.transitions.thumbnails = function(){
         var self = this;
         function createImg(index){
             var $panel = $("<div>", {
-                "class": "yoxviewFrame yoxviewFrame_" + self.options.resizeMode + " yoxviewFrame_" + yox.utils.browser.getPlatform(),
+                "class": "yoxviewFrame yoxviewFrame_" + self.options.resizeMode + " yoxviewFrame_" + yox.utils.browser.getPlatform() + " yoxviewFrame_thumbnails",
                 css: {
-                    transition: "all " + defaultTransitionTime + "ms ease-out",
+                    transition: "all " + defaultTransitionTime + "ms linear",
+                    transformOrigin: "center center",
                     display: "none",
                     "box-sizing": "border-box",
                     position: "fixed",
@@ -87,45 +88,56 @@ yox.view.transitions.thumbnails = function(){
         var $newPanel = panels[currentPanelIndex],
             $oldPanel = panels[currentPanelIndex ? 0 : 1];
 
-        if (options.position){
-            lastPosition = {
-                top: options.position.top,
-                left: options.position.left
-            };
-        }
-
         if (!options.isUpdate){
             if (options.item){
                 var $thumbnail = $(options.item.thumbnail.image),
-                    thumbnailOffset = $thumbnail.offset();
+                    thumbnailOffset = $thumbnail.offset(),
+                    thumbnailScale = $thumbnail.width() / options.position.width;
 
                 thumbnailOffset.top -= scrollElement.scrollTop;
                 thumbnailOffset.left -= scrollElement.scrollLeft;
 
-                $newPanel
-                        .show()
-                        .css($.extend({
+                $newPanel.show().css($.extend({
                     transition: "none",
+                    transform: [
+                        "scale(", thumbnailScale,
+                        ") translateX(", Math.round((thumbnailOffset.left - options.position.left - options.position.width * (1 - thumbnailScale) / 2) / thumbnailScale),
+                        "px) translateY(", Math.round((thumbnailOffset.top - options.position.top - options.position.height * (1 - thumbnailScale) / 2) / thumbnailScale),
+                        "px) translateZ(0)"].join(""),
                     "z-index": zIndex + 1
-                }, thumbnailOffset, { width: $thumbnail.width(), height: $thumbnail.height() }));
+                }, options.position));
+
+
 
                 openPanelTimeoutId = setTimeout(function(){
-                    $newPanel.css($.extend({
+                    $newPanel.css({
+                        transform: "scale(1) translateX(0) translateY(0) translateZ(0)",
                         transition: "all " + defaultTransitionTime +"ms ease-out"
-                    }, options.position ));
+                    });
                 }, 5);
+
             }
 
             if ($oldPanel && $currentItemThumbnail){
-                var thumbnailPosition = $currentItemThumbnail.offset();
+                var thumbnailPosition = $currentItemThumbnail.offset(),
+                    scale = $currentItemThumbnail.width() / lastPosition.width;
+
                 thumbnailPosition.top -= scrollElement.scrollTop;
                 thumbnailPosition.left -= scrollElement.scrollLeft;
 
-                $oldPanel.css($.extend({ "z-index": zIndex}, thumbnailPosition,
-                        {width: $currentItemThumbnail.width(), height: $currentItemThumbnail.height()}));
+                $oldPanel.css({
+                    "z-index": zIndex,
+                    transform: [
+                        "scale(", scale,
+                        ") translateX(", Math.round((thumbnailPosition.left - lastPosition.left - lastPosition.width * (1 - scale) / 2) / scale),
+                        "px) translateY(", Math.round((thumbnailPosition.top - lastPosition.top - lastPosition.height * (1 - scale) / 2) / scale),
+                        "px) translateZ(0)"].join("")
+                });
                 hideOldPanelTimeoutId = setTimeout(function(){ $oldPanel.hide() }, defaultTransitionTime);
                 showThumbnailTimeoutId = setTimeout(showThumbnail($currentItemThumbnail), defaultTransitionTime);
             }
+
+            lastPosition = options.position;
             $currentItemThumbnail = $thumbnail;
             if ($currentItemThumbnail)
                 $currentItemThumbnail.css("visibility", "hidden");

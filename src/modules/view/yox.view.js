@@ -1,5 +1,5 @@
 (function($){
-    yox.utils.css.addJqueryCssHooks(["transition", "transitionDuration", "transform", "transformStyle", "backfaceVisibility", "perspective"]);
+    yox.utils.css.addJqueryCssHooks(["transition", "transitionDuration", "transform", "transformOrigin", "transformStyle", "backfaceVisibility", "perspective"]);
 
 	yox.view = function(container, options, cache){
         var optionsEvents = $.extend({}, options.events),

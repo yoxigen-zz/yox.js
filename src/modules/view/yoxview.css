@@ -30,11 +30,7 @@
     opacity: .4;
     cursor: pointer;
     background: rgba(0,0,0,.5) url(img/close.png) no-repeat center center;
-    -webkit-transition: opacity 100ms ease-out;
-    -moz-transition: opacity 100ms ease-out;
-    -ms-transition: opacity 100ms ease-out;
-    -o-transition: opacity 100ms ease-out;
-    transition: opacity 100ms ease-out;
+
 }
 .yoxview_close:hover{ opacity: .9; }
 .yoxview_close:active{ top: 0 }
