@@ -3,13 +3,21 @@ yox.themes.wall = function(data, options){
         containerWidth,
         self = this,
         isLoading, // Flag indicating whether new contents are currently being fetched
-        loadedAllItems = false; // Flag indicating whether all the items have been loaded (all the possible items, after loading all pages)
+        loadedAllItems = false, // Flag indicating whether all the items have been loaded (all the possible items, after loading all pages)
+        enlargeThumbnailQueue = [],
+        enlargeThumbnailTimeoutId,
+        enlargingThumbnails = 0,
+        enlargeThumbnailsTimer = 100,
+        concurrentEnlargingThumbnails = 3;
 
     this.name = "wall";
 
     var loadingClass = this.getThemeClass("loading"),
         thumbs = [],
-        currentRowWidth = 0;
+        currentRowWidth = 0,
+        throttledScrollIntoView = yox.utils.performance.throttle(function(element){
+            yox.utils.dom.scrollIntoView(element, self.container, options.scrollAnimationDuration, options.scrollOffset);
+        }, 300);
 
     this.config = {
         thumbnails: {
@@ -33,7 +41,7 @@ yox.themes.wall = function(data, options){
             events: {
                 beforeSelect: function(e){
                     if (options.scrollToElementOnSelect && e.newItem){
-                        yox.utils.dom.scrollIntoView(e.newItem.thumbnail.element, self.container, options.scrollAnimationDuration, options.scrollOffset);
+                        throttledScrollIntoView(e.newItem.thumbnail.element);
                     }
                 },
                 create: onScroll
@@ -95,7 +103,6 @@ yox.themes.wall = function(data, options){
 
     }
 
-    var thumbnailsResizeTimeoutId;
     function updateThumbnails(){
         var thumbnails = self.modules.thumbnails.thumbnails;
         if (!thumbnails)
@@ -141,9 +148,21 @@ yox.themes.wall = function(data, options){
     }
 
     function onImageLoad(e){
-        this.style.visibility = "visible";
-        this.style.setProperty(yox.utils.browser.getCssPrefix() + "transform", "scale(1)");
-        this.removeEventListener("load", onImageLoad, false);
+        if (enlargingThumbnails < concurrentEnlargingThumbnails){
+            enlargingThumbnails++;
+            this.style.visibility = "visible";
+            this.style.setProperty(yox.utils.browser.getCssPrefix() + "transform", "scale(1)");
+            this.removeEventListener("load", onImageLoad, false);
+            setTimeout(function(){
+                enlargingThumbnails--;
+                if (enlargeThumbnailQueue.length){
+                    onImageLoad.call(enlargeThumbnailQueue.shift());
+                }
+            }, enlargeThumbnailsTimer);
+        }
+        else{
+            enlargeThumbnailQueue.push(this);
+        }
     }
 
     function loadItems(){
@@ -197,15 +216,16 @@ yox.themes.wall = function(data, options){
         styleEl.innerHTML = " ." + containerClass + " a[data-yoxthumbindex]{ " + thumbnailStyle.join("; ") + " }";
         document.getElementsByTagName("head")[0].appendChild(styleEl);
 
-        $(window).on("resize", function(e){
-            clearTimeout(thumbnailsResizeTimeoutId);
-            thumbnailsResizeTimeoutId = setTimeout(function(){
-                getContainerWidth();
-                thumbs = [];
-                currentRowWidth = 0;
-                updateThumbnails();
-            }, 50);
-        });
+        $(window).on("resize", yox.utils.performance.throttle(function(){
+            $(container).addClass(self.getThemeClass("resizing"));
+            getContainerWidth();
+            thumbs = [];
+            currentRowWidth = 0;
+            updateThumbnails();
+            setTimeout(function(){
+                $(self.container).removeClass(self.getThemeClass("resizing"));
+            }, 5);
+        }, 50));
 
         elements.scrollElement = container === document.body ? document : container;
         elements.scrollElementForMeasure = container;
