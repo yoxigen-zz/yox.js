@@ -12,7 +12,7 @@ yox.themes.switcher = function(data, options){
             enlarge: false,
             resizeMode: "fit",
             transition: yox.view.transitions.thumbnails,
-            transitionTime: 300,
+            transitionTime: 400,
             margin: { top: 45, right: 30, left: 30, bottom: 30 },
             showThumbnailsBeforeLoad: true,
             events: {
