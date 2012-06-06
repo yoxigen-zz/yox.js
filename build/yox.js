@@ -57,6 +57,11 @@ Yox.prototype = {
                 data: data
             },
             eventsHandler);
+
+            if (this.options.events){
+                for(var eventName in this.options.events)
+                    this.addEventListener(eventName, this.options.events[eventName]);
+            }
         }
 
         delete this.init;
@@ -2348,6 +2353,78 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
 
     window.yox.thumbnails = yox.thumbnails;
 })(jQuery);
+yox.controller = function(container, options){
+    this.options = $.extend({}, yox.controller.defaults, options);
+    var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
+
+    $.extend(this, eventsHandler);
+
+    if (this.options.events){
+        for(var eventName in this.options.events)
+            this.addEventListener(eventName, this.options.events[eventName]);
+    }
+
+
+    if (this.options.enableKeydown){
+        this.enableKeyboard();
+
+        if (this.options.keydownFrequency > 0){
+            var self = this;
+            $(document).on("keyup.yoxController", function(){
+                self.keydownLock = false;
+                clearTimeout(self.keydownLockTimeoutId);
+            });
+        }
+    }
+};
+
+yox.controller.keys = {
+    "40": 'down',
+    "35": 'end',
+    "13": 'enter',
+    "36": 'home',
+    "37": 'left',
+    "39": 'right',
+    "32": 'space',
+    "38": 'up',
+    "27": 'escape'
+};
+
+yox.controller.prototype = {
+    destroy: function(){
+        this.disableKeyboard();
+    },
+    disableKeyboard: function(){
+        $(document).on("keydown.yoxController", this.onKeyDown);
+    },
+    enableKeyboard: function(){
+        $(document).on("keydown.yoxController", { controller: this }, this.onKeyDown);
+    },
+    onKeyDown: function(e){
+        var key = yox.controller.keys[e.keyCode],
+            self = e.data.controller;
+
+
+        if (key){
+            e.preventDefault();
+            if (!self.keydownLock){
+                self.triggerEvent("keydown", { key: key, keyCode: e.keyCode });
+                if (self.options.keydownFrequency > 0){
+                    self.keydownLock = true;
+                    self.keydownLockTimeoutId = setTimeout(function(){
+                        self.keydownLock = false;
+                    }, self.options.keydownFrequency);
+                }
+            }
+        }
+        return true;
+    }
+};
+
+yox.controller.defaults = {
+    enableKeydown: true, // If true, keydown events are handled by the controller
+    keydownFrequency: 0 // The minimum interval to fire keydown events. Set to zero or less to disable this option
+};
 (function($){
     yox.utils.css.addJqueryCssHooks(["transition", "transitionDuration", "transform", "transformOrigin", "transformStyle", "backfaceVisibility", "perspective"]);
 
@@ -2395,37 +2472,6 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
 	}
 
     yox.view.prototype = (function(){
-        var dataSources = {};
-
-        var keyboard = {
-			map: {
-	            40: 'down',
-	            35: 'end',
-	            13: 'enter',
-	            36: 'home',
-	            37: 'left',
-	            39: 'right',
-	            32: 'space',
-	            38: 'up',
-	            72: 'h',
-	            27: 'escape'
-			},
-			onKeyDown: function(e){
-                var view = e.data.view,
-                    pK = keyboard.map[e.keyCode],
-                    calledFunction = view[view.options.keyPress[pK]];
-
-                if (calledFunction)
-                {
-                    e.preventDefault();
-                    calledFunction.call(view);
-                    return false;
-                }
-
-				return true;
-			}
-		};
-
         function setTransition(transition){
             var transitionModeConstructor = typeof transition === "string" ? yox.view.transitions[transition] : transition;
             if (!transitionModeConstructor)
@@ -2663,21 +2709,18 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
              * Selects a null item. Transitions that support this should close the view.
              */
             close: function(){
-                if (this.currentItem){
+                if (this.isOpen()){
                     this.selectItem(null);
                     this.triggerEvent("close");
                 }
             },
             /**
-             * Removes all elements created for the view, keyboard events.
+             * Removes all elements created for the view
              */
             destroy: function(){
                 this.triggerEvent("beforeDestroy");
-                this.disableKeyboard();
                 this.transition.destroy();
             },
-            disableKeyboard: function(){ $(document).off("keydown.modules", keyboard.onKeyDown); },
-            enableKeyboard: function(){	$(document).on("keydown.modules", { view: this }, keyboard.onKeyDown); },
             first: function(){
 				if (!this.currentItem)
 					return false;
@@ -2709,9 +2752,6 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                 createViewer(this);
                 this.options.data && this.addDataSources(this.options.data);
 
-                if (this.options.enableKeyboard)
-                    this.enableKeyboard();
-
                 if (this.options.controls){
                     for(var methodName in this.options.controls){
                         var method = this[methodName];
@@ -2727,6 +2767,9 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
 
                 this.update();
                 this.triggerEvent("create");
+            },
+            isOpen: function(){
+                return !!this.currentItem;
             },
             last: function(){
 				if (!this.currentItem)
@@ -2890,9 +2933,7 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
         defaults: {
             cacheImagesInBackground: true, // If true, full-size images are cached even while the gallery hasn't been opened yet.
             createInfo: undefined, // If this is set to a function, it overrides the default createInfo function, which creates the info elements for an item.
-            enableKeyPresses: true, // If set to false, YoxView won't catch any keyboard press events. To change individual keys, use keyPress.
             enlarge: false, // Whether to enlarge images to fit the container
-            keyPress: { left: "prev", right: "next", up: "prev", down: "next", escape: "close", home: "first", end: "last", enter: "toggleSlideshow" }, // Functions to apply on key presses
             events: { // Predefined event handlers
                 init: function(){
                     if (this.options.cacheImagesInBackground && this.items.length)
@@ -2941,6 +2982,15 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
                 showInfo: true,
                 transitionTime: 300 // The time it takes to animate transitions between items or opening and closing.
             }
+        },
+        keys: {
+            right: "next",
+            left: "prev",
+            enter: "toggleSlideshow",
+            escape: "close",
+            home: "first",
+            end: "last",
+            space: "next"
         }
     };
 })(jQuery);
@@ -4486,8 +4536,16 @@ yox.themes.switcher = function(data, options){
                     self.modules.view.close();
                     isOpen = false;
                     $(elements.container).removeClass(self.getThemeClass("open"));
+                },
+                keydown: function(e){
+                    var keyHandler = yox.view.config.keys[e.key];
+                    if (keyHandler)
+                        this[keyHandler]();
                 }
             }
+        },
+        controller: {
+            keydownFrequency: options.keydownFrequency
         }
     };
 
@@ -4525,7 +4583,8 @@ yox.themes.switcher = function(data, options){
 
 };
 yox.themes.switcher.defaults = {
-    scrollDuration: 500 // The time, in milliseconds, for scrolling animations, when a thumbnailo should be brought into view
+    keydownFrequency: 200, // The minimum interval to fire keydown events. Set to zero or less to disable this option
+    scrollDuration: 500 // The time, in milliseconds, for scrolling animations, when a thumbnail should be brought into view
 };
 
 yox.themes.switcher.prototype = new yox.theme();
@@ -4536,7 +4595,6 @@ yox.themes.wall = function(data, options){
         isLoading, // Flag indicating whether new contents are currently being fetched
         loadedAllItems = false, // Flag indicating whether all the items have been loaded (all the possible items, after loading all pages)
         enlargeThumbnailQueue = [],
-        enlargeThumbnailTimeoutId,
         enlargingThumbnails = 0,
         enlargeThumbnailsTimer = 100,
         concurrentEnlargingThumbnails = 3;
