@@ -5,7 +5,6 @@ yox.themes.wall = function(data, options){
         isLoading, // Flag indicating whether new contents are currently being fetched
         loadedAllItems = false, // Flag indicating whether all the items have been loaded (all the possible items, after loading all pages)
         enlargeThumbnailQueue = [],
-        enlargeThumbnailTimeoutId,
         enlargingThumbnails = 0,
         enlargeThumbnailsTimer = 100,
         concurrentEnlargingThumbnails = 3;

@@ -34,8 +34,16 @@ yox.themes.switcher = function(data, options){
                     self.modules.view.close();
                     isOpen = false;
                     $(elements.container).removeClass(self.getThemeClass("open"));
+                },
+                keydown: function(e){
+                    var keyHandler = yox.view.config.keys[e.key];
+                    if (keyHandler)
+                        this[keyHandler]();
                 }
             }
+        },
+        controller: {
+            keydownFrequency: options.keydownFrequency
         }
     };
 
@@ -73,7 +81,8 @@ yox.themes.switcher = function(data, options){
 
 };
 yox.themes.switcher.defaults = {
-    scrollDuration: 500 // The time, in milliseconds, for scrolling animations, when a thumbnailo should be brought into view
+    keydownFrequency: 200, // The minimum interval to fire keydown events. Set to zero or less to disable this option
+    scrollDuration: 500 // The time, in milliseconds, for scrolling animations, when a thumbnail should be brought into view
 };
 
 yox.themes.switcher.prototype = new yox.theme();

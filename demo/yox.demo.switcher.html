@@ -58,7 +58,7 @@
                 padding: 0 5px;
             }
     </style>
-    <script src="js/ga.js"></script>
+    <!--<script src="js/ga.js"></script>-->
 </head>
 <body>
 <header>
@@ -79,19 +79,12 @@
 <script type="text/javascript" src="../src/modules/thumbnails/yox.thumbnails.js"></script>
 <script type="text/javascript" src="../src/modules/data/sources/yox.data.source.js"></script>
 <script type="text/javascript" src="../src/modules/data/sources/yox.data.source.picasa.js"></script>
-<script type="text/javascript" src="../src/modules/data/sources/yox.data.source.flickr.js"></script>
-<script type="text/javascript" src="../src/modules/data/sources/yox.data.source.twitpic.js"></script>
-<script type="text/javascript" src="../src/modules/data/sources/yox.data.source.files.js"></script>
 <script type="text/javascript" src="../src/yox.eventsHandler.js"></script>
 <script type="text/javascript" src="../src/modules/view/yox.view.js"></script>
 <script type="text/javascript" src="../src/modules/view/yox.view.cache.js"></script>
 <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.js"></script>
-<script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.morph.js"></script>
-<script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.fade.js"></script>
-<script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.evaporate.js"></script>
-<script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.flip.js"></script>
 <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.thumbnails.js"></script>
-<script type="text/javascript" src="../src/modules/scroll/yox.scroll.js"></script>
+<script type="text/javascript" src="../src/modules/controller/yox.controller.js"></script>
 <script type="text/javascript" src="../src/modules/statistics/yox.statistics.js"></script>
 <script type="text/javascript" src="../src/modules/statistics/reporters/yox.statistics.reporter.js"></script>
 <script type="text/javascript" src="../src/modules/statistics/reporters/yox.statistics.reporter.ga.js"></script>
@@ -103,32 +96,70 @@
     <script>
         var defaultDataUrl = "xrCvoB?authkey=Gv1sRgCJ7LkvmYpdjwAg",
             yoxApi = new Yox(document.body, {
-            theme: [
-                {
-                    name: "switcher"
+                theme: [
+                    {
+                        name: "switcher"
+                    },
+                    {
+                        name: "wall",
+                        options: {
+                            thumbnailsMaxHeight: 300,
+                            borderWidth: 3,
+                            padding: 3,
+                            scrollToElementOnSelect: true
+                        }
+                    }
+                ],
+                data: {
+                    type: "picasa",
+                    cache: false,
+                    source: {
+                        url: "https://picasaweb.google.com/105098710956916751721/" + (getHash() || defaultDataUrl),
+                        imgmax: 1600,
+                        thumbsize: 400,
+                        kind: "photo",
+                        pageSize: 25
+                    }
                 },
-                {
-                    name: "wall",
-                    options: {
-                        thumbnailsMaxHeight: 300,
-                        borderWidth: 3,
-                        padding: 3,
-                        scrollToElementOnSelect: true
+                events: {
+                    keydown: function(e){
+                        if (e.key === "up" || e.key === "down"){
+                            var isUp = e.key === "up";
+
+                            if(yoxApi.themes.switcher.modules.view.isOpen()){
+                                var selectedThumbnail = yoxApi.themes.switcher.modules.view.currentItem.thumbnail.element,
+                                    thumbnailBounds = selectedThumbnail.getBoundingClientRect(),
+                                    halfPoint = {
+                                        left: Math.round(thumbnailBounds.left + thumbnailBounds.width / 2),
+                                        top: isUp ? thumbnailBounds.top - 10 : thumbnailBounds.bottom + 10
+                                    },
+                                    currentItemIndex = yoxApi.themes.switcher.modules.view.currentItem.id - 1;
+
+                                var nextThumbnail = isUp ? selectedThumbnail.previousSibling : selectedThumbnail.nextSibling,
+                                    nextThumbBounds,
+                                    targetThumbnail;
+
+                                while (!targetThumbnail && nextThumbnail && currentItemIndex >= 0){
+                                    if (nextThumbnail.nodeType === 1){
+                                        currentItemIndex += isUp ? -1 : 1;
+                                        nextThumbBounds = nextThumbnail.getBoundingClientRect()
+                                        if (nextThumbBounds.top !== thumbnailBounds.top){
+                                            if (halfPoint.left >= nextThumbBounds.left && halfPoint.left <= nextThumbBounds.right){
+                                                targetThumbnail = nextThumbnail;
+                                            }
+                                        }
+                                    }
+
+                                    nextThumbnail = isUp ? nextThumbnail.previousSibling : nextThumbnail.nextSibling;
+                                }
+
+                                if (targetThumbnail)
+                                    yoxApi.themes.switcher.modules.view.selectItem(currentItemIndex);
+                            }
+                        }
                     }
                 }
-            ],
-            data: {
-                type: "picasa",
-                cache: false,
-                source: {
-                    url: "https://picasaweb.google.com/105098710956916751721/" + (getHash() || defaultDataUrl),
-                    imgmax: 1600,
-                    thumbsize: 400,
-                    kind: "photo",
-                    pageSize: 25
-                }
-            }
-        });
+            });
 
         var albumsData = new yox.data({
             cache: true,
