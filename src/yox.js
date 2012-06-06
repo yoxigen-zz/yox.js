@@ -57,6 +57,11 @@ Yox.prototype = {
                 data: data
             },
             eventsHandler);
+
+            if (this.options.events){
+                for(var eventName in this.options.events)
+                    this.addEventListener(eventName, this.options.events[eventName]);
+            }
         }
 
         delete this.init;
