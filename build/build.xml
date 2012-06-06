@@ -16,6 +16,7 @@
 			<fileset id="data" dir="../src/modules/statistics/reporters" includes="yox.statistics.reporter.*.js" />
 			<fileset id="data" dir="../src/modules/scroll" includes="**/*.js" />
 			<fileset id="data" dir="../src/modules/thumbnails" includes="**/*.js" />
+			<fileset id="data" dir="../src/modules/controller" includes="**/*.js" />
 			<filelist id="view" dir="../src/modules/view" files="yox.view.js, yox.view.cache.js" />
             <filelist id="view" dir="../src/modules/view/transitions" files="yox.view.transition.js" />
 			<fileset id="transitions" dir="../src/modules/view/transitions" includes="**/yox.view.transition.*.js" />
