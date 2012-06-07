@@ -107,8 +107,6 @@ yox.view.transitions.thumbnails = function(){
                     "z-index": zIndex + 1
                 }, options.position));
 
-
-
                 openPanelTimeoutId = setTimeout(function(){
                     $newPanel.css({
                         transform: "scale(1) translateX(0) translateY(0) translateZ(0)",

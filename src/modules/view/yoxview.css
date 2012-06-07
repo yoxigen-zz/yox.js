@@ -22,14 +22,13 @@
 .yoxviewFrame div#info{ background: rgba(0,0,0,0.5); color: White; height: 30px; bottom: 0; left: 0; width: 100%; line-height: 30px; padding-left: 10px;}
 .yoxview_close{
     position: absolute;
-    right: -24px;
-    top: -1px;
+    right: 5px;
+    top: 5px;
     width: 18px;
     height: 18px;
-    border: solid 1px #DDD;
     opacity: .4;
     cursor: pointer;
-    background: rgba(0,0,0,.5) url(img/close.png) no-repeat center center;
+    background: url(img/close.png) no-repeat center center;
 
 }
 .yoxview_close:hover{ opacity: .9; }

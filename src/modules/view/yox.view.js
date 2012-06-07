@@ -126,11 +126,11 @@
                 function onImageLoad(e){
                     var view = e instanceof yox.view ? e : e.data.view;
                     this.loading = false;
-                    if (view.currentItem.url !== this.src && view.currentItem.thumbnail.src !== this.src){
+                    if (view.currentItem && view.currentItem.url !== this.src && view.currentItem.thumbnail.src !== this.src){
                         return false;
                     }
 
-                    if (!view.options.showThumbnailsBeforeLoad || this.loadingThumbnail){
+                    if (view.currentItem && (!view.options.showThumbnailsBeforeLoad || this.loadingThumbnail)){
                         this.loadingThumbnail = false;
                         var item = view.currentItem,
                             position = view.getPosition(item, view.containerDimensions, view.options);
@@ -138,6 +138,8 @@
                         view.transition.transition.call(view, { position: position, index: item.id - 1, item: item });
                     }
                 }
+
+                var changeImageTimeoutId;
 
                 return {
                     checkLoading: true,
@@ -151,14 +153,26 @@
                         return img;
                     },
                     set: function(item, element, loadThumbnail){
+                        if (this.options.showThumbnailsBeforeLoad)
+                            clearTimeout(changeImageTimeoutId);
+
                         var imageUrl = loadThumbnail && item.thumbnail ? item.thumbnail.src : item.url;
                         element.loading = true;
                         if (loadThumbnail)
                             element.loadingThumbnail = true;
 
                         if (element.src !== imageUrl){
-                            element.src = "";
-                            element.src = imageUrl;
+                            function setSrc(){
+                                element.src = "";
+                                element.src = imageUrl;
+                            }
+
+                            if (this.options.showThumbnailsBeforeLoad && !loadThumbnail){
+                                clearTimeout(changeImageTimeoutId);
+                                changeImageTimeoutId = setTimeout(setSrc, this.options.transitionTime + 50);
+                            }
+                            else
+                                setSrc();
                         }
                         else
                             onImageLoad.call(element, this);
@@ -249,9 +263,15 @@
                 itemType.set.call(this, item, element, loadThumbnail);
             }
             else { // No item given, the transition should close if it can.
-                this.transition.getPanel(item);
-                this.transition.transition.call(this, { item: item });
-                this.triggerEvent("select", item);
+                var closingElement = this.transition.getPanel();
+
+                // In case thumbnails are displayed before the full image, change back to the thumbnail when closing, for better performance.
+                if (this.options.showThumbnailsBeforeLoad){
+                    itemType = itemTypes[this.previousItem.type];
+                    itemType.set.call(this, this.previousItem, closingElement, true);
+                }
+                this.transition.transition.call(this, { item: null });
+                this.triggerEvent("select");
             }
         }
 
@@ -460,6 +480,7 @@
 					return false;
 
                 this.triggerEvent("beforeSelect", { newItem: item, oldItem: currentItem, data: data });
+                this.previousItem = this.currentItem;
 				this.currentItem = item;
 
                 if (item){
