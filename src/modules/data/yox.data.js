@@ -42,15 +42,29 @@ yox.data.prototype = {
         this.triggerEvent("loadSourcesStart", sources);
         this.isLoading = true;
 
-        for(var i=0; i < sources.length; i++){
-            var promise = this.loadSource(sources[i]);
+        for(var i=0, source; source = sources[i]; i++){
+            var promise = this.loadSource(source);
             if (promise)
                 deferredPromises.push(promise);
         }
 
         $.when.apply(this, deferredPromises).done(function () {
-            for(var i=0; i < arguments.length; i++)
-                self.data.push(arguments[i]);
+            var totalItemsCount = self.countItems();
+
+            for(var sourceIndex=0, source; sourceIndex < arguments.length; sourceIndex++){
+                source = arguments[sourceIndex];
+                source.id = self.data.length;
+                source.parent = self;
+
+                for(var itemIndex = 0, item; item = source.items[itemIndex]; itemIndex++){
+                    item.id = ++totalItemsCount;
+                    item.indexInSource = itemIndex;
+                    item.source = source;
+                    source.items[itemIndex] = new yox.data.item(item);
+                }
+
+                self.data.push(source);
+            }
 
             self.isLoading = false;
             self.triggerEvent("loadSources", Array.prototype.slice.call(arguments, 0));
