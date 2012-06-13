@@ -56,13 +56,14 @@ yox.themes.wall = function(data, options){
         var isLastThumbnail = index === totalThumbnailsCount - 1,
             totalBordersWidth = (thumbs.length - 1) * options.borderWidth,
             isFullRow = currentRowWidth + totalBordersWidth >= containerWidth;
-
+        console.log("is last: ", isLastThumbnail);
         // Gathered enough thumbnails to fill the current row:
         if (isFullRow || isLastThumbnail){
+
             var rowAspectRatio = (containerWidth - totalBordersWidth) / currentRowWidth,
                 rowHeight = Math.round(thumbs[0].dimensions.height * rowAspectRatio),
                 setWidth = true,
-                showThumbnail = isFullRow || loadedAllItems,
+                showThumbnail = isFullRow || isLastThumbnail,
                 finalRowWidth = totalBordersWidth;
 
             if (rowHeight > options.thumbnailsMaxHeight){

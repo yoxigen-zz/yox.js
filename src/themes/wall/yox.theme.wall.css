@@ -1,6 +1,6 @@
 .yox-theme-wall-loading{}
 .yox-theme-wall-loader{
-    background: url(ajax-loader.gif) no-repeat center top;
+    background: url(img/ajax-loader.gif) no-repeat center top;
     height: 32px;
 }
 
@@ -32,17 +32,10 @@
     @media only screen and (max-device-width:500px){
         .yox-theme-wall-thumbnails a{
             opacity: 1;
-
         }
     }
     .yox-theme-switcher-open .yox-theme-wall-thumbnails a{ opacity: .2; background: Transparent; }
     .yox-theme-wall-thumbnails a:hover{
-        /*
-        -webkit-transform: scale(1.2);
-        -moz-transform: scale(1.2);
-        -ms-transform: scale(1.2);
-        -o-transform: scale(1.2);
-        */
         opacity: 1;
         z-index: 99;
     }
