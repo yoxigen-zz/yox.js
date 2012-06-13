@@ -216,10 +216,6 @@
                 createItems = createItems.concat(sourceData.items);
             }
 
-            for(var i=originalNumberOfItems, count=view.items.length; i < count; i++){
-                view.items[i].id = i + 1;
-            }
-
             view.triggerEvent("load", { items: createItems, sources: sources });
 
             if (!view.initialized){
@@ -376,7 +372,13 @@
 					return false;
 
                 this.direction = 1;
-				var nextItemId = this.currentItem.id === this.items.length ? 0 : this.currentItem.id;
+				var nextItemId = this.currentItem.id;
+                if (this.currentItem.id === this.items.length){
+                    if (this.options.loop)
+                        this.currentItem.id = 0;
+                    else
+                        return false;
+                }
 				this.selectItem(nextItemId, undefined, slideshow);
             },
             option: function(option, value){
@@ -422,7 +424,13 @@
 					return false;
 
                 this.direction = -1;
-				var prevItemId = this.currentItem.id === 1 ? this.items.length - 1 : this.currentItem.id - 2;
+                var prevItemId = this.currentItem.id - 2;
+                if (this.currentItem.id === 1){
+                    if (this.options.loop)
+                        this.currentItem.id = this.items.length - 1;
+                    else
+                        return false;
+                }
 				this.selectItem(prevItemId);
             },
             removeItems: function(){
@@ -544,11 +552,11 @@
                 }
             }, // A function to call when the popup's background is clicked. (Applies only in popup mode)
             container: document.body || document.getElementsByTagName("body")[0], // The element in which the viewer is rendered. Defaults to the whole window.
+            loop: true, // If true, viewing never ends - the first item is shown after the last, and the last after the first.
             panelDimensions: { width: 1600, height: 1600 }, // Default width and height for panels which aren't images
             resizeMode: "fit", // The mode in which to resize the item in the container - 'fit' (shows the whole item, resized to fit inside the container) or 'fill' (fills the entire container).
             showThumbnailsBeforeLoad: false, // If set to true, the viewer will open thumbnails using the transition. When the full image is loaded, it replaces the thumbnail.
             slideshowDelay: 3000 // Time in milliseconds to display each image when in slideshow
-
         },
         mode: {
             fill: {
