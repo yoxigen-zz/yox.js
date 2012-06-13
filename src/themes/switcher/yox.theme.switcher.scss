@@ -1,0 +1,86 @@
+$navBtnWidth: 70px;
+$navBtnPadding: 30px;
+
+.yox-theme-switcher-view{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    .yoxview_info{
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        height: 40px;
+        background: rgba(0, 0, 0, .5);
+        color: white;
+        border-radius: 10px;
+        padding: 0 15px;
+        font-size: 12pt;
+        line-height: 40px;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        text-shadow: -1px 1px 0 rgba(0, 0, 0, 0.5);
+        visiblity: hidden;
+
+        &[disabled]{ display: none }
+    }
+
+    .yoxview_close{ visibility: hidden }
+    .yoxviewFrame:hover{
+         .yoxview_close, .yoxview_info{ visibility: visible }
+     }
+}
+
+.yox-theme-switcher-btn{
+    position: fixed;
+    top: 50%;
+    z-index: 99999;
+    width: $navBtnWidth;
+    cursor: pointer;
+    display: none;
+    padding: $navBtnPadding;
+    -webkit-transition: -webkit-transform 300ms ease-out;
+    -moz-transition: -webkit-transform 300ms ease-out;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+
+    img{
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        opacity: .5;
+        -webkit-transition: all 200ms ease-out;
+        -moz-transition: all 200ms ease-out;
+        border: solid 1px #666;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+    }
+
+    &:hover img{ opacity: 1 }
+}
+
+.yox-theme-switcher-btn-prev{ text-align: left; left: 0; -webkit-transform: translateX(0); -moz-transform: translateX(0); padding-left: 0; }
+.yox-theme-switcher-btn-next{ text-align: right; right: 0; -webkit-transform: translateX(0); -moz-transform: translateX(0); padding-right: 0 }
+
+.yox-theme-switcher-nav{
+    .yox-theme-switcher-btn-prev{ -webkit-transform: translateX(-$navBtnWidth - $navBtnPadding); -moz-transform: translateX(-$navBtnWidth - $navBtnPadding); }
+    .yox-theme-switcher-btn-next{ -webkit-transform: translateX($navBtnWidth + $navBtnPadding); -moz-transform: translateX($navBtnWidth + $navBtnPadding); }
+}
+
+.yox-theme-switcher-nav-enabled{
+    .yox-theme-switcher-btn-prev{
+        -webkit-transform: translateX(0);
+        -moz-transform: translateX(0);
+        img{ -webkit-transform: translateX($navBtnWidth/-2); -moz-transform: translateX($navBtnWidth/-2); }
+        &:hover img{ -webkit-transform: translateX(5px); -moz-transform: translateX(5px); }
+    }
+    .yox-theme-switcher-btn-next{
+            -webkit-transform: translateX(0);
+            -moz-transform: translateX(0);
+            img{ -webkit-transform: translateX($navBtnWidth/2); -moz-transform: translateX($navBtnWidth/2); }
+            &:hover img{ -webkit-transform: translateX(-5px); -moz-transform: translateX(-5px); }
+        }
+}
