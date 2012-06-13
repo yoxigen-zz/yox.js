@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>yox.js demo - wall theme</title>
+    <title>Yossi Kolesnicov Photography</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link href='http://fonts.googleapis.com/css?family=Pontano+Sans|Quicksand:400,700' rel='stylesheet' type='text/css'>
     <link rel="Stylesheet" type="text/css" href="css/demo.css" />
-    <link rel="Stylesheet" type="text/css" href="../src/modules/view/yoxview.css" />
-    <link rel="Stylesheet" type="text/css" href="../src/themes/wall/yox.theme.wall.css" />
-    <link rel="Stylesheet" type="text/css" href="../src/themes/switcher/yox.theme.switcher.css" />
+    <link rel="Stylesheet" type="text/css" href="../dist/yox.lightbox.css" />
     <style>
         body{ padding: 33px 0 0; margin: 0; overflow-y: scroll; background: Black; }
         img{ vertical-align: top }
@@ -71,11 +69,13 @@
 </header>
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-
 <!--
+<script type="text/javascript" src="../src/polyfills/polyfill.bind.js"></script>
+<script type="text/javascript" src="../src/polyfills/polyfill.classlist.js"></script>
 <script type="text/javascript" src="../src/yox.js"></script>
 <script type="text/javascript" src="../src/yox.utils.js"></script>
 <script type="text/javascript" src="../src/modules/data/yox.data.js"></script>
+<script type="text/javascript" src="../src/modules/data/yox.data.item.js"></script>
 <script type="text/javascript" src="../src/modules/thumbnails/yox.thumbnails.js"></script>
 <script type="text/javascript" src="../src/modules/data/sources/yox.data.source.js"></script>
 <script type="text/javascript" src="../src/modules/data/sources/yox.data.source.picasa.js"></script>
@@ -92,7 +92,7 @@
 <script type="text/javascript" src="../src/themes/wall/yox.theme.wall.js"></script>
 <script type="text/javascript" src="../src/themes/switcher/yox.theme.switcher.js"></script>
 -->
-<script src="../build/yox.min.js"></script>
+<script src="../dist/yox.lightbox.min.js"></script>
     <script>
         var defaultDataUrl = "xrCvoB?authkey=Gv1sRgCJ7LkvmYpdjwAg",
             yoxApi = new Yox(document.body, {
