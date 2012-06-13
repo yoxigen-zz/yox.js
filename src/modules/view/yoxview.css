@@ -24,12 +24,12 @@
     position: absolute;
     right: 5px;
     top: 5px;
-    width: 18px;
-    height: 18px;
+    width: 40px;
+    height: 40px;
     opacity: .4;
     cursor: pointer;
-    background: url(img/close.png) no-repeat center center;
+    background: url(img/close.png) no-repeat right top;
 
 }
 .yoxview_close:hover{ opacity: .9; }
-.yoxview_close:active{ top: 0 }
+.yoxview_close:active{ top: 6px }
