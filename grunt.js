@@ -19,7 +19,7 @@ module.exports = function(grunt) {
                     'src/polyfills/*.js',
                     'src/yox.js',
                     'src/yox.utils.js',
-                    'src/yox.eventsHandler.js',
+                    'src/yox.eventBus.js',
                     'src/modules/data/yox.data.js',
                     'src/modules/data/yox.data.item.js',
                     'src/modules/data/sources/yox.data.source.js',

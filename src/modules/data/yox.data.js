@@ -12,8 +12,8 @@ yox.data = function(options){
     this.data = [];
     this.options = $.extend(true, {}, this.defaults, options);
 
-    var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
-    $.extend(this, eventsHandler);
+    var eventBus = this.options.eventBus || new yox.eventBus();
+    $.extend(this, eventBus);
 
     if (this.options.events){
         for(var eventName in this.options.events)

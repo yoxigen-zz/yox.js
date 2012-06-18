@@ -15,8 +15,8 @@ yox.statistics = function(container, options){
     this.reporter = new yox.statistics.reporters[options.reporter || yox.statistics.defaults.reporter](options);
     this.category = options.category || "yox.js";
 
-    var eventsHandler = options.eventsHandler || new yox.eventsHandler();
-    $.extend(this, eventsHandler);
+    var eventBus = options.eventBus || new yox.eventBus();
+    $.extend(this, eventBus);
 
     if (options.events){
         for(var eventName in options.events)

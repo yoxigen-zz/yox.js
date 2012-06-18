@@ -1,8 +1,8 @@
 yox.controller = function(container, options){
     this.options = $.extend({}, yox.controller.defaults, options);
-    var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
+    var eventBus = this.options.eventBus || new yox.eventBus();
 
-    $.extend(this, eventsHandler);
+    $.extend(this, eventBus);
 
     if (this.options.events){
         for(var eventName in this.options.events)

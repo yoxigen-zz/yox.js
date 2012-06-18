@@ -43,9 +43,17 @@ $navBtnPadding: 30px;
     display: none;
     padding: $navBtnPadding;
     -webkit-transition: -webkit-transform 300ms ease-out;
-    -moz-transition: -webkit-transform 300ms ease-out;
+    -moz-transition: -moz-transform 300ms ease-out;
+    -o-transition: -o-transform 300ms ease-out;
+    -ms-transition: -ms-transform 300ms ease-out;
     -webkit-user-select: none;
+    -o-user-select: none;
+    -ms-user-select: none;
     -moz-user-select: none;
+    -webkit-transform: translateX(0);
+    -moz-transform: translateX(0);
+    -o-transform: translateX(0);
+    -ms-transform: translateX(0);
 
     img{
         position: relative;
@@ -54,16 +62,20 @@ $navBtnPadding: 30px;
         opacity: .5;
         -webkit-transition: all 200ms ease-out;
         -moz-transition: all 200ms ease-out;
+        -o-transition: all 200ms ease-out;
+        -ms-transition: all 200ms ease-out;
         border: solid 1px #666;
         -webkit-user-select: none;
         -moz-user-select: none;
+        -o-user-select: none;
+        -ms-user-select: none;
     }
 
     &:hover img{ opacity: 1 }
 }
 
-.yox-theme-switcher-btn-prev{ text-align: left; left: 0; -webkit-transform: translateX(0); -moz-transform: translateX(0); padding-left: 0; }
-.yox-theme-switcher-btn-next{ text-align: right; right: 0; -webkit-transform: translateX(0); -moz-transform: translateX(0); padding-right: 0 }
+.yox-theme-switcher-btn-prev{ text-align: left; left: 0; padding-left: 0; }
+.yox-theme-switcher-btn-next{ text-align: right; right: 0; padding-right: 0 }
 
 .yox-theme-switcher-nav{
     .yox-theme-switcher-btn-prev{ -webkit-transform: translateX(-$navBtnWidth - $navBtnPadding); -moz-transform: translateX(-$navBtnWidth - $navBtnPadding); }

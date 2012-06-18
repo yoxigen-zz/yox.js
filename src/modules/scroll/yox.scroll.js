@@ -364,8 +364,8 @@
                 var options = $.extend({}, opt),
                     self = this;
 
-                var eventsHandler = options.eventsHandler || new yox.eventsHandler();
-                $.extend(this, eventsHandler);
+                var eventBus = options.eventBus || new yox.eventBus();
+                $.extend(this, eventBus);
 
                 // Merge the options events with the default ones:
                 var optionsEvents = $.extend({}, options.events),

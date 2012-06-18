@@ -6,7 +6,7 @@
 * Copyright (c) 2012 Yossi Kolesnicov
 *
 * License: MIT license
-* Date: 2012-06-13 
+* Date: 2012-06-18 
 */
 
 if (!Function.prototype.bind) {
@@ -95,7 +95,7 @@ function Yox(container, options){
 Yox.prototype = {
     init: function(){
         if (this.options.theme){
-            var eventsHandler = new yox.eventsHandler(),
+            var eventBus = new yox.eventBus(),
                 data,
                 self = this;
 
@@ -116,7 +116,7 @@ Yox.prototype = {
                 if (!(theme instanceof yox.theme))
                     throw new Error("Invalid theme, '" + themeName + "' is not an instance of yox.theme.");
 
-                theme.init(self.container, data, eventsHandler, themeOptions);
+                theme.init(self.container, $.extend(themeOptions, { data: data, eventBus: eventBus }));
                 return theme;
             }
 
@@ -143,7 +143,7 @@ Yox.prototype = {
                 },
                 data: data
             },
-            eventsHandler);
+            eventBus);
 
             if (this.options.events){
                 for(var eventName in this.options.events)
@@ -449,7 +449,7 @@ yox.utils = {
         }
     }
 };
-yox.eventsHandler = function(){
+yox.eventBus = function(){
     var namespaces = {
             _default: {}
         },
@@ -549,7 +549,7 @@ yox.eventsHandler = function(){
     }
 };
 
-yox.eventsHandler.prototype = {
+yox.eventBus.prototype = {
     /**
      * Wraps the eventHandler's triggerEvent method with a specified 'this' and 'sender' arguments.
      * Note: This isn't done simply with the 'bind' function because the sender should be the last parameter,
@@ -578,8 +578,8 @@ yox.data = function(options){
     this.data = [];
     this.options = $.extend(true, {}, this.defaults, options);
 
-    var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
-    $.extend(this, eventsHandler);
+    var eventBus = this.options.eventBus || new yox.eventBus();
+    $.extend(this, eventBus);
 
     if (this.options.events){
         for(var eventName in this.options.events)
@@ -986,8 +986,8 @@ yox.statistics = function(container, options){
     this.reporter = new yox.statistics.reporters[options.reporter || yox.statistics.defaults.reporter](options);
     this.category = options.category || "yox.js";
 
-    var eventsHandler = options.eventsHandler || new yox.eventsHandler();
-    $.extend(this, eventsHandler);
+    var eventBus = options.eventBus || new yox.eventBus();
+    $.extend(this, eventBus);
 
     if (options.events){
         for(var eventName in options.events)
@@ -1033,11 +1033,11 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
         this.options = $.extend(true, {}, this.defaults, options);
         this.itemCount = 0;
 
-        var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
-        $.extend(this, eventsHandler);
+        var eventBus = this.options.eventBus || new yox.eventBus();
+        $.extend(this, eventBus);
 
         this.triggerEvent = function(eventName, data){
-            eventsHandler.triggerEvent.call(self, eventName, data, self);
+            eventBus.triggerEvent.call(self, eventName, data, self);
         }
 
         if (this.options.events){
@@ -1200,9 +1200,9 @@ yox.statistics.reporters.ga.prototype = new yox.statistics.reporter("ga");
 })(jQuery);
 yox.controller = function(container, options){
     this.options = $.extend({}, yox.controller.defaults, options);
-    var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
+    var eventBus = this.options.eventBus || new yox.eventBus();
 
-    $.extend(this, eventsHandler);
+    $.extend(this, eventBus);
 
     if (this.options.events){
         for(var eventName in this.options.events)
@@ -1398,20 +1398,24 @@ yox.controller.defaults = {
                 function onImageLoad(e){
                     var view = e instanceof yox.view ? e : e.data.view;
                     this.loading = false;
-                    if (view.currentItem && view.currentItem.url !== this.src && view.currentItem.thumbnail.src !== this.src){
+                    if (view.currentItem && view.currentItem.url !== this.src && view.currentItem.thumbnail.src !== this.src)
                         return false;
-                    }
 
                     if (view.currentItem && (!view.options.showThumbnailsBeforeLoad || this.loadingThumbnail)){
                         this.loadingThumbnail = false;
                         var item = view.currentItem,
-                            position = view.getPosition(item, view.containerDimensions, view.options);
+                            position = view.getPosition(item, view.containerDimensions, view.options)
+
+                        if (view.options.showThumbnailsBeforeLoad && view.previousItem &&  view.previousItem.thumbnail){
+
+                            var previousImage = checkElementExists(view.transition.getNotCurrentPanel());
+                            if (previousImage.image.src)
+                                previousImage.image.src = view.previousItem.thumbnail.src;
+                        }
 
                         view.transition.transition.call(view, { position: position, index: item.id - 1, item: item });
                     }
                 }
-
-                var changeImageTimeoutId;
 
                 return {
                     checkLoading: true,
@@ -1426,7 +1430,7 @@ yox.controller.defaults = {
                     },
                     set: function(item, element, loadThumbnail){
                         if (this.options.showThumbnailsBeforeLoad)
-                            clearTimeout(changeImageTimeoutId);
+                            clearTimeout(element.changeImageTimeoutId);
 
                         var imageUrl = loadThumbnail && item.thumbnail ? item.thumbnail.src : item.url;
                         element.loading = true;
@@ -1435,13 +1439,14 @@ yox.controller.defaults = {
 
                         if (element.src !== imageUrl){
                             function setSrc(){
+                                console.log("chage:", element.src, imageUrl);
                                 element.src = "";
                                 element.src = imageUrl;
                             }
 
                             if (this.options.showThumbnailsBeforeLoad && !loadThumbnail){
-                                clearTimeout(changeImageTimeoutId);
-                                changeImageTimeoutId = setTimeout(setSrc, this.options.transitionTime + 50);
+                                clearTimeout(element.changeImageTimeoutId);
+                                element.changeImageTimeoutId = setTimeout(setSrc, this.options.transitionTime + 100);
                             }
                             else
                                 setSrc();
@@ -1595,8 +1600,8 @@ yox.controller.defaults = {
                 this.options.margin = yox.utils.dimensions.distributeMeasures(this.options.margin);
                 this.options.padding = yox.utils.dimensions.distributeMeasures(this.options.padding);
 
-                var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
-                $.extend(this, eventsHandler);
+                var eventBus = this.options.eventBus || new yox.eventBus();
+                $.extend(this, eventBus);
 
                 // Init events:
                 for(var eventName in this.options.events){
@@ -1776,9 +1781,6 @@ yox.controller.defaults = {
                     setItem.call(view, item);
 
                 return true;
-            },
-            unload: function(){
-                // SOON
             },
             update: function(force){
                 if (this.options.transitionTime){
@@ -2157,6 +2159,10 @@ yox.view.transitions.thumbnails = function(){
         return panels[currentPanelIndex];
     };
 
+    this.getNotCurrentPanel = function(){
+        return panels[currentPanelIndex ? 0 : 1];
+    }
+
     this.getPanel = function(item){
         currentPanelIndex = currentPanelIndex ? 0 : 1;
         return panels[currentPanelIndex];
@@ -2262,7 +2268,7 @@ yox.view.transitions.thumbnails = function(){
 };
 
 yox.view.transitions.thumbnails.prototype = new yox.view.transition("thumbnails");
-yox.theme = function(data, options){};
+yox.theme = function(){};
 yox.themes = {}; // Will hold the theme types
 
 yox.theme.prototype = {
@@ -2277,23 +2283,23 @@ yox.theme.prototype = {
     getThemeClass: function(className){
         return "yox-theme-" + this.name + (className ? "-" + className : "");
     },
-    init: function(container, data, eventsHandler, options){
-        if (!(data instanceof yox.data))
+    init: function(container, options){
+        if (!(options.data instanceof yox.data))
             throw new Error("Invalid data provided for theme, must be an instance of yox.data.");
 
-        $.extend(this, eventsHandler);
+        $.extend(this, options.eventBus);
 
         this.create(container);
 
         function createModule(container, moduleName, moduleOptions){
-            moduleOptions.data = data;
+            moduleOptions.data = options.data;
 
-            moduleOptions.eventsHandler = {
+            moduleOptions.eventBus = {
                 addEventListener: function(eventName, eventHandler){
-                    eventsHandler.addEventListener(eventName, eventHandler.bind(this));
+                    options.eventBus.addEventListener(eventName, eventHandler.bind(this));
                 },
                 triggerEvent: function(eventName, eventData, sender){
-                    eventsHandler.triggerEvent.call(this, eventName + "." + moduleName, eventData, sender || this);
+                    options.eventBus.triggerEvent.call(this, eventName + "." + moduleName, eventData, sender || this);
                 }
             };
 
@@ -2527,7 +2533,7 @@ yox.themes.wall = function(data, options){
         var isLastThumbnail = index === totalThumbnailsCount - 1,
             totalBordersWidth = (thumbs.length - 1) * options.borderWidth,
             isFullRow = currentRowWidth + totalBordersWidth >= containerWidth;
-        console.log("is last: ", isLastThumbnail);
+
         // Gathered enough thumbnails to fill the current row:
         if (isFullRow || isLastThumbnail){
 

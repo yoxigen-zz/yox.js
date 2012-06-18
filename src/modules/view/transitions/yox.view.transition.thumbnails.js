@@ -70,6 +70,10 @@ yox.view.transitions.thumbnails = function(){
         return panels[currentPanelIndex];
     };
 
+    this.getNotCurrentPanel = function(){
+        return panels[currentPanelIndex ? 0 : 1];
+    }
+
     this.getPanel = function(item){
         currentPanelIndex = currentPanelIndex ? 0 : 1;
         return panels[currentPanelIndex];
@@ -90,12 +94,21 @@ yox.view.transitions.thumbnails = function(){
 
         if (!options.isUpdate){
             if (options.item){
-                var $thumbnail = $(options.item.thumbnail.image),
-                    thumbnailOffset = $thumbnail.offset(),
+                var $thumbnail;
+                if (options.item.openFromElement){
+                    $thumbnail = $(options.item.openFromElement);
+                    delete options.item.openFromElement;
+                }
+                else
+                    $thumbnail = $(options.item.thumbnail.image);
+
+                var thumbnailOffset = $thumbnail.offset(),
                     thumbnailScale = $thumbnail.width() / options.position.width;
 
-                thumbnailOffset.top -= scrollElement.scrollTop;
-                thumbnailOffset.left -= scrollElement.scrollLeft;
+                if (window.getComputedStyle($thumbnail[0], null).position !== "fixed"  && window.getComputedStyle($thumbnail[0].parentNode, null).position !== "fixed"){
+                    thumbnailOffset.top -= scrollElement.scrollTop;
+                    thumbnailOffset.left -= scrollElement.scrollLeft;
+                }
 
                 $newPanel.show().css($.extend({
                     transition: "none",

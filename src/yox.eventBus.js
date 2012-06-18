@@ -1,4 +1,4 @@
-yox.eventsHandler = function(){
+yox.eventBus = function(){
     var namespaces = {
             _default: {}
         },
@@ -98,7 +98,7 @@ yox.eventsHandler = function(){
     }
 };
 
-yox.eventsHandler.prototype = {
+yox.eventBus.prototype = {
     /**
      * Wraps the eventHandler's triggerEvent method with a specified 'this' and 'sender' arguments.
      * Note: This isn't done simply with the 'bind' function because the sender should be the last parameter,

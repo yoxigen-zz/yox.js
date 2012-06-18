@@ -8,7 +8,7 @@ function Yox(container, options){
 Yox.prototype = {
     init: function(){
         if (this.options.theme){
-            var eventsHandler = new yox.eventsHandler(),
+            var eventBus = new yox.eventBus(),
                 data,
                 self = this;
 
@@ -29,7 +29,7 @@ Yox.prototype = {
                 if (!(theme instanceof yox.theme))
                     throw new Error("Invalid theme, '" + themeName + "' is not an instance of yox.theme.");
 
-                theme.init(self.container, data, eventsHandler, themeOptions);
+                theme.init(self.container, $.extend(themeOptions, { data: data, eventBus: eventBus }));
                 return theme;
             }
 
@@ -56,7 +56,7 @@ Yox.prototype = {
                 },
                 data: data
             },
-            eventsHandler);
+            eventBus);
 
             if (this.options.events){
                 for(var eventName in this.options.events)

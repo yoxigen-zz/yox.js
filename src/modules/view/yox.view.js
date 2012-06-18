@@ -126,20 +126,24 @@
                 function onImageLoad(e){
                     var view = e instanceof yox.view ? e : e.data.view;
                     this.loading = false;
-                    if (view.currentItem && view.currentItem.url !== this.src && view.currentItem.thumbnail.src !== this.src){
+                    if (view.currentItem && view.currentItem.url !== this.src && view.currentItem.thumbnail.src !== this.src)
                         return false;
-                    }
 
                     if (view.currentItem && (!view.options.showThumbnailsBeforeLoad || this.loadingThumbnail)){
                         this.loadingThumbnail = false;
                         var item = view.currentItem,
-                            position = view.getPosition(item, view.containerDimensions, view.options);
+                            position = view.getPosition(item, view.containerDimensions, view.options)
+
+                        if (view.options.showThumbnailsBeforeLoad && view.previousItem &&  view.previousItem.thumbnail){
+
+                            var previousImage = checkElementExists(view.transition.getNotCurrentPanel());
+                            if (previousImage.image.src)
+                                previousImage.image.src = view.previousItem.thumbnail.src;
+                        }
 
                         view.transition.transition.call(view, { position: position, index: item.id - 1, item: item });
                     }
                 }
-
-                var changeImageTimeoutId;
 
                 return {
                     checkLoading: true,
@@ -154,7 +158,7 @@
                     },
                     set: function(item, element, loadThumbnail){
                         if (this.options.showThumbnailsBeforeLoad)
-                            clearTimeout(changeImageTimeoutId);
+                            clearTimeout(element.changeImageTimeoutId);
 
                         var imageUrl = loadThumbnail && item.thumbnail ? item.thumbnail.src : item.url;
                         element.loading = true;
@@ -163,13 +167,14 @@
 
                         if (element.src !== imageUrl){
                             function setSrc(){
+                                console.log("chage:", element.src, imageUrl);
                                 element.src = "";
                                 element.src = imageUrl;
                             }
 
                             if (this.options.showThumbnailsBeforeLoad && !loadThumbnail){
-                                clearTimeout(changeImageTimeoutId);
-                                changeImageTimeoutId = setTimeout(setSrc, this.options.transitionTime + 50);
+                                clearTimeout(element.changeImageTimeoutId);
+                                element.changeImageTimeoutId = setTimeout(setSrc, this.options.transitionTime + 100);
                             }
                             else
                                 setSrc();
@@ -323,8 +328,8 @@
                 this.options.margin = yox.utils.dimensions.distributeMeasures(this.options.margin);
                 this.options.padding = yox.utils.dimensions.distributeMeasures(this.options.padding);
 
-                var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
-                $.extend(this, eventsHandler);
+                var eventBus = this.options.eventBus || new yox.eventBus();
+                $.extend(this, eventBus);
 
                 // Init events:
                 for(var eventName in this.options.events){
@@ -504,9 +509,6 @@
                     setItem.call(view, item);
 
                 return true;
-            },
-            unload: function(){
-                // SOON
             },
             update: function(force){
                 if (this.options.transitionTime){

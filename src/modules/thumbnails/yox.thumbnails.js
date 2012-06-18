@@ -6,11 +6,11 @@
         this.options = $.extend(true, {}, this.defaults, options);
         this.itemCount = 0;
 
-        var eventsHandler = this.options.eventsHandler || new yox.eventsHandler();
-        $.extend(this, eventsHandler);
+        var eventBus = this.options.eventBus || new yox.eventBus();
+        $.extend(this, eventBus);
 
         this.triggerEvent = function(eventName, data){
-            eventsHandler.triggerEvent.call(self, eventName, data, self);
+            eventBus.triggerEvent.call(self, eventName, data, self);
         }
 
         if (this.options.events){

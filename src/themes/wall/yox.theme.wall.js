@@ -56,7 +56,7 @@ yox.themes.wall = function(data, options){
         var isLastThumbnail = index === totalThumbnailsCount - 1,
             totalBordersWidth = (thumbs.length - 1) * options.borderWidth,
             isFullRow = currentRowWidth + totalBordersWidth >= containerWidth;
-        console.log("is last: ", isLastThumbnail);
+
         // Gathered enough thumbnails to fill the current row:
         if (isFullRow || isLastThumbnail){
 

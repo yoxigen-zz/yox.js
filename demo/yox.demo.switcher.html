@@ -3,66 +3,18 @@
 <head>
     <title>Yossi Kolesnicov Photography</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link href='http://fonts.googleapis.com/css?family=Pontano+Sans|Quicksand:400,700' rel='stylesheet' type='text/css'>
     <link rel="Stylesheet" type="text/css" href="css/demo.css" />
     <link rel="Stylesheet" type="text/css" href="../dist/yox.lightbox.css" />
-    <style>
-        body{ padding: 33px 0 0; margin: 0; overflow-y: scroll; background: Black; }
-        img{ vertical-align: top }
-        header{
-            background: none repeat scroll 0 0 rgba(0, 0, 0, 0.75);
-            position: fixed;
-            z-index: 100;
-            top: 0;
-            line-height: 39px;
-            border: none;
-            padding: 0;
-            border-bottom: solid 1px rgba(255, 255, 255, .2);
-        }
-        header h1{
-            font-family: 'Quicksand',sans-serif;
-            font-weight: 400;
-            font-size: 20px;
-            display: inline-block;
-            padding: 0 10px;
-        }
-        @media only screen and (max-width:800px){
-            header h1{ font-size: 16px; }
-        }
-        header h1 span{
-            color: #bbb;
-        }
-        nav{
-            float: right;
-            height: 35px;
-            line-height: 35px;
-        }
-            nav a{
-                display: inline-block;
-                height: 100%;
-                padding: 0 15px;
-            }
-            nav a:hover{
-                background-color: rgba(255,255,255,.2);
-            }
-            #contactLink{
-                border-left: solid 1px rgba(255,255,255,.2);
-                box-shadow: 1px 0 0 Black inset;
-                text-indent: 9999px;
-                background-image: url(img/contact_icon.png);
-                background-repeat: no-repeat;
-                background-position: center center;
-                width: 30px;
-                padding: 0 5px;
-            }
-    </style>
+    <link rel="Stylesheet" type="text/css" href="css/yox.demo.switcher.css" />
     <!--<script src="js/ga.js"></script>-->
 </head>
 <body>
 <header>
     <h1>Yossi Kolesnicov <span>Photography</span></h1>
     <nav>
-        <a href="/">All</a>
+        <a href="#">All</a>
         <span id="categories"></span>
         <a href="mailto:yk@yossikolesnicov.com" id="contactLink" title="Contact me">Contact</a>
     </nav>
@@ -79,7 +31,7 @@
 <script type="text/javascript" src="../src/modules/thumbnails/yox.thumbnails.js"></script>
 <script type="text/javascript" src="../src/modules/data/sources/yox.data.source.js"></script>
 <script type="text/javascript" src="../src/modules/data/sources/yox.data.source.picasa.js"></script>
-<script type="text/javascript" src="../src/yox.eventsHandler.js"></script>
+<script type="text/javascript" src="../src/yox.eventBus.js"></script>
 <script type="text/javascript" src="../src/modules/view/yox.view.js"></script>
 <script type="text/javascript" src="../src/modules/view/yox.view.cache.js"></script>
 <script type="text/javascript" src="../src/modules/view/transitions/yox.view.transition.js"></script>
@@ -93,104 +45,6 @@
 <script type="text/javascript" src="../src/themes/switcher/yox.theme.switcher.js"></script>
 -->
 <script src="../dist/yox.lightbox.min.js"></script>
-    <script>
-        var defaultDataUrl = "xrCvoB?authkey=Gv1sRgCJ7LkvmYpdjwAg",
-            yoxApi = new Yox(document.body, {
-                theme: [
-                    {
-                        name: "switcher"
-                    },
-                    {
-                        name: "wall",
-                        options: {
-                            thumbnailsMaxHeight: 300,
-                            borderWidth: 3,
-                            padding: 3,
-                            scrollToElementOnSelect: true
-                        }
-                    }
-                ],
-                data: {
-                    type: "picasa",
-                    cache: false,
-                    source: {
-                        url: "https://picasaweb.google.com/105098710956916751721/" + (getHash() || defaultDataUrl),
-                        imgmax: 1600,
-                        thumbsize: 400,
-                        kind: "photo",
-                        pageSize: 25
-                    }
-                },
-                events: {
-                    keydown: function(e){
-                        if (e.key === "up" || e.key === "down"){
-                            var isUp = e.key === "up";
-
-                            if(yoxApi.themes.switcher.modules.view.isOpen()){
-                                var selectedThumbnail = yoxApi.themes.switcher.modules.view.currentItem.thumbnail.element,
-                                    thumbnailBounds = selectedThumbnail.getBoundingClientRect(),
-                                    halfPoint = {
-                                        left: Math.round(thumbnailBounds.left + thumbnailBounds.width / 2),
-                                        top: isUp ? thumbnailBounds.top - 10 : thumbnailBounds.bottom + 10
-                                    },
-                                    currentItemIndex = yoxApi.themes.switcher.modules.view.currentItem.id - 1;
-
-                                var nextThumbnail = isUp ? selectedThumbnail.previousSibling : selectedThumbnail.nextSibling,
-                                    nextThumbBounds,
-                                    targetThumbnail;
-
-                                while (!targetThumbnail && nextThumbnail && currentItemIndex >= 0){
-                                    if (nextThumbnail.nodeType === 1){
-                                        currentItemIndex += isUp ? -1 : 1;
-                                        nextThumbBounds = nextThumbnail.getBoundingClientRect()
-                                        if (nextThumbBounds.top !== thumbnailBounds.top){
-                                            if (halfPoint.left >= nextThumbBounds.left && halfPoint.left <= nextThumbBounds.right){
-                                                targetThumbnail = nextThumbnail;
-                                            }
-                                        }
-                                    }
-
-                                    nextThumbnail = isUp ? nextThumbnail.previousSibling : nextThumbnail.nextSibling;
-                                }
-
-                                if (targetThumbnail)
-                                    yoxApi.themes.switcher.modules.view.selectItem(currentItemIndex);
-                            }
-                        }
-                    }
-                }
-            });
-
-        var albumsData = new yox.data({
-            cache: true,
-            events: {
-                loadSources: function(data){
-                    var categoriesArr = [];
-                    for(var i=0, album; album = data[0].items[i]; i++){
-                        categoriesArr.push("<a href='#", album.data.album.name, "'>", album.title, "</a>");
-                    }
-                    document.getElementById("categories").innerHTML = categoriesArr.join("");
-                }
-            },
-            source: {
-                    type: "picasa",
-                    url: "https://picasaweb.google.com/105098710956916751721"
-            }
-        });
-
-        function getHash(){
-            return window.location.hash.replace(/^#/, "");
-        }
-
-        window.addEventListener("hashchange", function(){
-            yoxApi.data.source({
-                type: "picasa",
-                url: "https://picasaweb.google.com/105098710956916751721/" + getHash(),
-                imgmax: 1600,
-                thumbsize: 400,
-                pageSize: 25
-            });
-        }, false);
-    </script>
+    <script src="js/yox.demo.switcher.js"></script>
 </body>
 </html>

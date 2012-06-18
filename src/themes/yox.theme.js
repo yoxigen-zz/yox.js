@@ -1,4 +1,4 @@
-yox.theme = function(data, options){};
+yox.theme = function(){};
 yox.themes = {}; // Will hold the theme types
 
 yox.theme.prototype = {
@@ -13,23 +13,23 @@ yox.theme.prototype = {
     getThemeClass: function(className){
         return "yox-theme-" + this.name + (className ? "-" + className : "");
     },
-    init: function(container, data, eventsHandler, options){
-        if (!(data instanceof yox.data))
+    init: function(container, options){
+        if (!(options.data instanceof yox.data))
             throw new Error("Invalid data provided for theme, must be an instance of yox.data.");
 
-        $.extend(this, eventsHandler);
+        $.extend(this, options.eventBus);
 
         this.create(container);
 
         function createModule(container, moduleName, moduleOptions){
-            moduleOptions.data = data;
+            moduleOptions.data = options.data;
 
-            moduleOptions.eventsHandler = {
+            moduleOptions.eventBus = {
                 addEventListener: function(eventName, eventHandler){
-                    eventsHandler.addEventListener(eventName, eventHandler.bind(this));
+                    options.eventBus.addEventListener(eventName, eventHandler.bind(this));
                 },
                 triggerEvent: function(eventName, eventData, sender){
-                    eventsHandler.triggerEvent.call(this, eventName + "." + moduleName, eventData, sender || this);
+                    options.eventBus.triggerEvent.call(this, eventName + "." + moduleName, eventData, sender || this);
                 }
             };
 
